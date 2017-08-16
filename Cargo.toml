@@ -1,0 +1,6 @@
+[package]
+name = "recipe_calculator_server"
+version = "0.1.0"
+authors = ["blazern <blazer007@yandex.ru>"]
+
+[dependencies]

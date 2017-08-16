@@ -1,0 +1,4 @@
+[root]
+name = "recipe_calculator_server"
+version = "0.1.0"
+
