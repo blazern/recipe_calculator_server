@@ -4,8 +4,20 @@ version = "0.1.0"
 authors = ["blazern <blazer007@yandex.ru>"]
 
 [dependencies]
+# error handling
+error-chain = "0.10.0"
+
+# decopt
 docopt = "0.8"
 serde = "1.0" # needed for docopt + derive(Deserialize)
 serde_derive = "1.0" # needed for docopt + derive(Deserialize)
+
+# json
 serde_json = "1.0"
+
+# testing
 time = "0.1"
+
+# HTTP client
+reqwest = "0.7.3"
+url = "1.5.1"

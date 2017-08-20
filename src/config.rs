@@ -1,7 +1,7 @@
 extern crate serde_json;
 
-use std::io::Read;
 use error::Error;
+use std::io::Read;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Config {
