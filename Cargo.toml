@@ -21,3 +21,8 @@ time = "0.1"
 # HTTP client
 reqwest = "0.7.3"
 url = "1.5.1"
+
+# diesel
+dotenv = "0.10.*"
+diesel = { version = "0.16.0", features = ["postgres"] }
+diesel_codegen = { version = "0.16.0", features = ["postgres"] }
