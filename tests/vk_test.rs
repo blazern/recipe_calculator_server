@@ -1,24 +1,19 @@
 extern crate recipe_calculator_server;
 extern crate serde_json;
 
-use recipe_calculator_server::vk;
-use std::env;
+mod testing_config;
 
-const VK_SERVER_TOKEN_ENV_VAR_NAME: &'static str = "VK_SERVER_TOKEN";
+use recipe_calculator_server::vk;
 
 #[test]
 fn can_check_client_token() {
-    let server_token = env::var(VK_SERVER_TOKEN_ENV_VAR_NAME);
-    let server_token = match server_token {
-        Ok(val) => val,
-        Err(err) => panic!("Is env var {} provided? Error: {:?}", VK_SERVER_TOKEN_ENV_VAR_NAME, err),
-    };
+    let config = testing_config::get();
     let user_token = "asdasd";
 
     // Note that we can't get a user token from a test -
     // VK api doesn't give mock user tokens and doesn't provide
     // a way to auth in tests.
-    let check_result = vk::check_token(&server_token, user_token).unwrap();
+    let check_result = vk::check_token(&config.vk_server_token(), user_token).unwrap();
 
     assert!(!check_result.is_success());
     assert!(check_result.error_code().unwrap() == vk::ERROR_CODE_CLIENT_TOKEN_INVALID);
