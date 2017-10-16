@@ -1,0 +1,1 @@
+infer_schema!("env:RECIPE_CALCULATOR_SERVER_PSQL_URL_USER_ADMIN");

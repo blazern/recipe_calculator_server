@@ -24,5 +24,8 @@ url = "1.5.1"
 
 # diesel
 dotenv = "0.10.*"
-diesel = { version = "0.16.0", features = ["postgres"] }
+diesel = { version = "0.16.0", features = ["postgres", "uuid"] }
 diesel_codegen = { version = "0.16.0", features = ["postgres"] }
+
+# uuid
+uuid = { version = "0.4", features = ["serde", "v4"] }
