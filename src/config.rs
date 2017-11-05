@@ -37,3 +37,7 @@ impl Config {
         return &self.psql_url_user_client;
     }
 }
+
+#[cfg(test)]
+#[path = "./config_test.rs"]
+mod config_test;

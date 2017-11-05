@@ -37,3 +37,7 @@ pub fn parse<I, S>(args: I) -> Result<Args, docopt::Error>
             .deserialize();
     return args;
 }
+
+#[cfg(test)]
+#[path = "./command_line_args_test.rs"]
+mod command_line_args_test;

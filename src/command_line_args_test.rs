@@ -1,6 +1,4 @@
-extern crate recipe_calculator_server;
-
-use recipe_calculator_server::command_line_args;
+use command_line_args;
 
 #[test]
 fn can_get_command_line_args() {

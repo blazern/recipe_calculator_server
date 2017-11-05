@@ -111,3 +111,7 @@ pub fn check_token(server_token: &str, client_token: &str) -> Result<CheckResult
     let response = client.get(url)?.send()?;
     return check_token_from_server_response(response);
 }
+
+#[cfg(test)]
+#[path = "./vk_test.rs"]
+mod vk_test;

@@ -65,3 +65,7 @@ pub fn select_by_id(id: i32, connection: &PgConnection) -> Result<Option<AppUser
         }
     }
 }
+
+#[cfg(test)]
+#[path = "./app_user_test.rs"]
+mod app_user_test;

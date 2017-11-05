@@ -1,13 +1,12 @@
-extern crate recipe_calculator_server;
 extern crate serde_json;
 
-mod testing_config;
+use vk;
 
-use recipe_calculator_server::vk;
+include!("testing_config.rs.inc");
 
 #[test]
 fn can_check_client_token() {
-    let config = testing_config::get();
+    let config = get_testing_config();
     let user_token = "asdasd";
 
     // Note that we can't get a user token from a test -

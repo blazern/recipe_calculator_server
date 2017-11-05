@@ -1,4 +1,3 @@
-extern crate recipe_calculator_server;
 extern crate serde_json;
 extern crate time;
 
@@ -6,7 +5,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::io::Seek;
 use std::io::SeekFrom;
-use recipe_calculator_server::config;
+use config;
 
 const FILE_PREFIX: &'static str = "/tmp/recipe_calculator_server_test_config";
 const VK_SERVER_TOKEN: &'static str = "asdasdasd";

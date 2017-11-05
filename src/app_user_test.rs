@@ -1,8 +1,5 @@
-extern crate recipe_calculator_server;
 extern crate diesel;
 extern crate uuid;
-
-mod testing_config;
 
 use std::env;
 use std::str::FromStr;
@@ -14,7 +11,10 @@ use diesel::LoadDsl;
 use diesel::pg::PgConnection;
 use uuid::Uuid;
 
-use recipe_calculator_server::app_user;
+use app_user;
+use schema;
+
+include!("testing_config.rs.inc");
 
 // Admin user has too many privileges and should be used only inside of tests.
 const PSQL_ADMIN_URL: &'static str = "RECIPE_CALCULATOR_SERVER_PSQL_URL_USER_ADMIN";
@@ -25,11 +25,11 @@ fn delete_entry_with(uid: &Uuid) {
     let pg_connection = PgConnection::establish(&psql_admin_url).unwrap();
 
     diesel::delete(
-        recipe_calculator_server::schema::app_user::table.filter(
-            recipe_calculator_server::schema::app_user::uid.eq(uid)))
+        schema::app_user::table.filter(
+            schema::app_user::uid.eq(uid)))
         .execute(&pg_connection).unwrap();
 
-    let all_users = recipe_calculator_server::schema::app_user::table
+    let all_users = schema::app_user::table
         .load::<app_user::AppUser>(&pg_connection).unwrap();
 
     for user in all_users {
@@ -48,7 +48,7 @@ fn insertion_and_selection_work() {
     let vk_uid = 1i32;
     delete_entry_with(&uid);
 
-    let config = testing_config::get();
+    let config = get_testing_config();
     let new_user = app_user::new(uid, vk_uid);
     let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
 
@@ -68,7 +68,7 @@ fn cant_insert_already_inserted_user() {
     let vk_uid = 2i32;
     delete_entry_with(&uid);
 
-    let config = testing_config::get();
+    let config = get_testing_config();
     let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
 
     let user_copy1 = app_user::new(uid, vk_uid);
@@ -87,7 +87,7 @@ fn cant_insert_user_with_already_used_uid() {
     let vk_uid2 = 4i32;
     delete_entry_with(&uid);
 
-    let config = testing_config::get();
+    let config = get_testing_config();
     let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
 
     let user1 = app_user::new(uid, vk_uid1);
@@ -107,7 +107,7 @@ fn cant_insert_user_with_already_used_vk_id() {
     delete_entry_with(&uid1);
     delete_entry_with(&uid2);
 
-    let config = testing_config::get();
+    let config = get_testing_config();
     let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
 
     let user1 = app_user::new(uid1, vk_uid);
