@@ -11,10 +11,10 @@ use diesel::LoadDsl;
 use diesel::pg::PgConnection;
 use uuid::Uuid;
 
-use app_user;
+use db::app_user;
 use schema;
 
-include!("testing_config.rs.inc");
+include!("../testing_config.rs.inc");
 
 // Admin user has too many privileges and should be used only inside of tests.
 const PSQL_ADMIN_URL: &'static str = "RECIPE_CALCULATOR_SERVER_PSQL_URL_USER_ADMIN";

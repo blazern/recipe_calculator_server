@@ -5,7 +5,7 @@
 extern crate reqwest;
 extern crate uuid;
 pub mod schema;
-pub mod app_user;
+pub mod db;
 pub mod error;
 pub mod command_line_args;
 pub mod config;
