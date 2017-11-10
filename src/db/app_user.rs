@@ -39,31 +39,11 @@ pub fn new(uid: Uuid, vk_uid: i32) -> NewAppUser {
 }
 
 pub fn insert(app_user: NewAppUser, connection: &PgConnection) -> Result<AppUser, Error> {
-    use diesel::LoadDsl;
-
-    let result: AppUser = diesel::insert(&app_user)
-        .into(schema::app_user::table)
-        .get_result(connection)?;
-
-    return Ok(result);
+    return insert!(AppUser, app_user, schema::app_user::table, connection);
 }
 
 pub fn select_by_id(id: i32, connection: &PgConnection) -> Result<Option<AppUser>, Error> {
-    use diesel::FindDsl;
-    use diesel::FirstDsl;
-
-    let result = schema::app_user::table.find(id).first::<AppUser>(connection);
-    return match result {
-        Err(diesel::result::Error::NotFound) => {
-            Ok(None)
-        }
-        Err(error) => {
-            Err(error.into())
-        }
-        Ok(app_user) => {
-            Ok(Some(app_user))
-        }
-    }
+    return select_by_column!(AppUser, schema::app_user::table, schema::app_user::id, id, connection);
 }
 
 #[cfg(test)]

@@ -2,6 +2,7 @@ extern crate reqwest;
 extern crate serde_json;
 extern crate url;
 extern crate diesel;
+extern crate uuid;
 
 use std;
 
@@ -12,5 +13,6 @@ error_chain! {
         Reqwest(reqwest::Error);
         UrlParse(url::ParseError);
         DieselError(diesel::result::Error);
+        UuidParseError(uuid::ParseError);
     }
 }
