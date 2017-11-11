@@ -1,25 +1,24 @@
 extern crate diesel;
 extern crate uuid;
 
+use diesel::Connection;
+use diesel::ExecuteDsl;
+use diesel::ExpressionMethods;
+use diesel::FilterDsl;
+use diesel::pg::PgConnection;
+use std::env;
+use std::str::FromStr;
+use uuid::Uuid;
+
+use db::app_user;
+use db::app_user::AppUser;
+use error;
+use schema;
+
 include!("psql_admin_url.rs.inc");
 
 #[test]
 fn transition_rolls_back_progress_when_interrupted() {
-    use diesel::Connection;
-    use diesel::ExecuteDsl;
-    use diesel::ExpressionMethods;
-    use diesel::FilterDsl;
-    use diesel::pg::PgConnection;
-    use std::env;
-    use std::str::FromStr;
-    use uuid::Uuid;
-
-    use db::app_user;
-    use db::app_user::AppUser;
-    use error;
-    use schema;
-
-
     let uid = Uuid::from_str("550e8400-e29b-41d4-a716-646655440001").unwrap();
     let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
     let connection = PgConnection::establish(&psql_admin_url).unwrap();
@@ -47,20 +46,6 @@ fn transition_rolls_back_progress_when_interrupted() {
 
 #[test]
 fn operations_without_transactions_dont_roll_back() {
-    use diesel::Connection;
-    use diesel::ExecuteDsl;
-    use diesel::ExpressionMethods;
-    use diesel::FilterDsl;
-    use diesel::pg::PgConnection;
-    use std::env;
-    use std::str::FromStr;
-    use uuid::Uuid;
-
-    use db::app_user;
-    use db::app_user::AppUser;
-    use schema;
-
-
     let uid = Uuid::from_str("550e8400-e29b-41d4-a716-646655440002").unwrap();
     let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
     let connection = PgConnection::establish(&psql_admin_url).unwrap();
