@@ -10,14 +10,12 @@ use error::Error;
 #[table_name="app_user"]
 pub struct NewAppUser {
     uid: Uuid,
-    vk_uid: i32,
 }
 
 #[derive(Debug, PartialEq, Eq, Queryable)]
 pub struct AppUser {
     id: i32,
     uid: Uuid,
-    vk_uid: i32,
 }
 
 impl AppUser {
@@ -28,14 +26,10 @@ impl AppUser {
     pub fn uid(&self) -> &Uuid {
         return &self.uid;
     }
-
-    pub fn vk_uid(&self) -> i32 {
-        return self.vk_uid;
-    }
 }
 
-pub fn new(uid: Uuid, vk_uid: i32) -> NewAppUser {
-    NewAppUser{ uid, vk_uid }
+pub fn new(uid: Uuid) -> NewAppUser {
+    NewAppUser{ uid }
 }
 
 pub fn insert(app_user: NewAppUser, connection: &PgConnection) -> Result<AppUser, Error> {

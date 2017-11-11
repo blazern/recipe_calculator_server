@@ -1,5 +1,7 @@
+#[allow(unused_imports)]
 use config;
 
+#[warn(dead_code)]
 fn get_testing_config() -> config::Config {
     use std;
 
