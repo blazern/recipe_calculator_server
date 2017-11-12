@@ -19,38 +19,53 @@ include!("../testing_config.rs.inc");
 include!("psql_admin_url.rs.inc");
 
 // Cleaning up before tests
-fn delete_entry_with(vk_uid: i32) {
+fn delete_entries_with(vk_uids: &[i32]) {
     let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
     let pg_connection = PgConnection::establish(&psql_admin_url).unwrap();
 
     pg_connection.transaction::<_, error::Error, _>(|| {
-        // Memorize existing entry
-        let existing_entry = select_entry_with(vk_uid, &pg_connection);
+        // Memorize existing entries
+        let mut existing_entries = Vec::new();
+        for vk_uid in vk_uids {
+            let selected_entry = select_entry_with(*vk_uid, &pg_connection);
+            match selected_entry {
+                Some(entry) => {
+                    existing_entries.push(entry);
+                }
+                _ => {}
+            }
+        }
 
-        // Delete it
-        delete_by_column!(
+        // Delete them
+        for vk_uid in vk_uids {
+            delete_by_column!(
                     schema::vk_user::table,
                     schema::vk_user::vk_uid,
-                    vk_uid,
+                    *vk_uid,
                     &pg_connection)?;
+        }
 
-        // Delete its AppUser (so that foreign key constraint would stop us).
-        match existing_entry {
-            Some(entry) => {
-                delete_by_column!(
+        // Delete their AppUsers (so that foreign key constraint wouldn't stop us).
+        for entry in existing_entries {
+            delete_by_column!(
                     schema::app_user::table,
                     schema::app_user::id,
                     entry.app_user_id(),
                     &pg_connection)?;
-            }
-            _ => {}
         }
 
-        let deleted_entry = select_entry_with(vk_uid, &pg_connection);
-        assert!(deleted_entry.is_none());
+
+        for vk_uid in vk_uids {
+            let deleted_entry = select_entry_with(*vk_uid, &pg_connection);
+            assert!(deleted_entry.is_none());
+        }
 
         Ok(())
     }).unwrap();
+}
+
+fn delete_entry_with(vk_uid: i32) {
+    delete_entries_with(&[vk_uid])
 }
 
 fn select_entry_with(vk_uid: i32, pg_connection: &PgConnection) -> Option<vk_user::VkUser> {
@@ -112,6 +127,32 @@ fn cant_insert_vk_user_with_already_used_vk_uid() {
 
         let second_insertion_result = vk_user::insert(vk_user_copy2, &pg_connection);
         assert!(second_insertion_result.is_err());
+
+        Ok(())
+    }).unwrap();
+}
+
+#[test]
+fn multiple_vk_users_cannot_depend_on_single_app_user() {
+    let vk_uid1 = 3;
+    let vk_uid2 = 4;
+    delete_entries_with(&[vk_uid1, vk_uid2]);
+
+    let config = get_testing_config();
+    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+
+    // Need to revert insertions if test fails
+    pg_connection.transaction::<_, error::Error, _>(|| {
+        let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655450002").unwrap();
+        let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+
+        let vk_user1 = vk_user::new(vk_uid1, &app_user);
+        let vk_user2 = vk_user::new(vk_uid2, &app_user);
+
+        vk_user::insert(vk_user1, &pg_connection).unwrap();
+
+        let second_user_selection_result = vk_user::insert(vk_user2, &pg_connection);
+        assert!(second_user_selection_result.is_err());
 
         Ok(())
     }).unwrap();
