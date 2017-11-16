@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! insert {
-    ( $ResultType:ty, $new_item:ident, $table:path, $connection:expr ) => {
+    ( $ResultType:ty, $new_item:expr, $table:path, $connection:expr ) => {
         {
             use diesel::LoadDsl;
             use diesel;
@@ -59,6 +59,43 @@ macro_rules! delete_by_column {
                         $column.eq($value)))
                     .execute($connection);
             result
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! update_column {
+    ( $Type:ty,
+      $table:path,
+      $searched_column:path,
+      $searched_value:expr,
+      $updated_column:path,
+      $updated_value:expr,
+      $connection:expr ) => {
+        {
+            use diesel::ExpressionMethods;
+            use diesel::FilterDsl;
+            use diesel::LoadDsl;
+            use error;
+
+            let target = $table.filter($searched_column.eq($searched_value));
+            let results: Result<Vec<$Type>, diesel::result::Error> =
+                diesel::update(target).set(
+                    $updated_column.eq($updated_value))
+                .get_results($connection);
+
+            let results: Result<Vec<$Type>, error::Error> = match results {
+                Err(diesel::result::Error::NotFound) => {
+                    Ok(Vec::with_capacity(0))
+                }
+                Err(error) => {
+                    Err(error.into())
+                }
+                Ok(val) => {
+                    Ok(val)
+                }
+            };
+            results
         }
     };
 }

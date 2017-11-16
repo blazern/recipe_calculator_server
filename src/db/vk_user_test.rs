@@ -98,6 +98,7 @@ fn insertion_and_selection_work() {
         let inserted_vk_user = vk_user::insert(new_vk_user, &pg_connection)?;
         assert!(inserted_vk_user.id() > 0);
         assert_eq!(inserted_vk_user.vk_uid(), vk_uid);
+        assert_eq!(app_user.id(), inserted_vk_user.app_user_id());
 
         let selected_vk_user = vk_user::select_by_id(inserted_vk_user.id(), &pg_connection);
         let selected_vk_user = selected_vk_user.unwrap().unwrap(); // unwrapping Result and Option

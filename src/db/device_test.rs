@@ -64,7 +64,6 @@ fn delete_entries_with(uuids: &[&Uuid]) {
     }).unwrap();
 }
 
-
 fn delete_entry_with(uuid: &Uuid) {
     delete_entries_with(&[uuid])
 }
@@ -99,6 +98,7 @@ fn insertion_and_selection_work() {
         let inserted_device = device::insert(new_device, &pg_connection)?;
         assert!(inserted_device.id() > 0);
         assert_eq!(*inserted_device.uuid(), uuid);
+        assert_eq!(app_user.id(), inserted_device.app_user_id());
 
         let selected_device = device::select_by_id(inserted_device.id(), &pg_connection);
         let selected_device = selected_device.unwrap().unwrap(); // unwrapping Result and Option
