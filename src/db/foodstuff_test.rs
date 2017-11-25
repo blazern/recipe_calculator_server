@@ -16,6 +16,7 @@ use schema;
 
 include!("../testing_config.rs.inc");
 include!("psql_admin_url.rs.inc");
+include!("testing_util.rs.inc");
 
 const FOODSTUFF_NAME: &'static str = "foodstuff name for tests";
 const FOODSTUFF_PROTEIN: f32 = 123456789_f32;
@@ -25,36 +26,10 @@ const FOODSTUFF_CALORIES: f32 = 123456789_f32;
 
 // Cleaning up before tests
 fn delete_entries_with(app_user_uid: &Uuid) {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
-
-    let app_user =
-        select_by_column!(
-            app_user::AppUser,
-            schema::app_user::table,
-            schema::app_user::uid,
-            app_user_uid,
-            &connection);
-
-    let app_user = app_user.unwrap();
-    if app_user.is_none() {
-        // AppUser already deleted - foodstuffs are connected to it by foreign key, so they are
-        // deleted too by now, because otherwise DB wouldn't let us delete
-        return;
-    }
-    let app_user = app_user.unwrap();
-
-    delete_by_column!(
+    testing_util_delete_entries_with!(
+        app_user_uid,
         schema::foodstuff::table,
-        schema::foodstuff::app_user_id,
-        app_user.id(),
-        &connection).unwrap();
-
-    delete_by_column!(
-        schema::app_user::table,
-        schema::app_user::id,
-        app_user.id(),
-        &connection).unwrap();
+        schema::foodstuff::app_user_id);
 }
 
 #[test]
