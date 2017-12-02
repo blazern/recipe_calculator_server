@@ -53,11 +53,25 @@ macro_rules! select_by_column {
 macro_rules! delete_by_column {
     ( $table:path, $column:path, $value:expr, $connection:expr ) => {
         {
+            use diesel::ExecuteDsl;
+            use diesel::ExpressionMethods;
+            use diesel::FilterDsl;
+            use error;
+
             let result =
                 diesel::delete(
                     $table.filter(
                         $column.eq($value)))
                     .execute($connection);
+
+            let result: Result<(), error::Error> = match result {
+                Ok(_) => {
+                    Ok(())
+                }
+                Err(err) => {
+                    Err(err.into())
+                }
+            };
             result
         }
     };

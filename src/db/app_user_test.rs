@@ -4,9 +4,6 @@ extern crate uuid;
 use std::env;
 use std::str::FromStr;
 use diesel::Connection;
-use diesel::ExecuteDsl;
-use diesel::ExpressionMethods;
-use diesel::FilterDsl;
 use diesel::pg::PgConnection;
 use uuid::Uuid;
 

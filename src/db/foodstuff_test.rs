@@ -2,9 +2,6 @@ extern crate diesel;
 extern crate uuid;
 
 use diesel::Connection;
-use diesel::ExecuteDsl;
-use diesel::ExpressionMethods;
-use diesel::FilterDsl;
 use diesel::pg::PgConnection;
 use std::env;
 use std::str::FromStr;

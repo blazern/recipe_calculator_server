@@ -4,16 +4,12 @@ extern crate uuid;
 use std::env;
 use std::str::FromStr;
 use diesel::Connection;
-use diesel::ExecuteDsl;
-use diesel::ExpressionMethods;
-use diesel::FilterDsl;
 use diesel::pg::PgConnection;
 use uuid::Uuid;
 
 use db::app_user;
 use db::device;
 use schema;
-use error;
 
 include!("../testing_config.rs.inc");
 include!("psql_admin_url.rs.inc");
@@ -25,15 +21,6 @@ fn delete_entries_with(app_user_uid: &Uuid) {
         app_user_uid,
         schema::device::table,
         schema::device::app_user_id);
-}
-
-fn select_entry_with(uuid: &Uuid, pg_connection: &PgConnection) -> Option<device::Device> {
-    return select_by_column!(
-        device::Device,
-        schema::device::table,
-        schema::device::uuid,
-        uuid,
-        pg_connection).unwrap();
 }
 
 // NOTE: different UUIDs and VK IDs must be used in each tests, because tests are run in parallel
