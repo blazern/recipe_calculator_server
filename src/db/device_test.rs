@@ -87,3 +87,55 @@ fn multiple_devices_can_depend_on_single_app_user() {
     device::insert(device1, &pg_connection).unwrap();
     device::insert(device2, &pg_connection).unwrap();
 }
+
+#[test]
+fn can_select_by_uuid() {
+    let uuid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440004").unwrap();
+    let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440003").unwrap();
+    delete_entries_with(&app_user_uid);
+
+    let config = get_testing_config();
+    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+
+    let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+
+    let inserted_device = device::insert(device::new(uuid.clone(), &app_user), &pg_connection).unwrap();
+    let selected_device = device::select_by_uuid(&uuid, &pg_connection).unwrap().unwrap();
+
+    assert_eq!(inserted_device, selected_device);
+}
+
+#[test]
+fn can_delete_device_by_id() {
+    let uuid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440005").unwrap();
+    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440004").unwrap();
+    delete_entries_with(&uid);
+
+    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
+    let pg_connection = PgConnection::establish(&psql_admin_url).unwrap();
+
+    let inserted_user = app_user::insert(app_user::new(uid), &pg_connection).unwrap();
+    let inserted_device = device::insert(device::new(uuid, &inserted_user), &pg_connection).unwrap();
+
+    device::delete_by_id(inserted_device.id(), &pg_connection).unwrap();
+    let deleted_device = device::select_by_id(inserted_device.id(), &pg_connection).unwrap();
+
+    assert!(deleted_device.is_none());
+}
+
+#[test]
+fn cant_delete_device_with_client_connection() {
+    let uuid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440006").unwrap();
+    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440005").unwrap();
+    delete_entries_with(&uid);
+
+    let config = get_testing_config();
+    let pg_client_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+
+    let inserted_user = app_user::insert(app_user::new(uid), &pg_client_connection).unwrap();
+    let inserted_device = device::insert(device::new(uuid, &inserted_user), &pg_client_connection).unwrap();
+
+    let device_deletion_result = device::delete_by_id(inserted_device.id(), &pg_client_connection);
+
+    assert!(device_deletion_result.is_err());
+}

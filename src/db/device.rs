@@ -47,6 +47,14 @@ pub fn select_by_id(id: i32, connection: &PgConnection) -> Result<Option<Device>
     return select_by_column!(Device, schema::device::table, schema::device::id, id, connection);
 }
 
+pub fn select_by_uuid(uuid: &Uuid, connection: &PgConnection) -> Result<Option<Device>, Error> {
+    return select_by_column!(Device, schema::device::table, schema::device::uuid, uuid, connection);
+}
+
+pub fn delete_by_id(id: i32, connection: &PgConnection) -> Result<(), Error> {
+    return delete_by_column!(schema::device::table, schema::device::id, id, connection);
+}
+
 #[cfg(test)]
 #[path = "./device_test.rs"]
 mod device_test;
