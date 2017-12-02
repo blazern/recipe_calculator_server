@@ -11,3 +11,4 @@ pub mod error;
 pub mod command_line_args;
 pub mod config;
 pub mod vk;
+pub mod server;

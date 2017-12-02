@@ -15,4 +15,11 @@ error_chain! {
         DieselError(diesel::result::Error);
         UuidParseError(uuid::ParseError);
     }
+
+    errors {
+        DeviceIdAlreadyExists(device_id: uuid::Uuid) {
+            description("Given Device ID already exists"),
+            display("Given Device ID ('{}') already exists", device_id),
+        }
+    }
 }
