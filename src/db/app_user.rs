@@ -40,6 +40,14 @@ pub fn select_by_id(id: i32, connection: &PgConnection) -> Result<Option<AppUser
     return select_by_column!(AppUser, schema::app_user::table, schema::app_user::id, id, connection);
 }
 
+pub fn select_by_uid(uid: &Uuid, connection: &PgConnection) -> Result<Option<AppUser>, Error> {
+    return select_by_column!(AppUser, schema::app_user::table, schema::app_user::uid, uid, connection);
+}
+
+pub fn delete_by_id(id: i32, connection: &PgConnection) -> Result<(), Error> {
+    return delete_by_column!(schema::app_user::table, schema::app_user::id, id, connection);
+}
+
 #[cfg(test)]
 #[path = "./app_user_test.rs"]
 mod app_user_test;

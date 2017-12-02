@@ -61,3 +61,49 @@ fn cant_insert_user_with_already_used_uid() {
     let second_insertion_result = app_user::insert(user2, &pg_connection);
     assert!(second_insertion_result.is_err());
 }
+
+#[test]
+fn can_select_user_by_uid() {
+    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440004").unwrap();
+    delete_entry_with(&uid);
+
+    let config = get_testing_config();
+    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+
+    let inserted_user = app_user::insert(app_user::new(uid), &pg_connection).unwrap();
+
+    let selected_user = app_user::select_by_uid(&uid, &pg_connection).unwrap().unwrap();
+
+    assert_eq!(inserted_user, selected_user);
+}
+
+#[test]
+fn can_delete_user_by_id() {
+    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440005").unwrap();
+    delete_entry_with(&uid);
+
+    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
+    let pg_connection = PgConnection::establish(&psql_admin_url).unwrap();
+
+    let inserted_user = app_user::insert(app_user::new(uid), &pg_connection).unwrap();
+
+    app_user::delete_by_id(inserted_user.id(), &pg_connection).unwrap();
+    let deleted_user = app_user::select_by_uid(&uid, &pg_connection).unwrap();
+
+    assert!(deleted_user.is_none());
+}
+
+#[test]
+fn cant_delete_user_with_client_connection() {
+    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440006").unwrap();
+    delete_entry_with(&uid);
+
+    let config = get_testing_config();
+    let pg_client_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+
+    let inserted_user = app_user::insert(app_user::new(uid), &pg_client_connection).unwrap();
+
+    let user_deletion_result = app_user::delete_by_id(inserted_user.id(), &pg_client_connection);
+
+    assert!(user_deletion_result.is_err());
+}
