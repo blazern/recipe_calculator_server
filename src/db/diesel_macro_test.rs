@@ -1,32 +1,31 @@
 extern crate diesel;
 extern crate uuid;
 
-use std::env;
 use std::str::FromStr;
-use diesel::Connection;
 use diesel::ExecuteDsl;
 use diesel::ExpressionMethods;
 use diesel::FilterDsl;
 use diesel::OptionalExtension;
-use diesel::pg::PgConnection;
 use uuid::Uuid;
 
 use db::app_user;
 use db::app_user::AppUser;
+use db::connection::DBConnection;
+use db::diesel_connection;
+use db::error::Error;
+use db::error::ErrorKind;
 use db::foodstuff;
 use db::foodstuff::Foodstuff;
 use schema;
 
-include!("psql_admin_url.rs.inc");
-
 fn delete_user_by_uid(uid: &Uuid) {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
+    let raw_connection = diesel_connection(&connection);
 
     diesel::delete(
         schema::app_user::table.filter(
             schema::app_user::uid.eq(uid)))
-        .execute(&connection).unwrap();
+        .execute(raw_connection).unwrap();
 
     assert!(select_user_by_uid(uid).is_none());
 }
@@ -34,11 +33,11 @@ fn delete_user_by_uid(uid: &Uuid) {
 fn select_user_by_uid(uid: &Uuid) -> Option<AppUser> {
     use diesel::FirstDsl;
 
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
+    let raw_connection = diesel_connection(&connection);
 
     return schema::app_user::table.filter(schema::app_user::uid.eq(uid))
-        .first::<AppUser>(&connection).optional().unwrap();
+        .first::<AppUser>(raw_connection).optional().unwrap();
 }
 
 fn create_foodstuff(app_user: &AppUser, app_user_foodstuff_id: i32, name: String)
@@ -56,56 +55,56 @@ fn create_foodstuff(app_user: &AppUser, app_user_foodstuff_id: i32, name: String
 
 #[test]
 fn insert_macro_works() {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
+    let raw_connection = diesel_connection(&connection);
 
     let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440000").unwrap();
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
     let new_user = app_user::new(uid);
-    insert!(AppUser, new_user, schema::app_user::table, &connection).unwrap();
+    insert!(AppUser, new_user, schema::app_user::table, raw_connection).unwrap();
     assert!(select_user_by_uid(&uid).is_some());
 }
 
 #[test]
 fn select_macro_works() {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
+    let raw_connection = diesel_connection(&connection);
 
     let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440001").unwrap();
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
     let new_user = app_user::new(uid);
-    insert!(AppUser, new_user, schema::app_user::table, &connection).unwrap();
+    insert!(AppUser, new_user, schema::app_user::table, raw_connection).unwrap();
     assert!(select_user_by_uid(&uid).is_some());
 
-    let result = select_by_column!(AppUser, schema::app_user::table, schema::app_user::uid, &uid, &connection);
+    let result = select_by_column!(AppUser, schema::app_user::table, schema::app_user::uid, &uid, raw_connection);
     assert!(result.unwrap().is_some());
 }
 
 #[test]
 fn delete_macro_works() {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
+    let raw_connection = diesel_connection(&connection);
 
     let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440002").unwrap();
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
     let new_user = app_user::new(uid);
-    insert!(AppUser, new_user, schema::app_user::table, &connection).unwrap();
+    insert!(AppUser, new_user, schema::app_user::table, raw_connection).unwrap();
     assert!(select_user_by_uid(&uid).is_some());
 
-    delete_by_column!(schema::app_user::table, schema::app_user::uid, &uid, &connection).unwrap();
+    delete_by_column!(schema::app_user::table, schema::app_user::uid, &uid, raw_connection).unwrap();
     assert!(select_user_by_uid(&uid).is_none());
 }
 
 #[test]
 fn update_macro_works() {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
+    let raw_connection = diesel_connection(&connection);
 
     let uid1 = Uuid::from_str("550a8400-e29b-41d4-a716-446655440003").unwrap();
     let uid2 = Uuid::from_str("550a8400-e29b-41d4-a716-446655440004").unwrap();
@@ -114,7 +113,7 @@ fn update_macro_works() {
     assert!(select_user_by_uid(&uid1).is_none());
     assert!(select_user_by_uid(&uid2).is_none());
 
-    let inserted_user = insert!(AppUser, app_user::new(uid1), schema::app_user::table, &connection).unwrap();
+    let inserted_user = insert!(AppUser, app_user::new(uid1), schema::app_user::table, raw_connection).unwrap();
     assert!(select_user_by_uid(&uid1).is_some());
     assert!(select_user_by_uid(&uid2).is_none());
 
@@ -125,15 +124,15 @@ fn update_macro_works() {
         inserted_user.id(),
         schema::app_user::uid,
         &uid2,
-        &connection).unwrap();
+        raw_connection).unwrap();
     assert!(select_user_by_uid(&uid1).is_none());
     assert!(select_user_by_uid(&uid2).is_some());
 }
 
 #[test]
 fn update_macro_returns_updated_values() {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
+    let raw_connection = diesel_connection(&connection);
 
     // cleaning up
     let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440005").unwrap();
@@ -143,14 +142,14 @@ fn update_macro_returns_updated_values() {
             diesel::delete(
                 schema::foodstuff::table.filter(
                     schema::foodstuff::app_user_id.eq(user.id())))
-                .execute(&connection).unwrap();
+                .execute(raw_connection).unwrap();
         }
         _ => {}
     }
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
-    let user = insert!(AppUser, app_user::new(uid), schema::app_user::table, &connection).unwrap();
+    let user = insert!(AppUser, app_user::new(uid), schema::app_user::table, raw_connection).unwrap();
 
     let app_user_foodstuff_id1 = 1;
     let app_user_foodstuff_id2 = 2;
@@ -165,9 +164,9 @@ fn update_macro_returns_updated_values() {
     let foodstuff3 =
         create_foodstuff(&user, app_user_foodstuff_id3, name2.to_string());
 
-    let foodstuff1 = insert!(Foodstuff, foodstuff1, schema::foodstuff::table, &connection).unwrap();
-    let foodstuff2 = insert!(Foodstuff, foodstuff2, schema::foodstuff::table, &connection).unwrap();
-    let foodstuff3 = insert!(Foodstuff, foodstuff3, schema::foodstuff::table, &connection).unwrap();
+    let foodstuff1 = insert!(Foodstuff, foodstuff1, schema::foodstuff::table, raw_connection).unwrap();
+    let foodstuff2 = insert!(Foodstuff, foodstuff2, schema::foodstuff::table, raw_connection).unwrap();
+    let foodstuff3 = insert!(Foodstuff, foodstuff3, schema::foodstuff::table, raw_connection).unwrap();
 
     assert_eq!(foodstuff1.name(), foodstuff2.name());
     assert_ne!(foodstuff1.name(), foodstuff3.name());
@@ -181,10 +180,41 @@ fn update_macro_returns_updated_values() {
             &name1,
             schema::foodstuff::name,
             &new_name,
-            &connection).unwrap();
+            raw_connection).unwrap();
 
     assert_eq!(2, updated_foodstuffs.len());
     assert!(updated_foodstuffs.iter().all(|foodstuff| foodstuff.name() == new_name));
     assert!(updated_foodstuffs.iter().any(|foodstuff| foodstuff.id() == foodstuff1.id()));
     assert!(updated_foodstuffs.iter().any(|foodstuff| foodstuff.id() == foodstuff2.id()));
+}
+
+#[test]
+fn unique_violation_error_returned_on_unique_violation() {
+    let connection = DBConnection::for_admin_user().unwrap();
+    let raw_connection = diesel_connection(&connection);
+
+    let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440006").unwrap();
+    delete_user_by_uid(&uid);
+    assert!(select_user_by_uid(&uid).is_none());
+
+    let new_user1 = app_user::new(uid);
+    let new_user2 = app_user::new(uid);
+    insert!(AppUser, new_user1, schema::app_user::table, raw_connection).unwrap();
+
+    let second_insertion_result = insert!(AppUser, new_user2, schema::app_user::table, raw_connection);
+    match second_insertion_result {
+        Ok(_) => {
+            panic!("Insertion with uid-duplicate expected to fail");
+        }
+        Err(error) => {
+            match &error {
+                &Error(ErrorKind::UniqueViolation(_), _) => {
+                    // Ok
+                }
+                _ => {
+                    panic!("Unexpected error: {:?}", error);
+                }
+            }
+        }
+    }
 }

@@ -1,18 +1,16 @@
 extern crate diesel;
 extern crate uuid;
 
-use std::env;
 use std::str::FromStr;
-use diesel::Connection;
-use diesel::pg::PgConnection;
 use uuid::Uuid;
 
 use db::app_user;
+use db::connection::DBConnection;
+use db::diesel_connection;
 use db::vk_user;
 use schema;
 
 include!("../testing_config.rs.inc");
-include!("psql_admin_url.rs.inc");
 include!("testing_util.rs.inc");
 
 // Cleaning up before tests
@@ -33,18 +31,18 @@ fn insertion_and_selection_work() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
     let new_vk_user = vk_user::new(vk_uid, &app_user);
 
-    let inserted_vk_user = vk_user::insert(new_vk_user, &pg_connection).unwrap();
+    let inserted_vk_user = vk_user::insert(new_vk_user, &connection).unwrap();
     assert!(inserted_vk_user.id() > 0);
     assert_eq!(inserted_vk_user.vk_uid(), vk_uid);
     assert_eq!(app_user.id(), inserted_vk_user.app_user_id());
 
-    let selected_vk_user = vk_user::select_by_id(inserted_vk_user.id(), &pg_connection);
+    let selected_vk_user = vk_user::select_by_id(inserted_vk_user.id(), &connection);
     let selected_vk_user = selected_vk_user.unwrap().unwrap(); // unwrapping Result and Option
     assert_eq!(inserted_vk_user, selected_vk_user);
 }
@@ -56,16 +54,16 @@ fn cant_insert_vk_user_with_already_used_vk_uid() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
     let vk_user_copy1 = vk_user::new(vk_uid, &app_user);
     let vk_user_copy2 = vk_user::new(vk_uid, &app_user);
 
-    vk_user::insert(vk_user_copy1, &pg_connection).unwrap();
+    vk_user::insert(vk_user_copy1, &connection).unwrap();
 
-    let second_insertion_result = vk_user::insert(vk_user_copy2, &pg_connection);
+    let second_insertion_result = vk_user::insert(vk_user_copy2, &connection);
     assert!(second_insertion_result.is_err());
 }
 
@@ -78,15 +76,15 @@ fn multiple_vk_users_cannot_depend_on_single_app_user() {
 
 
     let config = get_testing_config();
-    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
     let vk_user1 = vk_user::new(vk_uid1, &app_user);
     let vk_user2 = vk_user::new(vk_uid2, &app_user);
 
-    vk_user::insert(vk_user1, &pg_connection).unwrap();
+    vk_user::insert(vk_user1, &connection).unwrap();
 
-    let second_user_selection_result = vk_user::insert(vk_user2, &pg_connection);
+    let second_user_selection_result = vk_user::insert(vk_user2, &connection);
     assert!(second_user_selection_result.is_err());
 }

@@ -1,18 +1,16 @@
 extern crate diesel;
 extern crate uuid;
 
-use diesel::Connection;
-use diesel::pg::PgConnection;
-use std::env;
 use std::str::FromStr;
 use uuid::Uuid;
 
 use db::app_user;
+use db::connection::DBConnection;
+use db::diesel_connection;
 use db::foodstuff;
 use schema;
 
 include!("../testing_config.rs.inc");
-include!("psql_admin_url.rs.inc");
 include!("testing_util.rs.inc");
 
 const FOODSTUFF_NAME: &'static str = "foodstuff name for tests";
@@ -37,7 +35,7 @@ fn insertion_and_selection_work() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -70,7 +68,7 @@ fn multiple_foodstuffs_can_depend_on_single_app_user() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -106,7 +104,7 @@ fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -142,7 +140,7 @@ fn can_make_foodstuff_unlisted() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -170,7 +168,7 @@ fn making_already_unlisted_foodstuff_unlisted_does_nothing() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 

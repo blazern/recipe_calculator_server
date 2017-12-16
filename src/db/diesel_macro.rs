@@ -2,17 +2,23 @@
 macro_rules! insert {
     ( $ResultType:ty, $new_item:expr, $table:path, $connection:expr ) => {
         {
-            use diesel::LoadDsl;
             use diesel;
-            use error;
+            use diesel::LoadDsl;
+            use diesel::result::DatabaseErrorKind as DieselDatabaseErrorKind;
+            use diesel::result::Error as DieselError;
+            use diesel::result::Error::DatabaseError as DieselDatabaseError;
+            use db::error;
 
-            let result: Result<$ResultType, diesel::result::Error> = diesel::insert(&$new_item)
+            let result: Result<$ResultType, DieselError> = diesel::insert(&$new_item)
                 .into($table)
                 .get_result($connection);
 
             let result: Result<$ResultType, error::Error> = match result {
                 Ok(val) => {
                     Ok(val)
+                }
+                Err(error @ DieselDatabaseError(DieselDatabaseErrorKind::UniqueViolation, _)) => {
+                    Err(error::ErrorKind::UniqueViolation(error).into())
                 }
                 Err(error) => {
                     Err(error.into())
@@ -30,7 +36,7 @@ macro_rules! select_by_column {
             use diesel::ExpressionMethods;
             use diesel::FirstDsl;
             use diesel::FilterDsl;
-            use error;
+            use db::error;
 
             let result = $table.filter($column.eq($value)).first::<$Type>($connection);
             let result: Result<Option<$Type>, error::Error> = match result {
@@ -56,7 +62,7 @@ macro_rules! delete_by_column {
             use diesel::ExecuteDsl;
             use diesel::ExpressionMethods;
             use diesel::FilterDsl;
-            use error;
+            use db::error;
 
             let result =
                 diesel::delete(
@@ -90,7 +96,7 @@ macro_rules! update_column {
             use diesel::ExpressionMethods;
             use diesel::FilterDsl;
             use diesel::LoadDsl;
-            use error;
+            use db::error;
 
             let target = $table.filter($searched_column.eq($searched_value));
             let results: Result<Vec<$Type>, diesel::result::Error> =

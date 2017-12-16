@@ -1,10 +1,11 @@
 use diesel;
-use diesel::pg::PgConnection;
 
 use schema;
 use schema::foodstuff;
-use error::Error;
 use super::app_user::AppUser;
+use super::connection::DBConnection;
+use super::diesel_connection;
+use super::error::Error;
 
 #[derive(Insertable)]
 #[table_name="foodstuff"]
@@ -90,20 +91,20 @@ pub fn new(
         is_listed: is_listed
     }
 }
-pub fn insert(foodstuff: NewFoodstuff, connection: &PgConnection) -> Result<Foodstuff, Error> {
-    return insert!(Foodstuff, foodstuff, schema::foodstuff::table, connection);
+pub fn insert(foodstuff: NewFoodstuff, connection: &DBConnection) -> Result<Foodstuff, Error> {
+    return insert!(Foodstuff, foodstuff, schema::foodstuff::table, diesel_connection(connection));
 }
 
-pub fn select_by_id(id: i32, connection: &PgConnection) -> Result<Option<Foodstuff>, Error> {
+pub fn select_by_id(id: i32, connection: &DBConnection) -> Result<Option<Foodstuff>, Error> {
     return select_by_column!(
         Foodstuff,
         schema::foodstuff::table,
         schema::foodstuff::id,
         id,
-        connection);
+        diesel_connection(connection));
 }
 
-pub fn unlist(foodstuff: Foodstuff, connection: &PgConnection) -> Result<Foodstuff, Error> {
+pub fn unlist(foodstuff: Foodstuff, connection: &DBConnection) -> Result<Foodstuff, Error> {
     let result =
         update_column!(
             Foodstuff,
@@ -112,7 +113,7 @@ pub fn unlist(foodstuff: Foodstuff, connection: &PgConnection) -> Result<Foodstu
             foodstuff.id(),
             schema::foodstuff::is_listed,
             false,
-            connection);
+            diesel_connection(connection));
 
     return match result {
         Ok(mut vec) => {

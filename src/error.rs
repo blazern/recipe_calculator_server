@@ -12,14 +12,6 @@ error_chain! {
         SerdeJson(serde_json::error::Error);
         Reqwest(reqwest::Error);
         UrlParse(url::ParseError);
-        DieselError(diesel::result::Error);
         UuidParseError(uuid::ParseError);
-    }
-
-    errors {
-        DeviceIdAlreadyExists(device_id: uuid::Uuid) {
-            description("Given Device ID already exists"),
-            display("Given Device ID ('{}') already exists", device_id),
-        }
     }
 }

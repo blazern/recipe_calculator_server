@@ -1,18 +1,16 @@
 extern crate diesel;
 extern crate uuid;
 
-use std::env;
 use std::str::FromStr;
-use diesel::Connection;
-use diesel::pg::PgConnection;
 use uuid::Uuid;
 
 use db::app_user;
+use db::connection::DBConnection;
 use db::device;
+use db::diesel_connection;
 use schema;
 
 include!("../testing_config.rs.inc");
-include!("psql_admin_url.rs.inc");
 include!("testing_util.rs.inc");
 
 // Cleaning up before tests
@@ -33,18 +31,18 @@ fn insertion_and_selection_work() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
     let new_device = device::new(uuid, &app_user);
 
-    let inserted_device = device::insert(new_device, &pg_connection).unwrap();
+    let inserted_device = device::insert(new_device, &connection).unwrap();
     assert!(inserted_device.id() > 0);
     assert_eq!(*inserted_device.uuid(), uuid);
     assert_eq!(app_user.id(), inserted_device.app_user_id());
 
-    let selected_device = device::select_by_id(inserted_device.id(), &pg_connection);
+    let selected_device = device::select_by_id(inserted_device.id(), &connection);
     let selected_device = selected_device.unwrap().unwrap(); // unwrapping Result and Option
     assert_eq!(inserted_device, selected_device);
 }
@@ -56,16 +54,16 @@ fn cant_insert_device_with_already_used_uuid() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
     let device_copy1 = device::new(uuid, &app_user);
     let device_copy2 = device::new(uuid, &app_user);
 
-    device::insert(device_copy1, &pg_connection).unwrap();
+    device::insert(device_copy1, &connection).unwrap();
 
-    let second_insertion_result = device::insert(device_copy2, &pg_connection);
+    let second_insertion_result = device::insert(device_copy2, &connection);
     assert!(second_insertion_result.is_err());
 }
 
@@ -77,15 +75,15 @@ fn multiple_devices_can_depend_on_single_app_user() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
     let device1 = device::new(uuid1, &app_user);
     let device2 = device::new(uuid2, &app_user);
 
-    device::insert(device1, &pg_connection).unwrap();
-    device::insert(device2, &pg_connection).unwrap();
+    device::insert(device1, &connection).unwrap();
+    device::insert(device2, &connection).unwrap();
 }
 
 #[test]
@@ -95,12 +93,12 @@ fn can_select_by_uuid() {
     delete_entries_with(&app_user_uid);
 
     let config = get_testing_config();
-    let pg_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &pg_connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
-    let inserted_device = device::insert(device::new(uuid.clone(), &app_user), &pg_connection).unwrap();
-    let selected_device = device::select_by_uuid(&uuid, &pg_connection).unwrap().unwrap();
+    let inserted_device = device::insert(device::new(uuid.clone(), &app_user), &connection).unwrap();
+    let selected_device = device::select_by_uuid(&uuid, &connection).unwrap().unwrap();
 
     assert_eq!(inserted_device, selected_device);
 }
@@ -111,14 +109,13 @@ fn can_delete_device_by_id() {
     let uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440004").unwrap();
     delete_entries_with(&uid);
 
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let pg_connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
 
-    let inserted_user = app_user::insert(app_user::new(uid), &pg_connection).unwrap();
-    let inserted_device = device::insert(device::new(uuid, &inserted_user), &pg_connection).unwrap();
+    let inserted_user = app_user::insert(app_user::new(uid), &connection).unwrap();
+    let inserted_device = device::insert(device::new(uuid, &inserted_user), &connection).unwrap();
 
-    device::delete_by_id(inserted_device.id(), &pg_connection).unwrap();
-    let deleted_device = device::select_by_id(inserted_device.id(), &pg_connection).unwrap();
+    device::delete_by_id(inserted_device.id(), &connection).unwrap();
+    let deleted_device = device::select_by_id(inserted_device.id(), &connection).unwrap();
 
     assert!(deleted_device.is_none());
 }
@@ -130,7 +127,7 @@ fn cant_delete_device_with_client_connection() {
     delete_entries_with(&uid);
 
     let config = get_testing_config();
-    let pg_client_connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let pg_client_connection = DBConnection::for_client_user(&config).unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &pg_client_connection).unwrap();
     let inserted_device = device::insert(device::new(uuid, &inserted_user), &pg_client_connection).unwrap();

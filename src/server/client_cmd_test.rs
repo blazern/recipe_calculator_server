@@ -1,21 +1,18 @@
 extern crate diesel;
 extern crate uuid;
 
-use std::env;
 use std::str::FromStr;
 
-use diesel::Connection;
-use diesel::pg::PgConnection;
 use uuid::Uuid;
 
+use server::error::Error;
+use server::error::ErrorKind::DeviceIdDuplicationError;
 use db::app_user;
+use db::connection::DBConnection;
 use db::device;
-use error;
 use server::client_cmd;
 
 include!("../testing_config.rs.inc");
-// TODO: put entire 'db' module under abstraction, removing all mentions of psql from other modules.
-include!("../db/psql_admin_url.rs.inc");
 
 struct SameUidGenerator {
     uid: Uuid,
@@ -37,8 +34,7 @@ impl client_cmd::UserAppUidGenerator for SameUidGenerator {
 
 // Cleaning up before tests
 fn delete_app_user_with(uid: &Uuid) {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
 
     let selected_app_user = app_user::select_by_uid(&uid, &connection);
     match selected_app_user {
@@ -50,8 +46,7 @@ fn delete_app_user_with(uid: &Uuid) {
 }
 
 fn delete_device_with(device_uuid: &Uuid) {
-    let psql_admin_url = env::var(PSQL_ADMIN_URL).unwrap();
-    let connection = PgConnection::establish(&psql_admin_url).unwrap();
+    let connection = DBConnection::for_admin_user().unwrap();
 
     let selected_device = device::select_by_uuid(&device_uuid, &connection);
     match selected_device {
@@ -70,7 +65,7 @@ fn device_registration_works() {
     delete_app_user_with(&uid);
 
     let config = get_testing_config();
-    let connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
     let mut uid_generator = SameUidGenerator::new(uid.clone());
     client_cmd::register_device_by_uid_generator(&mut uid_generator, device_uuid.clone(), &connection).unwrap();
@@ -91,7 +86,7 @@ fn device_registration_returns_device_id_duplication_error_on_duplication() {
     delete_app_user_with(&uid2);
 
     let config = get_testing_config();
-    let connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
     let mut uid_generator1 = SameUidGenerator::new(uid1.clone());
     let mut uid_generator2 = SameUidGenerator::new(uid2.clone());
@@ -100,7 +95,7 @@ fn device_registration_returns_device_id_duplication_error_on_duplication() {
     let second_registration_result =
         client_cmd::register_device_by_uid_generator(&mut uid_generator2, device_uuid.clone(), &connection);
     match second_registration_result {
-        Err(error::Error(error::ErrorKind::DeviceIdAlreadyExists(_), _)) => {
+        Err(Error(DeviceIdDuplicationError(_, _), _)) => {
              // OK
         }
         Err(err) => {
@@ -118,7 +113,7 @@ fn app_user_creation_is_repeated_on_uid_collisions() {
     delete_app_user_with(&uid);
 
     let config = get_testing_config();
-    let connection = PgConnection::establish(config.psql_diesel_url_client_user()).unwrap();
+    let connection = DBConnection::for_client_user(&config).unwrap();
 
     // Ensuring that AppUser with used uid already exists in DB
     let inserted_app_user = app_user::insert(app_user::new(uid.clone()), &connection);
