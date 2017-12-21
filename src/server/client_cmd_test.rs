@@ -7,9 +7,9 @@ use uuid::Uuid;
 
 use server::error::Error;
 use server::error::ErrorKind::DeviceIdDuplicationError;
-use db::app_user;
-use db::connection::DBConnection;
-use db::device;
+use db::core::app_user;
+use db::core::connection::DBConnection;
+use db::core::device;
 use server::client_cmd;
 
 include!("../testing_config.rs.inc");

@@ -5,8 +5,8 @@ use diesel::Connection;
 use diesel::pg::PgConnection;
 
 use super::error::Error;
+use super::error::ErrorKind;
 use config::Config;
-use db::error::ErrorKind;
 
 pub struct DBConnection {
     diesel_connection: PgConnection,

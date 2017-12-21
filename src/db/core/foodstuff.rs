@@ -80,15 +80,16 @@ pub fn new(
         carbs: f32,
         calories: f32,
         is_listed: bool) -> NewFoodstuff {
+    let app_user_id = app_user.id();
     NewFoodstuff {
-        app_user_id: app_user.id(),
-        app_user_foodstuff_id: app_user_foodstuff_id,
-        name: name,
-        protein: protein,
-        fats: fats,
-        carbs: carbs,
-        calories: calories,
-        is_listed: is_listed
+        app_user_id,
+        app_user_foodstuff_id,
+        name,
+        protein,
+        fats,
+        carbs,
+        calories,
+        is_listed
     }
 }
 pub fn insert(foodstuff: NewFoodstuff, connection: &DBConnection) -> Result<Foodstuff, Error> {

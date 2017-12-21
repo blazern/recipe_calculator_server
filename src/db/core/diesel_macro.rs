@@ -7,7 +7,7 @@ macro_rules! insert {
             use diesel::result::DatabaseErrorKind as DieselDatabaseErrorKind;
             use diesel::result::Error as DieselError;
             use diesel::result::Error::DatabaseError as DieselDatabaseError;
-            use db::error;
+            use db::core::error;
 
             let result: Result<$ResultType, DieselError> = diesel::insert(&$new_item)
                 .into($table)
@@ -36,7 +36,7 @@ macro_rules! select_by_column {
             use diesel::ExpressionMethods;
             use diesel::FirstDsl;
             use diesel::FilterDsl;
-            use db::error;
+            use db::core::error;
 
             let result = $table.filter($column.eq($value)).first::<$Type>($connection);
             let result: Result<Option<$Type>, error::Error> = match result {
@@ -62,7 +62,7 @@ macro_rules! delete_by_column {
             use diesel::ExecuteDsl;
             use diesel::ExpressionMethods;
             use diesel::FilterDsl;
-            use db::error;
+            use db::core::error;
 
             let result =
                 diesel::delete(
@@ -96,7 +96,7 @@ macro_rules! update_column {
             use diesel::ExpressionMethods;
             use diesel::FilterDsl;
             use diesel::LoadDsl;
-            use db::error;
+            use db::core::error;
 
             let target = $table.filter($searched_column.eq($searched_value));
             let results: Result<Vec<$Type>, diesel::result::Error> =

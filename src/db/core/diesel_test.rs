@@ -6,10 +6,10 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use db;
-use db::app_user;
-use db::app_user::AppUser;
-use db::connection::DBConnection;
-use db::diesel_connection;
+use db::core::app_user;
+use db::core::app_user::AppUser;
+use db::core::connection::DBConnection;
+use db::core::diesel_connection;
 use schema;
 
 #[test]
@@ -24,7 +24,7 @@ fn transition_rolls_back_progress_when_interrupted() {
 
     let invalid_id_value = -1;
     let mut id: i32 = invalid_id_value;
-    let transaction_result = connection.transaction::<(), db::error::Error, _>(|| {
+    let transaction_result = connection.transaction::<(), db::core::error::Error, _>(|| {
         let new_user = app_user::new(uid);
         let user = insert!(AppUser, new_user, schema::app_user::table, connection);
         let user = user.unwrap();

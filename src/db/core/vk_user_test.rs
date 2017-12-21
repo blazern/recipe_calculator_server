@@ -4,13 +4,13 @@ extern crate uuid;
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::app_user;
-use db::connection::DBConnection;
-use db::diesel_connection;
-use db::vk_user;
+use db::core::app_user;
+use db::core::connection::DBConnection;
+use db::core::diesel_connection;
+use db::core::vk_user;
 use schema;
 
-include!("../testing_config.rs.inc");
+include!("../../testing_config.rs.inc");
 include!("testing_util.rs.inc");
 
 // Cleaning up before tests

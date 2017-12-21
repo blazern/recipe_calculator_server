@@ -3,11 +3,11 @@ use uuid::Uuid;
 use super::error::Error;
 use super::error::ErrorKind::DeviceIdDuplicationError;
 use super::error::ErrorKind::AppUserUniqueIdCreationError;
-use db::app_user;
-use db::connection::DBConnection;
-use db::device;
-use db::error::Error as DBError;
-use db::error::ErrorKind as DBErrorKind;
+use db::core::app_user;
+use db::core::connection::DBConnection;
+use db::core::device;
+use db::core::error::Error as DBError;
+use db::core::error::ErrorKind as DBErrorKind;
 
 const DUPLICATED_APP_USER_UID_MAX_STREAK: i32 = 5;
 

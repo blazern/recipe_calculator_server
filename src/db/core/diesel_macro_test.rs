@@ -8,14 +8,14 @@ use diesel::FilterDsl;
 use diesel::OptionalExtension;
 use uuid::Uuid;
 
-use db::app_user;
-use db::app_user::AppUser;
-use db::connection::DBConnection;
-use db::diesel_connection;
-use db::error::Error;
-use db::error::ErrorKind;
-use db::foodstuff;
-use db::foodstuff::Foodstuff;
+use db::core::app_user;
+use db::core::app_user::AppUser;
+use db::core::connection::DBConnection;
+use db::core::diesel_connection;
+use db::core::error::Error;
+use db::core::error::ErrorKind;
+use db::core::foodstuff;
+use db::core::foodstuff::Foodstuff;
 use schema;
 
 fn delete_user_by_uid(uid: &Uuid) {

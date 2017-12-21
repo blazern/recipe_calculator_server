@@ -1,7 +1,7 @@
 use super::DBConnection;
 use config::Config;
 
-include!("../testing_config.rs.inc");
+include!("../../testing_config.rs.inc");
 
 #[test]
 fn connection_constructs_with_valid_config() {
