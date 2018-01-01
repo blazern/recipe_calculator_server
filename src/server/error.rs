@@ -3,7 +3,7 @@ use db;
 
 error_chain! {
     links {
-        Another(db::core::error::Error, db::core::error::ErrorKind);
+        DBCoreError(db::core::error::Error, db::core::error::ErrorKind);
     }
 
     errors {
