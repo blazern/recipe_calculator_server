@@ -1,11 +1,10 @@
 use super::DBConnection;
 use config::Config;
-
-include!("../../testing_config.rs.inc");
+use testing_config;
 
 #[test]
 fn connection_constructs_with_valid_config() {
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config);
     connection.unwrap();
 }

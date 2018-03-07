@@ -8,10 +8,9 @@ use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::device;
 use db::core::diesel_connection;
+use db::core::testing_util;
 use schema;
-
-include!("../../testing_config.rs.inc");
-include!("testing_util.rs.inc");
+use testing_config;
 
 // Cleaning up before tests
 fn delete_entries_with(app_user_uid: &Uuid) {
@@ -30,7 +29,7 @@ fn insertion_and_selection_work() {
     let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440000").unwrap();
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
@@ -53,7 +52,7 @@ fn cant_insert_device_with_already_used_uuid() {
     let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440001").unwrap();
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
@@ -74,7 +73,7 @@ fn multiple_devices_can_depend_on_single_app_user() {
     let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440002").unwrap();
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
@@ -92,7 +91,7 @@ fn can_select_by_uuid() {
     let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440003").unwrap();
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
@@ -126,7 +125,7 @@ fn cant_delete_device_with_client_connection() {
     let uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440005").unwrap();
     delete_entries_with(&uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let pg_client_connection = DBConnection::for_client_user(&config).unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &pg_client_connection).unwrap();

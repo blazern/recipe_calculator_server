@@ -33,8 +33,7 @@ impl DBConnection {
         }
     }
 
-    // TODO compile for tests only somehow. Maybe there's a #[for_tests] attribute of some sort?
-    // Will work only in tests
+    #[cfg(test)]
     pub fn for_admin_user() -> Result<DBConnection, Error> {
         return Self::from_raw_params(&env::var("RECIPE_CALCULATOR_SERVER_PSQL_URL_USER_ADMIN").unwrap());
     }

@@ -8,10 +8,9 @@ use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::diesel_connection;
 use db::core::foodstuff;
+use db::core::testing_util;
 use schema;
-
-include!("../../testing_config.rs.inc");
-include!("testing_util.rs.inc");
+use testing_config;
 
 const FOODSTUFF_NAME: &'static str = "foodstuff name for tests";
 const FOODSTUFF_PROTEIN: f32 = 123456789_f32;
@@ -34,7 +33,7 @@ fn insertion_and_selection_work() {
 
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
@@ -67,7 +66,7 @@ fn multiple_foodstuffs_can_depend_on_single_app_user() {
 
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
@@ -103,7 +102,7 @@ fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
 
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
@@ -139,7 +138,7 @@ fn can_make_foodstuff_unlisted() {
 
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
@@ -167,7 +166,7 @@ fn making_already_unlisted_foodstuff_unlisted_does_nothing() {
 
     delete_entries_with(&app_user_uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();

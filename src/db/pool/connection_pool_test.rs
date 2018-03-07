@@ -1,10 +1,9 @@
 use super::ConnectionPool;
-
-include!("../../testing_config.rs.inc");
+use testing_config;
 
 #[test]
 fn can_borrow_and_put_back() {
-    let config = get_testing_config();
+    let config = testing_config::get();
 
     let mut pool = ConnectionPool::for_client_user(config);
 
@@ -14,7 +13,7 @@ fn can_borrow_and_put_back() {
 
 #[test]
 fn connections_are_reused() {
-    let config = get_testing_config();
+    let config = testing_config::get();
 
     let mut pool = ConnectionPool::for_client_user(config);
     let initial_connections_count = pool.pooled_connections_count();

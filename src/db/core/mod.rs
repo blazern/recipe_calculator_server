@@ -1,6 +1,10 @@
 #[macro_use]
 mod diesel_macro;
 
+#[cfg(test)]
+#[macro_use]
+mod testing_util;
+
 pub mod app_user;
 pub mod connection;
 pub mod device;

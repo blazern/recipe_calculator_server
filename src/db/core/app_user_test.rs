@@ -8,8 +8,7 @@ use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::diesel_connection;
 use schema;
-
-include!("../../testing_config.rs.inc");
+use testing_config;
 
 // Cleaning up before tests
 fn delete_entry_with(uid: &Uuid) {
@@ -30,7 +29,7 @@ fn insertion_and_selection_work() {
     let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440000").unwrap();
     delete_entry_with(&uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let new_user = app_user::new(uid);
     let connection = DBConnection::for_client_user(&config).unwrap();
 
@@ -48,7 +47,7 @@ fn cant_insert_user_with_already_used_uid() {
     let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440002").unwrap();
     delete_entry_with(&uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let user1 = app_user::new(uid);
@@ -65,7 +64,7 @@ fn can_select_user_by_uid() {
     let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440004").unwrap();
     delete_entry_with(&uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &connection).unwrap();
@@ -95,7 +94,7 @@ fn cant_delete_user_with_client_connection() {
     let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440006").unwrap();
     delete_entry_with(&uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let pg_client_connection = DBConnection::for_client_user(&config).unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &pg_client_connection).unwrap();

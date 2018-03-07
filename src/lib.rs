@@ -5,6 +5,7 @@
 #[macro_use] extern crate error_chain;
 extern crate reqwest;
 extern crate uuid;
+#[cfg(test)] pub mod testing_config;
 pub mod schema;
 pub mod db;
 pub mod error;

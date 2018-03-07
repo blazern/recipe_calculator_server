@@ -11,8 +11,7 @@ use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::device;
 use server::client_cmd;
-
-include!("../testing_config.rs.inc");
+use testing_config;
 
 struct SameUidGenerator {
     uid: Uuid,
@@ -64,7 +63,7 @@ fn device_registration_works() {
     delete_device_with(&device_uuid);
     delete_app_user_with(&uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let mut uid_generator = SameUidGenerator::new(uid.clone());
@@ -85,7 +84,7 @@ fn device_registration_returns_device_id_duplication_error_on_duplication() {
     delete_app_user_with(&uid1);
     delete_app_user_with(&uid2);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     let mut uid_generator1 = SameUidGenerator::new(uid1.clone());
@@ -112,7 +111,7 @@ fn app_user_creation_is_repeated_on_uid_collisions() {
     let uid = Uuid::from_str("50008400-e29b-41d4-a716-446655440003").unwrap();
     delete_app_user_with(&uid);
 
-    let config = get_testing_config();
+    let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
     // Ensuring that AppUser with used uid already exists in DB

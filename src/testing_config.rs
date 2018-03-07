@@ -1,8 +1,7 @@
-#[allow(unused_imports)]
 use config;
 
-#[warn(dead_code)]
-fn get_testing_config() -> config::Config {
+#[cfg(test)]
+pub fn get() -> config::Config {
     use std;
 
     let config_path = std::env::var("CONFIG_FILE_PATH");
