@@ -1,5 +1,3 @@
-use std::env;
-
 use diesel;
 use diesel::Connection;
 use diesel::pg::PgConnection;
@@ -35,6 +33,7 @@ impl DBConnection {
 
     #[cfg(test)]
     pub fn for_admin_user() -> Result<DBConnection, Error> {
+        use std::env;
         return Self::from_raw_params(&env::var("RECIPE_CALCULATOR_SERVER_PSQL_URL_USER_ADMIN").unwrap());
     }
 

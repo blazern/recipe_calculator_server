@@ -8,7 +8,6 @@ use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::diesel_connection;
 use db::core::vk_user;
-use db::core::testing_util;
 use schema;
 use testing_config;
 
