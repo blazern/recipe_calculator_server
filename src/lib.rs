@@ -3,6 +3,8 @@
 #[macro_use] extern crate diesel_codegen;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate error_chain;
+extern crate hyper;
+extern crate futures;
 extern crate reqwest;
 extern crate uuid;
 #[cfg(test)] pub mod testing_config;

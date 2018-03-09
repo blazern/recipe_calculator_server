@@ -22,6 +22,10 @@ time = "0.1"
 reqwest = "0.7.3"
 url = "1.5.1"
 
+# HTTP server
+futures = "0.1.14"
+hyper = "0.11.2"
+
 # diesel
 dotenv = "0.10.*"
 diesel = { version = "0.16.0", features = ["postgres", "uuid"] }
