@@ -17,5 +17,9 @@ error_chain! {
             description("Unique constraint violation"),
             display("Unique constraint violation: {:?}", diesel_error),
         }
+        TransactionError(diesel_error: diesel::result::Error) {
+            description("Transaction error"),
+            display("Transaction error: {:?}", diesel_error),
+        }
     }
 }

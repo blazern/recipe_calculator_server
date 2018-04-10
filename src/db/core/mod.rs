@@ -10,6 +10,7 @@ pub mod connection;
 pub mod device;
 pub mod error;
 pub mod foodstuff;
+pub mod transaction;
 pub mod vk_user;
 
 // Implementation details.
