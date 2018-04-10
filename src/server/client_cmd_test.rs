@@ -6,28 +6,26 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use server::error::Error;
-use server::error::ErrorKind::DeviceIdDuplicationError;
+use server::error::ErrorKind::UniqueUuidCreationError;
 use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::device;
 use server::client_cmd;
 use testing_config;
 
-struct SameUidGenerator {
-    uid: Uuid,
-    generations_count: i32,
+struct SameUuidGenerator {
+    uuid: Uuid,
 }
 
-impl SameUidGenerator {
-    fn new(uid: Uuid) -> SameUidGenerator {
-        SameUidGenerator{ uid, generations_count: 0 }
+impl SameUuidGenerator {
+    fn new(uid: Uuid) -> SameUuidGenerator {
+        SameUuidGenerator{ uuid: uid }
     }
 }
 
-impl client_cmd::UserAppUidGenerator for SameUidGenerator {
+impl client_cmd::UuidGenerator for SameUuidGenerator {
     fn generate(&mut self) -> Uuid {
-        self.generations_count += 1;
-        return self.uid.clone();
+        return self.uuid.clone();
     }
 }
 
@@ -66,8 +64,9 @@ fn device_registration_works() {
     let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let mut uid_generator = SameUidGenerator::new(uid.clone());
-    client_cmd::register_device_by_uid_generator(&mut uid_generator, device_uuid.clone(), &connection).unwrap();
+    let mut uid_generator = SameUuidGenerator::new(uid.clone());
+    let mut device_id_generator = SameUuidGenerator::new(device_uuid.clone());
+    client_cmd::register_device_by_uuid_generator(&mut uid_generator, &mut device_id_generator, &connection).unwrap();
 
     // making sure device is inserted
     device::select_by_uuid(&device_uuid, &connection).unwrap().unwrap();
@@ -76,7 +75,7 @@ fn device_registration_works() {
 }
 
 #[test]
-fn device_registration_returns_device_id_duplication_error_on_duplication() {
+fn device_registration_returns_duplication_error_on_device_id_duplication() {
     let uid1 = Uuid::from_str("50008400-e29b-41d4-a716-446655440001").unwrap();
     let uid2 = Uuid::from_str("50008400-e29b-41d4-a716-446655440002").unwrap();
     let device_uuid = Uuid::from_str("60008400-e29b-41d4-a716-446655440001").unwrap();
@@ -87,43 +86,104 @@ fn device_registration_returns_device_id_duplication_error_on_duplication() {
     let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
-    let mut uid_generator1 = SameUidGenerator::new(uid1.clone());
-    let mut uid_generator2 = SameUidGenerator::new(uid2.clone());
-    client_cmd::register_device_by_uid_generator(&mut uid_generator1, device_uuid.clone(), &connection).unwrap();
+    let mut uid_generator1 = SameUuidGenerator::new(uid1.clone());
+    let mut uid_generator2 = SameUuidGenerator::new(uid2.clone());
+    let mut device_id_generator = SameUuidGenerator::new(device_uuid.clone());
+    client_cmd::register_device_by_uuid_generator(&mut uid_generator1, &mut device_id_generator, &connection).unwrap();
 
     let second_registration_result =
-        client_cmd::register_device_by_uid_generator(&mut uid_generator2, device_uuid.clone(), &connection);
+        client_cmd::register_device_by_uuid_generator(&mut uid_generator2, &mut device_id_generator, &connection);
     match second_registration_result {
-        Err(Error(DeviceIdDuplicationError(_, _), _)) => {
+        Err(Error(UniqueUuidCreationError(_), _)) => {
              // OK
         }
         Err(err) => {
-            panic!("Expected error::DeviceIdAlreadyExists, but got another error: {:?}", err);
+            panic!("Expected error::UniqueUuidCreationError, but got another error: {:?}", err);
         }
         Ok(_) => {
-            panic!("Expected error::DeviceIdAlreadyExists, but registration was successful!");
+            panic!("Expected error::UniqueUuidCreationError, but registration was successful!");
         }
     }
 }
 
 #[test]
-fn app_user_creation_is_repeated_on_uid_collisions() {
+fn device_registration_returns_duplication_error_on_uid_duplication() {
     let uid = Uuid::from_str("50008400-e29b-41d4-a716-446655440003").unwrap();
+    let device_uuid1 = Uuid::from_str("60008400-e29b-41d4-a716-446655440002").unwrap();
+    let device_uuid2 = Uuid::from_str("60008400-e29b-41d4-a716-446655440003").unwrap();
+    delete_device_with(&device_uuid1);
+    delete_device_with(&device_uuid2);
     delete_app_user_with(&uid);
 
     let config = testing_config::get();
     let connection = DBConnection::for_client_user(&config).unwrap();
 
-    // Ensuring that AppUser with used uid already exists in DB
-    let inserted_app_user = app_user::insert(app_user::new(uid.clone()), &connection);
-    // Stop compiler's unused var warning
-    assert!(inserted_app_user.is_ok() || inserted_app_user.is_err());
+    let mut uid_generator = SameUuidGenerator::new(uid.clone());
+    let mut device_id_generator1 = SameUuidGenerator::new(device_uuid1.clone());
+    let mut device_id_generator2 = SameUuidGenerator::new(device_uuid2.clone());
+    client_cmd::register_device_by_uuid_generator(&mut uid_generator, &mut device_id_generator1, &connection).unwrap();
 
-    let mut uid_generator = SameUidGenerator::new(uid);
-    {
-        let app_creation_result = client_cmd::create_app_user_by_uid_generator(&mut uid_generator, &connection);
-        assert!(app_creation_result.is_err());
+    let second_registration_result =
+        client_cmd::register_device_by_uuid_generator(&mut uid_generator, &mut device_id_generator2, &connection);
+    match second_registration_result {
+        Err(Error(UniqueUuidCreationError(_), _)) => {
+            // OK
+        }
+        Err(err) => {
+            panic!("Expected error::UniqueUuidCreationError, but got another error: {:?}", err);
+        }
+        Ok(_) => {
+            panic!("Expected error::UniqueUuidCreationError, but registration was successful!");
+        }
     }
+}
 
-    assert_eq!(client_cmd::DUPLICATED_APP_USER_UID_MAX_STREAK, uid_generator.generations_count)
+#[test]
+fn device_id_duplication_leaves_user_not_created() {
+    let uid1 = Uuid::from_str("50008400-e29b-41d4-a716-446655440004").unwrap();
+    let uid2 = Uuid::from_str("50008400-e29b-41d4-a716-446655440005").unwrap();
+    let device_uuid = Uuid::from_str("60008400-e29b-41d4-a716-446655440004").unwrap();
+    delete_device_with(&device_uuid);
+    delete_app_user_with(&uid1);
+    delete_app_user_with(&uid2);
+
+    let config = testing_config::get();
+    let connection = DBConnection::for_client_user(&config).unwrap();
+
+    let mut uid_generator1 = SameUuidGenerator::new(uid1.clone());
+    let mut uid_generator2 = SameUuidGenerator::new(uid2.clone());
+    let mut device_id_generator = SameUuidGenerator::new(device_uuid.clone());
+    client_cmd::register_device_by_uuid_generator(&mut uid_generator1, &mut device_id_generator, &connection).unwrap();
+
+    let second_registration_result =
+        client_cmd::register_device_by_uuid_generator(&mut uid_generator2, &mut device_id_generator, &connection);
+    assert!(second_registration_result.is_err()); // test doesn't make sense otherwise
+
+    let app_user = app_user::select_by_uid(&uid2, &connection);
+    assert!(app_user.unwrap().is_none());
+}
+
+#[test]
+fn uid_duplication_leaves_device_not_created() {
+    let uid = Uuid::from_str("50008400-e29b-41d4-a716-446655440006").unwrap();
+    let device_uuid1 = Uuid::from_str("60008400-e29b-41d4-a716-446655440005").unwrap();
+    let device_uuid2 = Uuid::from_str("60008400-e29b-41d4-a716-446655440006").unwrap();
+    delete_device_with(&device_uuid1);
+    delete_device_with(&device_uuid2);
+    delete_app_user_with(&uid);
+
+    let config = testing_config::get();
+    let connection = DBConnection::for_client_user(&config).unwrap();
+
+    let mut uid_generator = SameUuidGenerator::new(uid.clone());
+    let mut device_id_generator1 = SameUuidGenerator::new(device_uuid1.clone());
+    let mut device_id_generator2 = SameUuidGenerator::new(device_uuid2.clone());
+    client_cmd::register_device_by_uuid_generator(&mut uid_generator, &mut device_id_generator1, &connection).unwrap();
+
+    let second_registration_result =
+        client_cmd::register_device_by_uuid_generator(&mut uid_generator, &mut device_id_generator2, &connection);
+    assert!(second_registration_result.is_err()); // test doesn't make sense otherwise
+
+    let device = device::select_by_uuid(&device_uuid2, &connection);
+    assert!(device.unwrap().is_none());
 }

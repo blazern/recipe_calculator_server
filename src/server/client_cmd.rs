@@ -1,23 +1,21 @@
 use uuid::Uuid;
 
 use super::error::Error;
-use super::error::ErrorKind::DeviceIdDuplicationError;
-use super::error::ErrorKind::AppUserUniqueIdCreationError;
+use super::error::ErrorKind::UniqueUuidCreationError;
 use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::device;
 use db::core::error::Error as DBError;
 use db::core::error::ErrorKind as DBErrorKind;
+use db::core::transaction;
 
-const DUPLICATED_APP_USER_UID_MAX_STREAK: i32 = 5;
-
-pub trait UserAppUidGenerator {
+pub trait UuidGenerator {
     fn generate(&mut self) -> Uuid;
 }
 
-struct DefaultUserAppUidGenerator;
+struct DefaultUuidGenerator;
 
-impl UserAppUidGenerator for DefaultUserAppUidGenerator {
+impl UuidGenerator for DefaultUuidGenerator {
     fn generate(&mut self) -> Uuid {
         return Uuid::new_v4();
     }
@@ -26,60 +24,36 @@ impl UserAppUidGenerator for DefaultUserAppUidGenerator {
 // Registers new device by creating an 'app_user::AppUser' for it and storing
 // both device and app_user to DB.
 //
-// Returns DeviceIdDuplication when receives already used Device ID.
-pub fn register_device(device_id: Uuid, db_connection: &DBConnection) -> Result<(), Error> {
-    return register_device_by_uid_generator(&mut DefaultUserAppUidGenerator{}, device_id, &db_connection);
+pub fn register_device(db_connection: &DBConnection) -> Result<Uuid, Error> {
+    return register_device_by_uuid_generator(
+        &mut DefaultUuidGenerator{}, &mut DefaultUuidGenerator{}, &db_connection);
 }
 
-fn register_device_by_uid_generator(
-        generator: &mut UserAppUidGenerator, device_id: Uuid, db_connection: &DBConnection) -> Result<(), Error> {
-    let app_user = create_app_user_by_uid_generator(generator, &db_connection)?;
-    let device = device::insert(device::new(device_id, &app_user), &db_connection);
+fn register_device_by_uuid_generator(
+        uid_generator: &mut UuidGenerator,
+        device_id_generator: &mut UuidGenerator,
+        db_connection: &DBConnection) -> Result<Uuid, Error> {
+    let device_id = device_id_generator.generate();
+    let uid = uid_generator.generate();
 
-    match device {
-        Ok(_) => {
-            return Ok(());
-        },
-        Err(error @ DBError(DBErrorKind::UniqueViolation(_), _)) => {
-            return Err(DeviceIdDuplicationError(device_id, error).into());
-        }
-        Err(error) => {
-            return Err(error.into());
-        }
-    };
+    return transaction::start(&db_connection, || {
+        let app_user = app_user::insert(app_user::new(uid), &db_connection);
+        let app_user = app_user.map_err(extract_uuid_duplication_error)?;
+        let device = device::insert(device::new(device_id, &app_user), &db_connection);
+        let device = device.map_err(extract_uuid_duplication_error)?;
+        return Ok(device.uuid().clone());
+    });
 }
 
-fn create_app_user_by_uid_generator(
-        uuid_generator: &mut UserAppUidGenerator,
-        db_connection: &DBConnection) -> Result<app_user::AppUser, Error> {
-
-    let mut app_user_result: Result<app_user::AppUser, DBError>;
-
-    for index in 1..DUPLICATED_APP_USER_UID_MAX_STREAK+1 {
-        // Note: while very unlikely,
-        // the 'new_v4' function can lead to uids collisions.
-        // That's why uid generation is performed in a loop.
-        let uid = uuid_generator.generate();
-        app_user_result = app_user::insert(app_user::new(uid), &db_connection);
-        match (app_user_result, index) {
-            (Ok(app_user), _) => {
-                return Ok(app_user);
-            },
-            (Err(error @ DBError(DBErrorKind::UniqueViolation(_), _)), DUPLICATED_APP_USER_UID_MAX_STREAK) => {
-                // If index reached max value - return unique ID creation error
-                return Err(AppUserUniqueIdCreationError(error).into());
-            }
-            (Err(DBError(DBErrorKind::UniqueViolation(_), _)), _) => {
-                // If index isn't DUPLICATED_APP_USER_UID_MAX_STREAK, yet - continue trying.
-                continue;
-            }
-            (Err(error), _) => {
-                // On any error other than UniqueViolation - fail immediately.
-                return Err(error.into());
-            }
-        };
+fn extract_uuid_duplication_error(db_error: DBError) -> Error {
+    match db_error {
+        error @ DBError(DBErrorKind::UniqueViolation(_), _) => {
+            return UniqueUuidCreationError(error).into();
+        }
+        error => {
+            return error.into();
+        }
     }
-    panic!("Expected to be not reached");
 }
 
 #[cfg(test)]
