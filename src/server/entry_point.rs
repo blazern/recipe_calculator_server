@@ -1,16 +1,16 @@
 use futures::future::Future;
-
-use futures;
 use hyper;
 use hyper::header::ContentLength;
 use hyper::server::{Http, Request, Response, Service};
 use std::net::SocketAddr;
+use std::sync::Arc;
 
-struct EntryPoint;
+use super::requests_handler::RequestsHandler;
 
-pub const RESPONSE: &'static str = "Hello, World!";
+struct EntryPoint {
+    requests_handler: Arc<RequestsHandler>,
+}
 
-// Temporary implementation of server, copied from hyper's docs.
 impl Service for EntryPoint {
     // boilerplate hooking up hyper's server types
     type Request = Request;
@@ -20,21 +20,28 @@ impl Service for EntryPoint {
     // resolve to. This can change to whatever Future you need.
     type Future = Box<Future<Item=Self::Response, Error=Self::Error>>;
 
-    fn call(&self, _req: Request) -> Self::Future {
-        // We're currently ignoring the Request
-        // And returning an 'ok' Future, which means it's ready
-        // immediately, and build a Response with the 'RESPONSE' body.
-        Box::new(futures::future::ok(
-            Response::new()
-                .with_header(ContentLength(RESPONSE.len() as u64))
-                .with_body(RESPONSE)
-        ))
+    fn call(&self, req: Request) -> Self::Future {
+        let str_future = (*self.requests_handler).handle(req.uri());
+        let future =
+            str_future
+            .map(|str_response| {
+                Response::new()
+                    .with_header(ContentLength(str_response.len() as u64))
+                    .with_body(str_response)
+            })
+            .map_err(|_|panic!("Error not expected"));
+
+        Box::new(future)
     }
 }
 
 // Starts server on the calling thread, blocking it.
-pub fn start_server<F>(address: &SocketAddr, shutdown_signal: F) where F: Future<Item = (), Error = ()> {
-    let server = Http::new().bind(address, || Ok(EntryPoint)).unwrap();
+pub fn start_server<F, RH>(address: &SocketAddr, shutdown_signal: F, requests_handler: RH) where
+        F: Future<Item = (), Error = ()>,
+        RH: RequestsHandler + 'static {
+    let requests_handler = Arc::new(requests_handler);
+    let entry_point = Arc::new(EntryPoint{ requests_handler });
+    let server = Http::new().bind(address, move || Ok(entry_point.clone())).unwrap();
     server.run_until(shutdown_signal).unwrap();
 }
 
