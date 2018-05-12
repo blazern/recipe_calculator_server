@@ -33,3 +33,6 @@ diesel_codegen = { version = "0.16.0", features = ["postgres"] }
 
 # uuid
 uuid = { version = "0.4", features = ["serde", "v4"] }
+
+# util
+lazy_static = "1.0"

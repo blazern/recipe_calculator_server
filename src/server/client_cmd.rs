@@ -1,6 +1,7 @@
 use uuid::Uuid;
 
 use super::error::Error;
+use super::error::ErrorKind::DeviceNotFoundError;
 use super::error::ErrorKind::UniqueUuidCreationError;
 use db::core::app_user;
 use db::core::connection::DBConnection;
@@ -52,6 +53,21 @@ fn extract_uuid_duplication_error(db_error: DBError) -> Error {
         }
         error => {
             return error.into();
+        }
+    }
+}
+
+pub fn is_device_registered(db_connection: &DBConnection, device_id: &Uuid) -> Result<bool, Error> {
+    let _device = device::select_by_uuid(&device_id, &db_connection);
+    match _device {
+        Ok(Some(_device)) => {
+            return Ok(true);
+        },
+        Ok(None) => {
+            return Ok(false);
+        },
+        Err(_) => {
+            return Err(DeviceNotFoundError(device_id.clone()).into());
         }
     }
 }

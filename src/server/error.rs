@@ -1,5 +1,6 @@
 use db;
 
+use uuid::Uuid;
 use db::core::transaction;
 
 error_chain! {
@@ -12,6 +13,10 @@ error_chain! {
         UniqueUuidCreationError(db_error: db::core::error::Error) {
             description("Couldn't create unique UUID"),
             display("Couldn't create unique UUID, parent err: {:?}", db_error),
+        }
+        DeviceNotFoundError(device_id: Uuid) {
+            description("Device ID not found"),
+            display("Device ID not found: {:?}", device_id),
         }
     }
 }
