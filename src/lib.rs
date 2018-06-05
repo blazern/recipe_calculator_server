@@ -14,7 +14,6 @@ extern crate uuid;
 pub mod schema;
 pub mod db;
 pub mod error;
-pub mod command_line_args;
 pub mod config;
 pub mod vk;
 pub mod server;
