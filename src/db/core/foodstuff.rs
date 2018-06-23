@@ -13,10 +13,10 @@ pub struct NewFoodstuff {
     app_user_id: i32,
     app_user_foodstuff_id: i32,
     name: String,
-    protein: f32,
-    fats: f32,
-    carbs: f32,
-    calories: f32,
+    protein: i32,
+    fats: i32,
+    carbs: i32,
+    calories: i32,
     is_listed: bool,
 }
 
@@ -26,10 +26,10 @@ pub struct Foodstuff {
     app_user_id: i32,
     app_user_foodstuff_id: i32,
     name: String,
-    protein: f32,
-    fats: f32,
-    carbs: f32,
-    calories: f32,
+    protein: i32,
+    fats: i32,
+    carbs: i32,
+    calories: i32,
     is_listed: bool,
 }
 
@@ -50,19 +50,19 @@ impl Foodstuff {
         return &self.name;
     }
 
-    pub fn protein(&self) -> f32 {
+    pub fn protein(&self) -> i32 {
         return self.protein;
     }
 
-    pub fn fats(&self) -> f32 {
+    pub fn fats(&self) -> i32 {
         return self.fats;
     }
 
-    pub fn carbs(&self) -> f32 {
+    pub fn carbs(&self) -> i32 {
         return self.carbs;
     }
 
-    pub fn calories(&self) -> f32 {
+    pub fn calories(&self) -> i32 {
         return self.calories;
     }
 
@@ -75,10 +75,10 @@ pub fn new(
         app_user: &AppUser,
         app_user_foodstuff_id: i32,
         name: String,
-        protein: f32,
-        fats: f32,
-        carbs: f32,
-        calories: f32,
+        protein: i32,
+        fats: i32,
+        carbs: i32,
+        calories: i32,
         is_listed: bool) -> NewFoodstuff {
     let app_user_id = app_user.id();
     NewFoodstuff {

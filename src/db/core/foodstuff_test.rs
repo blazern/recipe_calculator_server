@@ -12,10 +12,10 @@ use schema;
 use testing_config;
 
 const FOODSTUFF_NAME: &'static str = "foodstuff name for tests";
-const FOODSTUFF_PROTEIN: f32 = 123456789_f32;
-const FOODSTUFF_FATS: f32 = 123456789_f32;
-const FOODSTUFF_CARBS: f32 = 123456789_f32;
-const FOODSTUFF_CALORIES: f32 = 123456789_f32;
+const FOODSTUFF_PROTEIN: i32 = 123456789_i32;
+const FOODSTUFF_FATS: i32 = 123456789_i32;
+const FOODSTUFF_CARBS: i32 = 123456789_i32;
+const FOODSTUFF_CALORIES: i32 = 123456789_i32;
 
 // Cleaning up before tests
 fn delete_entries_with(app_user_uid: &Uuid) {

@@ -46,10 +46,10 @@ fn create_foodstuff(app_user: &AppUser, app_user_foodstuff_id: i32, name: String
         &app_user,
         app_user_foodstuff_id,
         name,
-        0f32,
-        0f32,
-        0f32,
-        0f32,
+        0i32,
+        0i32,
+        0i32,
+        0i32,
         false);
 }
 
