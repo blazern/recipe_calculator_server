@@ -7,17 +7,17 @@ use uuid::Uuid;
 use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::diesel_connection;
-use schema;
+use db::core::app_user::app_user as app_user_schema;
 use testing_config;
 
 // Cleaning up before tests
 fn delete_entry_with(uid: &Uuid) {
     let connection = DBConnection::for_admin_user().unwrap();
     let raw_connection = diesel_connection(&connection);
-    delete_by_column!(schema::app_user::table, schema::app_user::uid, uid, raw_connection)
+    delete_by_column!(app_user_schema::table, app_user_schema::uid, uid, raw_connection)
         .expect("Deletion shouldn't fail");
     let deleted_user =
-        select_by_column!(app_user::AppUser, schema::app_user::table, schema::app_user::uid, uid, raw_connection);
+        select_by_column!(app_user::AppUser, app_user_schema::table, app_user_schema::uid, uid, raw_connection);
     assert!(deleted_user.expect("Selection shouldn't fail").is_none());
 }
 

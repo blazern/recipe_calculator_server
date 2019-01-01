@@ -8,7 +8,7 @@ use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::diesel_connection;
 use db::core::foodstuff;
-use schema;
+use db::core::foodstuff::foodstuff as foodstuff_schema;
 use testing_config;
 
 const FOODSTUFF_NAME: &'static str = "foodstuff name for tests";
@@ -21,8 +21,8 @@ const FOODSTUFF_CALORIES: i32 = 123456789_i32;
 fn delete_entries_with(app_user_uid: &Uuid) {
     testing_util_delete_entries_with!(
         app_user_uid,
-        schema::foodstuff::table,
-        schema::foodstuff::app_user_id);
+        foodstuff_schema::table,
+        foodstuff_schema::app_user_id);
 }
 
 #[test]

@@ -11,7 +11,6 @@ extern crate serde;
 extern crate reqwest;
 extern crate uuid;
 #[cfg(test)] pub mod testing_config;
-pub mod schema;
 pub mod db;
 pub mod error;
 pub mod config;

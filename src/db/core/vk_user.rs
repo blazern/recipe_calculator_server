@@ -1,11 +1,18 @@
 use diesel;
 
-use schema;
-use schema::vk_user;
 use super::app_user::AppUser;
 use super::connection::DBConnection;
 use super::diesel_connection;
 use super::error::Error;
+
+table! {
+    vk_user {
+        id -> Integer,
+        vk_uid -> Integer,
+        app_user_id -> Integer,
+    }
+}
+use self::vk_user as vk_user_schema;
 
 #[derive(Insertable)]
 #[table_name="vk_user"]
@@ -40,11 +47,11 @@ pub fn new(vk_uid: i32, app_user: &AppUser) -> NewVkUser {
 }
 
 pub fn insert(vk_user: NewVkUser, connection: &DBConnection) -> Result<VkUser, Error> {
-    return insert!(VkUser, vk_user, schema::vk_user::table, diesel_connection(connection));
+    return insert!(VkUser, vk_user, vk_user_schema::table, diesel_connection(connection));
 }
 
 pub fn select_by_id(id: i32, connection: &DBConnection) -> Result<Option<VkUser>, Error> {
-    return select_by_column!(VkUser, schema::vk_user::table, schema::vk_user::id, id, diesel_connection(connection));
+    return select_by_column!(VkUser, vk_user_schema::table, vk_user_schema::id, id, diesel_connection(connection));
 }
 
 #[cfg(test)]

@@ -8,9 +8,23 @@ pub struct Config {
     vk_server_token: String,
     psql_url_user_server: String,
     psql_url_user_client: String,
+    #[cfg(test)]
+    psql_url_user_admin: String,
 }
 
 impl Config {
+    #[cfg(test)]
+    pub fn new(vk_server_token: &str,
+               psql_url_user_server: &str,
+               psql_url_user_client: &str) -> Config {
+        Config{
+            vk_server_token: vk_server_token.to_string(),
+            psql_url_user_server: psql_url_user_server.to_string(),
+            psql_url_user_client: psql_url_user_client.to_string(),
+            psql_url_user_admin: String::new() }
+    }
+
+    #[cfg(not(test))]
     pub fn new(vk_server_token: &str,
                psql_url_user_server: &str,
                psql_url_user_client: &str) -> Config {
@@ -35,6 +49,11 @@ impl Config {
 
     pub fn psql_diesel_url_client_user(&self) -> &str {
         return &self.psql_url_user_client;
+    }
+
+    #[cfg(test)]
+    pub fn psql_diesel_url_admin_user(&self) -> &str {
+        return &self.psql_url_user_admin;
     }
 }
 

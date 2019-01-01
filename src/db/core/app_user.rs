@@ -1,12 +1,17 @@
 use diesel;
 use uuid::Uuid;
 
-use schema;
-use schema::app_user;
-
 use super::connection::DBConnection;
 use super::diesel_connection;
 use super::error::Error;
+
+table! {
+    app_user {
+        id -> Integer,
+        uid -> Uuid,
+    }
+}
+use self::app_user as app_user_schema;
 
 #[derive(Insertable)]
 #[table_name="app_user"]
@@ -35,19 +40,19 @@ pub fn new(uid: Uuid) -> NewAppUser {
 }
 
 pub fn insert(app_user: NewAppUser, connection: &DBConnection) -> Result<AppUser, Error> {
-    return insert!(AppUser, app_user, schema::app_user::table, diesel_connection(connection));
+    return insert!(AppUser, app_user, app_user_schema::table, diesel_connection(connection));
 }
 
 pub fn select_by_id(id: i32, connection: &DBConnection) -> Result<Option<AppUser>, Error> {
-    return select_by_column!(AppUser, schema::app_user::table, schema::app_user::id, id, diesel_connection(connection));
+    return select_by_column!(AppUser, app_user_schema::table, app_user_schema::id, id, diesel_connection(connection));
 }
 
 pub fn select_by_uid(uid: &Uuid, connection: &DBConnection) -> Result<Option<AppUser>, Error> {
-    return select_by_column!(AppUser, schema::app_user::table, schema::app_user::uid, uid, diesel_connection(connection));
+    return select_by_column!(AppUser, app_user_schema::table, app_user_schema::uid, uid, diesel_connection(connection));
 }
 
 pub fn delete_by_id(id: i32, connection: &DBConnection) -> Result<(), Error> {
-    return delete_by_column!(schema::app_user::table, schema::app_user::id, id, diesel_connection(connection));
+    return delete_by_column!(app_user_schema::table, app_user_schema::id, id, diesel_connection(connection));
 }
 
 #[cfg(test)]
