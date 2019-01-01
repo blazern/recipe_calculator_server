@@ -40,8 +40,12 @@ fn main() {
 
     let mut config_file = std::fs::OpenOptions::new().read(true).open(config_path).unwrap();
     let config = config::Config::from(&mut config_file).unwrap();
+    let config_json = serde_json::to_string_pretty(&config).unwrap();
+    println!("Received config:\n{}", config_json);
 
     let address = address.parse().unwrap();
     let shutdown_signal = futures::future::empty::<(),()>();
+
+    println!("Starting listening to address: {}", address);
     entry_point::start_server(&address, shutdown_signal, RequestsHandlerImpl::new(config));
 }
