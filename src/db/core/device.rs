@@ -1,12 +1,19 @@
 use diesel;
 use uuid::Uuid;
 
-use schema;
-use schema::device;
 use super::app_user::AppUser;
 use super::connection::DBConnection;
 use super::diesel_connection;
 use super::error::Error;
+
+table! {
+    device {
+        id -> Integer,
+        uuid -> Uuid,
+        app_user_id -> Integer,
+    }
+}
+use self::device as device_schema;
 
 #[derive(Insertable)]
 #[table_name="device"]
@@ -41,19 +48,19 @@ pub fn new(uuid: Uuid, app_user: &AppUser) -> NewDevice {
 }
 
 pub fn insert(device: NewDevice, connection: &DBConnection) -> Result<Device, Error> {
-    return insert!(Device, device, schema::device::table, diesel_connection(connection));
+    return insert!(Device, device, device_schema::table, diesel_connection(connection));
 }
 
 pub fn select_by_id(id: i32, connection: &DBConnection) -> Result<Option<Device>, Error> {
-    return select_by_column!(Device, schema::device::table, schema::device::id, id, diesel_connection(connection));
+    return select_by_column!(Device, device_schema::table, device_schema::id, id, diesel_connection(connection));
 }
 
 pub fn select_by_uuid(uuid: &Uuid, connection: &DBConnection) -> Result<Option<Device>, Error> {
-    return select_by_column!(Device, schema::device::table, schema::device::uuid, uuid, diesel_connection(connection));
+    return select_by_column!(Device, device_schema::table, device_schema::uuid, uuid, diesel_connection(connection));
 }
 
 pub fn delete_by_id(id: i32, connection: &DBConnection) -> Result<(), Error> {
-    return delete_by_column!(schema::device::table, schema::device::id, id, diesel_connection(connection));
+    return delete_by_column!(device_schema::table, device_schema::id, id, diesel_connection(connection));
 }
 
 #[cfg(test)]

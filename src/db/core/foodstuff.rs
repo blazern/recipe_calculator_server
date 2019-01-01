@@ -1,11 +1,24 @@
 use diesel;
 
-use schema;
-use schema::foodstuff;
 use super::app_user::AppUser;
 use super::connection::DBConnection;
 use super::diesel_connection;
 use super::error::Error;
+
+table! {
+    foodstuff {
+        id -> Integer,
+        app_user_id -> Integer,
+        app_user_foodstuff_id -> Integer,
+        name -> VarChar,
+        protein -> Integer,
+        fats -> Integer,
+        carbs -> Integer,
+        calories -> Integer,
+        is_listed -> Bool,
+    }
+}
+use self::foodstuff as foodstuff_schema;
 
 #[derive(Insertable)]
 #[table_name="foodstuff"]
@@ -93,14 +106,14 @@ pub fn new(
     }
 }
 pub fn insert(foodstuff: NewFoodstuff, connection: &DBConnection) -> Result<Foodstuff, Error> {
-    return insert!(Foodstuff, foodstuff, schema::foodstuff::table, diesel_connection(connection));
+    return insert!(Foodstuff, foodstuff, foodstuff_schema::table, diesel_connection(connection));
 }
 
 pub fn select_by_id(id: i32, connection: &DBConnection) -> Result<Option<Foodstuff>, Error> {
     return select_by_column!(
         Foodstuff,
-        schema::foodstuff::table,
-        schema::foodstuff::id,
+        foodstuff_schema::table,
+        foodstuff_schema::id,
         id,
         diesel_connection(connection));
 }
@@ -109,10 +122,10 @@ pub fn unlist(foodstuff: Foodstuff, connection: &DBConnection) -> Result<Foodstu
     let result =
         update_column!(
             Foodstuff,
-            schema::foodstuff::table,
-            schema::foodstuff::id,
+            foodstuff_schema::table,
+            foodstuff_schema::id,
             foodstuff.id(),
-            schema::foodstuff::is_listed,
+            foodstuff_schema::is_listed,
             false,
             diesel_connection(connection));
 

@@ -8,15 +8,15 @@ use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::device;
 use db::core::diesel_connection;
-use schema;
+use db::core::device::device as device_schema;
 use testing_config;
 
 // Cleaning up before tests
 fn delete_entries_with(app_user_uid: &Uuid) {
     testing_util_delete_entries_with!(
         app_user_uid,
-        schema::device::table,
-        schema::device::app_user_id);
+        device_schema::table,
+        device_schema::app_user_id);
 }
 
 // NOTE: different UUIDs and VK IDs must be used in each tests, because tests are run in parallel
