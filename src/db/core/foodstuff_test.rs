@@ -28,7 +28,7 @@ fn delete_entries_with(app_user_uid: &Uuid) {
 #[test]
 fn insertion_and_selection_work() {
     let app_user_foodstuff_id = 1;
-    let app_user_uid = Uuid::from_str("550e8400-e29b-f00d-a716-a46655440000").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-005000000000").unwrap();
 
     delete_entries_with(&app_user_uid);
 
@@ -61,7 +61,7 @@ fn insertion_and_selection_work() {
 fn multiple_foodstuffs_can_depend_on_single_app_user() {
     let app_user_foodstuff_id1 = 2;
     let app_user_foodstuff_id2 = 3;
-    let app_user_uid = Uuid::from_str("550e8400-e29b-f00d-a716-a46655440001").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-005000000001").unwrap();
 
     delete_entries_with(&app_user_uid);
 
@@ -97,7 +97,7 @@ fn multiple_foodstuffs_can_depend_on_single_app_user() {
 #[test]
 fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
     let app_user_foodstuff_id = 4;
-    let app_user_uid = Uuid::from_str("550e8400-e29b-f00d-a716-a46655440002").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-005000000002").unwrap();
 
     delete_entries_with(&app_user_uid);
 
@@ -133,7 +133,7 @@ fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
 #[test]
 fn can_make_foodstuff_unlisted() {
     let app_user_foodstuff_id = 5;
-    let app_user_uid = Uuid::from_str("550e8400-e29b-f00d-a716-a46655440003").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-005000000003").unwrap();
 
     delete_entries_with(&app_user_uid);
 
@@ -161,7 +161,7 @@ fn can_make_foodstuff_unlisted() {
 #[test]
 fn making_already_unlisted_foodstuff_unlisted_does_nothing() {
     let app_user_foodstuff_id = 6;
-    let app_user_uid = Uuid::from_str("550e8400-e29b-f00d-a716-a46655440004").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-005000000004").unwrap();
 
     delete_entries_with(&app_user_uid);
 

@@ -59,7 +59,7 @@ fn insert_macro_works() {
     let connection = DBConnection::for_admin_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
-    let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440000").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-008000000000").unwrap();
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
@@ -73,7 +73,7 @@ fn select_macro_works() {
     let connection = DBConnection::for_admin_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
-    let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440001").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-008000000001").unwrap();
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
@@ -90,7 +90,7 @@ fn delete_macro_works() {
     let connection = DBConnection::for_admin_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
-    let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440002").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-008000000002").unwrap();
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
@@ -107,8 +107,8 @@ fn update_macro_works() {
     let connection = DBConnection::for_admin_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
-    let uid1 = Uuid::from_str("550a8400-e29b-41d4-a716-446655440003").unwrap();
-    let uid2 = Uuid::from_str("550a8400-e29b-41d4-a716-446655440004").unwrap();
+    let uid1 = Uuid::from_str("00000000-0000-0000-0000-008000000003").unwrap();
+    let uid2 = Uuid::from_str("00000000-0000-0000-0000-008000000004").unwrap();
     delete_user_by_uid(&uid1);
     delete_user_by_uid(&uid2);
     assert!(select_user_by_uid(&uid1).is_none());
@@ -136,7 +136,7 @@ fn update_macro_returns_updated_values() {
     let raw_connection = diesel_connection(&connection);
 
     // cleaning up
-    let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440005").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-008000000005").unwrap();
     let user = select_user_by_uid(&uid);
     match user {
         Some(user) => {
@@ -194,7 +194,7 @@ fn unique_violation_error_returned_on_unique_violation() {
     let connection = DBConnection::for_admin_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
-    let uid = Uuid::from_str("550a8400-e29b-41d4-a716-446655440006").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-008000000006").unwrap();
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 

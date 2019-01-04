@@ -25,7 +25,7 @@ fn delete_entries_with(app_user_uid: &Uuid) {
 #[test]
 fn insertion_and_selection_work() {
     let vk_uid = 1;
-    let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655540000").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-002000000000").unwrap();
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
@@ -48,7 +48,7 @@ fn insertion_and_selection_work() {
 #[test]
 fn cant_insert_vk_user_with_already_used_vk_uid() {
     let vk_uid = 2;
-    let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655450001").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-002000000001").unwrap();
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
@@ -69,7 +69,7 @@ fn cant_insert_vk_user_with_already_used_vk_uid() {
 fn multiple_vk_users_cannot_depend_on_single_app_user() {
     let vk_uid1 = 3;
     let vk_uid2 = 4;
-    let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655450002").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-002000000002").unwrap();
     delete_entries_with(&app_user_uid);
 
 

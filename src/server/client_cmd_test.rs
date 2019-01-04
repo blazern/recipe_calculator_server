@@ -56,8 +56,8 @@ fn delete_device_with(device_uuid: &Uuid) {
 
 #[test]
 fn device_registration_works() {
-    let uid = Uuid::from_str("50008400-e29b-41d4-a716-446655440000").unwrap();
-    let device_uuid = Uuid::from_str("60008400-e29b-41d4-a716-446655440000").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-001000000000").unwrap();
+    let device_uuid = Uuid::from_str("00000000-0000-0000-0000-001000000001").unwrap();
     delete_device_with(&device_uuid);
     delete_app_user_with(&uid);
 
@@ -76,9 +76,9 @@ fn device_registration_works() {
 
 #[test]
 fn device_registration_returns_duplication_error_on_device_id_duplication() {
-    let uid1 = Uuid::from_str("50008400-e29b-41d4-a716-446655440001").unwrap();
-    let uid2 = Uuid::from_str("50008400-e29b-41d4-a716-446655440002").unwrap();
-    let device_uuid = Uuid::from_str("60008400-e29b-41d4-a716-446655440001").unwrap();
+    let uid1 = Uuid::from_str("00000000-0000-0000-0000-001000000002").unwrap();
+    let uid2 = Uuid::from_str("00000000-0000-0000-0000-001000000003").unwrap();
+    let device_uuid = Uuid::from_str("00000000-0000-0000-0000-001000000004").unwrap();
     delete_device_with(&device_uuid);
     delete_app_user_with(&uid1);
     delete_app_user_with(&uid2);
@@ -108,9 +108,9 @@ fn device_registration_returns_duplication_error_on_device_id_duplication() {
 
 #[test]
 fn device_registration_returns_duplication_error_on_uid_duplication() {
-    let uid = Uuid::from_str("50008400-e29b-41d4-a716-446655440003").unwrap();
-    let device_uuid1 = Uuid::from_str("60008400-e29b-41d4-a716-446655440002").unwrap();
-    let device_uuid2 = Uuid::from_str("60008400-e29b-41d4-a716-446655440003").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-001000000005").unwrap();
+    let device_uuid1 = Uuid::from_str("00000000-0000-0000-0000-001000000006").unwrap();
+    let device_uuid2 = Uuid::from_str("00000000-0000-0000-0000-001000000007").unwrap();
     delete_device_with(&device_uuid1);
     delete_device_with(&device_uuid2);
     delete_app_user_with(&uid);
@@ -140,9 +140,9 @@ fn device_registration_returns_duplication_error_on_uid_duplication() {
 
 #[test]
 fn device_id_duplication_leaves_user_not_created() {
-    let uid1 = Uuid::from_str("50008400-e29b-41d4-a716-446655440004").unwrap();
-    let uid2 = Uuid::from_str("50008400-e29b-41d4-a716-446655440005").unwrap();
-    let device_uuid = Uuid::from_str("60008400-e29b-41d4-a716-446655440004").unwrap();
+    let uid1 = Uuid::from_str("00000000-0000-0000-0000-001000000008").unwrap();
+    let uid2 = Uuid::from_str("00000000-0000-0000-0000-001000000009").unwrap();
+    let device_uuid = Uuid::from_str("00000000-0000-0000-0000-001000000010").unwrap();
     delete_device_with(&device_uuid);
     delete_app_user_with(&uid1);
     delete_app_user_with(&uid2);
@@ -165,9 +165,9 @@ fn device_id_duplication_leaves_user_not_created() {
 
 #[test]
 fn uid_duplication_leaves_device_not_created() {
-    let uid = Uuid::from_str("50008400-e29b-41d4-a716-446655440006").unwrap();
-    let device_uuid1 = Uuid::from_str("60008400-e29b-41d4-a716-446655440005").unwrap();
-    let device_uuid2 = Uuid::from_str("60008400-e29b-41d4-a716-446655440006").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-001000000011").unwrap();
+    let device_uuid1 = Uuid::from_str("00000000-0000-0000-0000-001000000012").unwrap();
+    let device_uuid2 = Uuid::from_str("00000000-0000-0000-0000-001000000013").unwrap();
     delete_device_with(&device_uuid1);
     delete_device_with(&device_uuid2);
     delete_app_user_with(&uid);

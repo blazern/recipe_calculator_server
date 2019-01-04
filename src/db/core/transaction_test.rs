@@ -47,7 +47,7 @@ fn delete_entry_with(uid: &Uuid) {
 
 #[test]
 fn transaction_works() {
-    let uid = Uuid::from_str("550e8400-e29b-a1a1-a716-446655440000").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-003000000000").unwrap();
     delete_entry_with(&uid);
 
     let config = testing_config::get();

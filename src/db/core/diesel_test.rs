@@ -14,7 +14,7 @@ use db::core::app_user::app_user as app_user_schema;
 
 #[test]
 fn transition_rolls_back_progress_when_interrupted() {
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-646655440001").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-006000000000").unwrap();
 
     let connection = DBConnection::for_admin_user().unwrap();
     let connection = diesel_connection(&connection);
@@ -42,7 +42,7 @@ fn transition_rolls_back_progress_when_interrupted() {
 
 #[test]
 fn operations_without_transactions_dont_roll_back() {
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-646655440002").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-006000000001").unwrap();
     let connection = DBConnection::for_admin_user().unwrap();
     let connection = diesel_connection(&connection);
 

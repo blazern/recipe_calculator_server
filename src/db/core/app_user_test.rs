@@ -26,7 +26,7 @@ fn delete_entry_with(uid: &Uuid) {
 
 #[test]
 fn insertion_and_selection_work() {
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440000").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000000").unwrap();
     delete_entry_with(&uid);
 
     let config = testing_config::get();
@@ -44,7 +44,7 @@ fn insertion_and_selection_work() {
 
 #[test]
 fn cant_insert_user_with_already_used_uid() {
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440002").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000001").unwrap();
     delete_entry_with(&uid);
 
     let config = testing_config::get();
@@ -61,7 +61,7 @@ fn cant_insert_user_with_already_used_uid() {
 
 #[test]
 fn can_select_user_by_uid() {
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440004").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000002").unwrap();
     delete_entry_with(&uid);
 
     let config = testing_config::get();
@@ -76,7 +76,7 @@ fn can_select_user_by_uid() {
 
 #[test]
 fn can_delete_user_by_id() {
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440005").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000003").unwrap();
     delete_entry_with(&uid);
 
     let connection = DBConnection::for_admin_user().unwrap();
@@ -91,7 +91,7 @@ fn can_delete_user_by_id() {
 
 #[test]
 fn cant_delete_user_with_client_connection() {
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440006").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000004").unwrap();
     delete_entry_with(&uid);
 
     let config = testing_config::get();

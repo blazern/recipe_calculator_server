@@ -24,8 +24,8 @@ fn delete_entries_with(app_user_uid: &Uuid) {
 
 #[test]
 fn insertion_and_selection_work() {
-    let uuid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440000").unwrap();
-    let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440000").unwrap();
+    let uuid = Uuid::from_str("00000000-0000-0000-0000-007000000000").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-007000000001").unwrap();
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
@@ -47,8 +47,8 @@ fn insertion_and_selection_work() {
 
 #[test]
 fn cant_insert_device_with_already_used_uuid() {
-    let uuid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440001").unwrap();
-    let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440001").unwrap();
+    let uuid = Uuid::from_str("00000000-0000-0000-0000-007000000002").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-007000000003").unwrap();
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
@@ -67,9 +67,9 @@ fn cant_insert_device_with_already_used_uuid() {
 
 #[test]
 fn multiple_devices_can_depend_on_single_app_user() {
-    let uuid1 = Uuid::from_str("550e8400-e29b-41d4-a716-446655440002").unwrap();
-    let uuid2 = Uuid::from_str("550e8400-e29b-41d4-a716-446655440003").unwrap();
-    let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440002").unwrap();
+    let uuid1 = Uuid::from_str("00000000-0000-0000-0000-007000000004").unwrap();
+    let uuid2 = Uuid::from_str("00000000-0000-0000-0000-007000000005").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-007000000006").unwrap();
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
@@ -86,8 +86,8 @@ fn multiple_devices_can_depend_on_single_app_user() {
 
 #[test]
 fn can_select_by_uuid() {
-    let uuid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440004").unwrap();
-    let app_user_uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440003").unwrap();
+    let uuid = Uuid::from_str("00000000-0000-0000-0000-007000000007").unwrap();
+    let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-007000000008").unwrap();
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
@@ -103,8 +103,8 @@ fn can_select_by_uuid() {
 
 #[test]
 fn can_delete_device_by_id() {
-    let uuid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440005").unwrap();
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440004").unwrap();
+    let uuid = Uuid::from_str("00000000-0000-0000-0000-007000000009").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-007000000010").unwrap();
     delete_entries_with(&uid);
 
     let connection = DBConnection::for_admin_user().unwrap();
@@ -120,8 +120,8 @@ fn can_delete_device_by_id() {
 
 #[test]
 fn cant_delete_device_with_client_connection() {
-    let uuid = Uuid::from_str("550e8400-e29b-41d4-a716-446655440006").unwrap();
-    let uid = Uuid::from_str("550e8400-e29b-41d4-a716-a46655440005").unwrap();
+    let uuid = Uuid::from_str("00000000-0000-0000-0000-007000000011").unwrap();
+    let uid = Uuid::from_str("00000000-0000-0000-0000-007000000012").unwrap();
     delete_entries_with(&uid);
 
     let config = testing_config::get();
