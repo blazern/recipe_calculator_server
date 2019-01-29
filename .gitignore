@@ -2,3 +2,4 @@ target/
 **/*.rs.bk
 recipe_calculator_server.iml
 .idea/
+.testing_env/
