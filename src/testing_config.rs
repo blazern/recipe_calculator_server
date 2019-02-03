@@ -1,4 +1,5 @@
 extern crate serde_json;
+use std::sync::Once;
 use config;
 
 #[cfg(test)]
@@ -13,7 +14,12 @@ pub fn get() -> config::Config {
 
     let mut file = std::fs::OpenOptions::new().read(true).open(config_path).unwrap();
     let result = config::Config::from(&mut file).unwrap();
+
     let config_json = serde_json::to_string_pretty(&result).unwrap();
-    println!("Received testing config:\n{}", config_json);
+    static START: Once = Once::new();
+    START.call_once(|| {
+        println!("Received testing config:\n{}", config_json);
+    });
+
     return result;
 }
