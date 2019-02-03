@@ -1,9 +1,8 @@
-use reqwest::Client;
 use serde_json;
 use serde_json::Value as JsonValue;
-use std::io::Read;
 use uuid::Uuid;
 
+use http_client;
 use testing_config;
 use server::constants;
 use server::requests_handler_impl::RequestsHandlerImpl;
@@ -17,16 +16,10 @@ fn start_server() -> ServerWrapper {
 }
 
 fn make_request(url: &str) -> JsonValue {
-    let client = Client::new().unwrap();
-
-    let mut response = client.get(url).unwrap().send().unwrap();
-    let mut response_str = String::new();
-    response.read_to_string(&mut response_str).unwrap();
-
-    serde_json::from_str(&response_str).expect(&format!("Expecting JSON response for query {}", url))
+    let response = http_client::make_blocking_request(url).unwrap();
+    serde_json::from_str(&response)
+        .expect(&format!("Expected JSON response for query: {}, got: {}", url, response))
 }
-
-
 
 fn assert_status_ok(response: &JsonValue) {
     match response {

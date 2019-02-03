@@ -2,8 +2,6 @@ use std::collections::HashMap;
 use std::convert::From;
 use std::str::FromStr;
 use std::sync::Mutex;
-use futures::future;
-use futures::future::Future;
 use serde_json::Value as JsonValue;
 use uuid;
 use uuid::Uuid;
@@ -91,7 +89,7 @@ impl RequestsHandlerImpl {
 }
 
 impl RequestsHandler for RequestsHandlerImpl {
-    fn handle(&mut self, request: &str, query: Option<&str>) -> Box<Future<Item=String, Error=()>> {
+    fn handle(&mut self, request: &str, query: Option<&str>) -> String {
         let result = self.handle_impl(request, query);
         let response = match result {
             Ok(result) => result,
@@ -102,7 +100,7 @@ impl RequestsHandler for RequestsHandlerImpl {
                 })
             }
         };
-        return Box::new(future::ok(response.to_string()));
+        return response.to_string();
     }
 }
 

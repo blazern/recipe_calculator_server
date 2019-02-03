@@ -1,7 +1,10 @@
-use futures::future::Future;
-use hyper;
-use hyper::header::ContentLength;
-use hyper::server::{Http, Request, Response, Service};
+use hyper::Body;
+use hyper::Response;
+use hyper::Server;
+use hyper::service::service_fn_ok;
+use hyper::rt::Future;
+
+use tokio_core;
 
 use std::cell::RefCell;
 use std::net::SocketAddr;
@@ -20,41 +23,42 @@ impl<RH> EntryPoint<RH> where RH: RequestsHandler {
     }
 }
 
-impl<RH> Service for EntryPoint<RH> where RH: RequestsHandler {
-    // boilerplate hooking up hyper's server types
-    type Request = Request;
-    type Response = Response;
-    type Error = hyper::Error;
-    // The future representing the eventual Response your call will
-    // resolve to. This can change to whatever Future you need.
-    type Future = Box<Future<Item=Self::Response, Error=Self::Error>>;
-
-    fn call(&self, req: Request) -> Self::Future {
-        let requests_handler = self.requests_handler.lock().unwrap();
-        let str_future = requests_handler.borrow_mut().handle(req.path(), req.query());
-        let future =
-            str_future
-            .map(|str_response| {
-                Response::new()
-                    .with_header(ContentLength(str_response.len() as u64))
-                    .with_body(str_response)
-            })
-            .map_err(|_|panic!("Error not expected"));
-
-        Box::new(future)
-    }
-}
-
 // Starts server on the calling thread, blocking it.
 pub fn start_server<F, RH>(address: &SocketAddr, shutdown_signal: F, requests_handler: RH) where
         F: Future<Item = (), Error = ()>,
         RH: RequestsHandler + 'static {
     let requests_handler = RefCell::new(requests_handler);
     let entry_point = Arc::new(EntryPoint::new(requests_handler));
-    // NOTE that passed closure is 'Fn' not 'FnOnce' for a reason - Hyper can call it many times,
-    // assuming that each call creates a new service (but we always provide the same instance).
-    let server = Http::new().bind(address, move || Ok(entry_point.clone())).unwrap();
-    server.run_until(shutdown_signal).unwrap();
+
+    // TODO: current implementation blocks the threads it's called on. For a real world app its unacceptable.
+    let new_service = move || {
+        let entry_point = entry_point.clone();
+        service_fn_ok(move |req| {
+            let uri = req.uri();
+
+            let requests_handler = entry_point.requests_handler.lock().unwrap();
+            let str_response = requests_handler.borrow_mut().handle(uri.path(), uri.query());
+            Response::new(Body::from(str_response))
+        })
+    };
+
+    let shutdown_signal = shutdown_signal.map_err(|err| {
+        panic!("No errors expected from shutdown signal, got: {:?}", err);
+    });
+    let server = Server::bind(&address)
+        .serve(new_service)
+        .map_err(|e| panic!("No error was expected, but got: {}", e));
+
+    let mut tokio_core = tokio_core::reactor::Core::new().unwrap(); // TODO remove unwrap
+
+    let server_with_shutdown_signal = shutdown_signal.select(server);
+    let server_result = tokio_core.run(server_with_shutdown_signal);
+    match server_result {
+        Ok(_) => {},
+        Err(_) => {
+            panic!("Server finished with unexpected error")
+        }
+    }
 }
 
 #[cfg(test)]

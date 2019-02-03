@@ -19,28 +19,24 @@ error-chain = "0.11.0"
 clap = "2.31.2"
 
 # json
-serde = "1.0"
-serde_derive = "1.0"
-serde_json = "1.0"
+serde = "1.0.85"
+serde_derive = "1.0.85"
+serde_json = "1.0.38"
 
 # testing
 time = "0.1"
 
-# HTTP client
-reqwest = "0.7.3"
-url = "1.5.1"
-
-# HTTP server
-futures = "0.1.14"
-hyper = "0.11.2"
+# HTTP
+futures = "0.1.25"
+hyper = "0.12.23"
+hyper-tls = "0.3.1"
+tokio-core = "0.1.17"
 
 # diesel
-dotenv = "0.10.*"
-diesel = { version = "0.16.0", features = ["postgres", "uuid"] }
-diesel_codegen = { version = "0.16.0", features = ["postgres"] }
+diesel = { version = "1.4.1", features = ["postgres", "uuid"] }
 
 # uuid
-uuid = { version = "0.4", features = ["serde", "v4"] }
+uuid = { version = "0.5.1", features = ["serde", "v4"] }
 
 # util
 lazy_static = "1.0"
