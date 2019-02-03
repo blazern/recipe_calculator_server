@@ -1,9 +1,9 @@
 extern crate serde_json;
-extern crate reqwest;
-extern crate url;
+
+use std;
 
 use error::Error;
-use std;
+use http_client;
 
 #[allow(dead_code)]
 pub const ERROR_CODE_SERVER_TOKEN_INVALID: i64 = 5;
@@ -101,15 +101,14 @@ pub fn check_token_from_server_response<R>(response: R) -> Result<CheckResult, E
 }
 
 pub fn check_token(server_token: &str, client_token: &str) -> Result<CheckResult, Error> {
-    let client = reqwest::Client::new()?;
     let url = [HOST_METHOD, METHOD_CHECK_TOKEN].join("");
-    let url = url::Url::parse_with_params(&url,
-                                          &[(PARAM_ACCESS_TOKEN, server_token),
-                                            (PARAM_TOKEN, client_token),
-                                            (PARAM_API_VERSION, API_VERSION)])?;
+    let url = format!("{}?{}={}&{}={}&{}={}",
+                        url, PARAM_ACCESS_TOKEN, server_token,
+                        PARAM_TOKEN, client_token,
+                        PARAM_API_VERSION, API_VERSION);
 
-    let response = client.get(url)?.send()?;
-    return check_token_from_server_response(response);
+    let response = http_client::make_blocking_request(&url)?;
+    return check_token_from_server_response(response.as_bytes());
 }
 
 #[cfg(test)]

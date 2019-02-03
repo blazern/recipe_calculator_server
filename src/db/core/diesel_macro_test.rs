@@ -2,10 +2,10 @@ extern crate diesel;
 extern crate uuid;
 
 use std::str::FromStr;
-use diesel::ExecuteDsl;
 use diesel::ExpressionMethods;
-use diesel::FilterDsl;
 use diesel::OptionalExtension;
+use diesel::RunQueryDsl;
+use diesel::QueryDsl;
 use uuid::Uuid;
 
 use db::core::app_user;
@@ -32,8 +32,6 @@ fn delete_user_by_uid(uid: &Uuid) {
 }
 
 fn select_user_by_uid(uid: &Uuid) -> Option<AppUser> {
-    use diesel::FirstDsl;
-
     let connection = DBConnection::for_admin_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 

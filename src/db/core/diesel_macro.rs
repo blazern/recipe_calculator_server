@@ -3,14 +3,14 @@ macro_rules! insert {
     ( $ResultType:ty, $new_item:expr, $table:path, $connection:expr ) => {
         {
             use diesel;
-            use diesel::LoadDsl;
+            use diesel::RunQueryDsl;
             use diesel::result::DatabaseErrorKind as DieselDatabaseErrorKind;
             use diesel::result::Error as DieselError;
             use diesel::result::Error::DatabaseError as DieselDatabaseError;
             use db::core::error;
 
-            let result: Result<$ResultType, DieselError> = diesel::insert(&$new_item)
-                .into($table)
+            let result: Result<$ResultType, DieselError> = diesel::insert_into($table)
+                .values(&$new_item)
                 .get_result($connection);
 
             let result: Result<$ResultType, error::Error> = match result {
@@ -34,8 +34,8 @@ macro_rules! select_by_column {
     ( $Type:ty, $table:path, $column:path, $value:expr, $connection:expr ) => {
         {
             use diesel::ExpressionMethods;
-            use diesel::FirstDsl;
-            use diesel::FilterDsl;
+            use diesel::RunQueryDsl;
+            use diesel::QueryDsl;
             use db::core::error;
 
             let result = $table.filter($column.eq($value)).first::<$Type>($connection);
@@ -59,9 +59,9 @@ macro_rules! select_by_column {
 macro_rules! delete_by_column {
     ( $table:path, $column:path, $value:expr, $connection:expr ) => {
         {
-            use diesel::ExecuteDsl;
             use diesel::ExpressionMethods;
-            use diesel::FilterDsl;
+            use diesel::RunQueryDsl;
+            use diesel::QueryDsl;
             use db::core::error;
 
             let result =
@@ -94,8 +94,8 @@ macro_rules! update_column {
       $connection:expr ) => {
         {
             use diesel::ExpressionMethods;
-            use diesel::FilterDsl;
-            use diesel::LoadDsl;
+            use diesel::RunQueryDsl;
+            use diesel::QueryDsl;
             use db::core::error;
 
             let target = $table.filter($searched_column.eq($searched_value));
