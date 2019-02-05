@@ -3,6 +3,8 @@ extern crate futures;
 extern crate recipe_calculator_lib;
 extern crate serde_json;
 
+use std::net::ToSocketAddrs;
+
 use clap::{Arg, App};
 
 use recipe_calculator_lib::config;
@@ -43,7 +45,8 @@ fn main() {
     let config_json = serde_json::to_string_pretty(&config).unwrap();
     println!("Received config:\n{}", config_json);
 
-    let address = address.parse().unwrap();
+    let mut address = address.to_socket_addrs().unwrap();
+    let address = address.next().unwrap();
     let shutdown_signal = futures::future::empty::<(),()>();
 
     println!("Starting listening to address: {}", address);
