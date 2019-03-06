@@ -19,6 +19,10 @@ def check_call(cmd):
   stdout_log_file.write('### Executing cmd: {}\n'.format(cmd))
   subprocess.check_call(cmd, shell=True, stdout=stdout_log_file)
 
+def call(cmd):
+  stdout_log_file.write('### Executing cmd: {}\n'.format(cmd))
+  subprocess.call(cmd, shell=True, stdout=stdout_log_file)
+
 def run(cmd):
   stdout_log_file.write('### Executing cmd: {}\n'.format(cmd))
   return subprocess.run(cmd, shell=True, stdout=stdout_log_file)
@@ -30,10 +34,12 @@ def Popen(cmd):
 def main(args):
   parser = argparse.ArgumentParser(description='Optional app description')
   parser.add_argument('--vk-server-token', required=True)
+  parser.add_argument('--offline-mode', action='store_true',
+                      help='With this option set, not nessecery operations that require network will not fail the script execution')
   args = parser.parse_args()
   step('Args: {}'.format(args))
   step('std out log file: {}'.format(stdout_log_file))
-  
+
   step('Ensuring docker repo existence')
   if os.path.exists(docker_repo_dir) and not os.path.isdir(docker_repo_dir):
     raise RuntimeError('Folder with docker repo is unexpectedly not folder {}'.format(docker_repo_dir))
@@ -45,7 +51,11 @@ def main(args):
     step('Docker repo dir found, no need to clone the repo')
 
   step('Pulling last commits from docker repo')
-  check_call('git -C {} pull'.format(docker_repo_dir))
+  pull_cmd='git -C {} pull'.format(docker_repo_dir)
+  if args.offline_mode:
+    call(pull_cmd)
+  else:
+    check_call(pull_cmd)
 
   step('Building db container')
   db_container_dir = os.path.join(docker_repo_dir, 'db')
@@ -94,7 +104,7 @@ def main(args):
 
   step('Blocking until db container finishes')
   step('You can start the tests now, don\'t forget to export env var CONFIG_FILE_PATH with value: {}'.format(config_file))
-  
+
   docker_run_process.communicate()
   step('Finishing')
 
