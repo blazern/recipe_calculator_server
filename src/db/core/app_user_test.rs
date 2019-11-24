@@ -5,14 +5,14 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use db::core::app_user;
-use db::core::connection::DBConnection;
 use db::core::diesel_connection;
 use db::core::app_user::app_user as app_user_schema;
+use db::core::testing_util as dbtesting_utils;
 use testing_config;
 
 // Cleaning up before tests
 fn delete_entry_with(uid: &Uuid) {
-    let connection = DBConnection::for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
     let raw_connection = diesel_connection(&connection);
     delete_by_column!(app_user_schema::table, app_user_schema::uid, uid, raw_connection)
         .expect("Deletion shouldn't fail");
@@ -31,7 +31,7 @@ fn insertion_and_selection_work() {
 
     let config = testing_config::get();
     let new_user = app_user::new(uid);
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let inserted_user = app_user::insert(new_user, &connection).unwrap();
     assert!(inserted_user.id() > 0);
@@ -48,7 +48,7 @@ fn cant_insert_user_with_already_used_uid() {
     delete_entry_with(&uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let user1 = app_user::new(uid);
     let user2 = app_user::new(uid);
@@ -65,7 +65,7 @@ fn can_select_user_by_uid() {
     delete_entry_with(&uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &connection).unwrap();
 
@@ -79,7 +79,7 @@ fn can_delete_user_by_id() {
     let uid = Uuid::from_str("00000000-0000-0000-0000-009000000003").unwrap();
     delete_entry_with(&uid);
 
-    let connection = DBConnection::for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &connection).unwrap();
 
@@ -95,7 +95,7 @@ fn cant_delete_user_with_client_connection() {
     delete_entry_with(&uid);
 
     let config = testing_config::get();
-    let pg_client_connection = DBConnection::for_client_user(&config).unwrap();
+    let pg_client_connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &pg_client_connection).unwrap();
 

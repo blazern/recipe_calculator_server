@@ -8,8 +8,8 @@ use uuid::Uuid;
 use server::error::Error;
 use server::error::ErrorKind::UniqueUuidCreationError;
 use db::core::app_user;
-use db::core::connection::DBConnection;
 use db::core::device;
+use db::core::testing_util as dbtesting_utils;
 use server::client_cmd;
 use testing_config;
 
@@ -31,7 +31,7 @@ impl client_cmd::UuidGenerator for SameUuidGenerator {
 
 // Cleaning up before tests
 fn delete_app_user_with(uid: &Uuid) {
-    let connection = DBConnection::for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
 
     let selected_app_user = app_user::select_by_uid(&uid, &connection);
     match selected_app_user {
@@ -43,7 +43,7 @@ fn delete_app_user_with(uid: &Uuid) {
 }
 
 fn delete_device_with(device_uuid: &Uuid) {
-    let connection = DBConnection::for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
 
     let selected_device = device::select_by_uuid(&device_uuid, &connection);
     match selected_device {
@@ -62,7 +62,7 @@ fn device_registration_works() {
     delete_app_user_with(&uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let mut uid_generator = SameUuidGenerator::new(uid.clone());
     let mut device_id_generator = SameUuidGenerator::new(device_uuid.clone());
@@ -84,7 +84,7 @@ fn device_registration_returns_duplication_error_on_device_id_duplication() {
     delete_app_user_with(&uid2);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let mut uid_generator1 = SameUuidGenerator::new(uid1.clone());
     let mut uid_generator2 = SameUuidGenerator::new(uid2.clone());
@@ -116,7 +116,7 @@ fn device_registration_returns_duplication_error_on_uid_duplication() {
     delete_app_user_with(&uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let mut uid_generator = SameUuidGenerator::new(uid.clone());
     let mut device_id_generator1 = SameUuidGenerator::new(device_uuid1.clone());
@@ -148,7 +148,7 @@ fn device_id_duplication_leaves_user_not_created() {
     delete_app_user_with(&uid2);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let mut uid_generator1 = SameUuidGenerator::new(uid1.clone());
     let mut uid_generator2 = SameUuidGenerator::new(uid2.clone());
@@ -173,7 +173,7 @@ fn uid_duplication_leaves_device_not_created() {
     delete_app_user_with(&uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let mut uid_generator = SameUuidGenerator::new(uid.clone());
     let mut device_id_generator1 = SameUuidGenerator::new(device_uuid1.clone());

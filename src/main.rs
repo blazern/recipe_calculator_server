@@ -50,5 +50,5 @@ fn main() {
     let shutdown_signal = futures::future::empty::<(),()>();
 
     println!("Starting listening to address: {}", address);
-    entry_point::start_server(&address, shutdown_signal, RequestsHandlerImpl::new(config));
+    entry_point::start_server(&address, shutdown_signal, RequestsHandlerImpl::new(config).unwrap());
 }

@@ -12,7 +12,7 @@ use server::testing_server_wrapper::ServerWrapper;
 fn start_server() -> ServerWrapper {
     let config = testing_config::get();
     let requests_handler = RequestsHandlerImpl::new(config);
-    testing_server_wrapper::start_server(requests_handler)
+    testing_server_wrapper::start_server(requests_handler.unwrap())
 }
 
 fn make_request(url: &str) -> JsonValue {

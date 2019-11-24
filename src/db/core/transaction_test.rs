@@ -5,7 +5,7 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use db::core::app_user;
-use db::core::connection::DBConnection;
+use db::core::testing_util as dbtesting_utils;
 use db::core::transaction;
 use db::core::transaction::TransactionError;
 use testing_config;
@@ -35,7 +35,7 @@ impl From<TransactionError<TestError>> for TestError {
 
 // Cleaning up before tests
 fn delete_entry_with(uid: &Uuid) {
-    let connection = DBConnection::for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
     let user = app_user::select_by_uid(uid, &connection).unwrap();
     match user {
         Some(user) => {
@@ -51,7 +51,7 @@ fn transaction_works() {
     delete_entry_with(&uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let transaction_result = transaction::start::<(), _, _>(&connection, || {
         app_user::insert(app_user::new(uid), &connection).unwrap();
@@ -66,7 +66,7 @@ fn transaction_works() {
 #[test]
 fn returns_correct_error() {
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let val = 100500;
     let transaction_result = transaction::start::<(), TestError, _>(&connection, || {
@@ -86,7 +86,7 @@ fn returns_correct_error() {
 #[test]
 fn returns_correct_value() {
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let val = 100500;
     let transaction_result = transaction::start::<i32, TestError, _>(&connection, || {

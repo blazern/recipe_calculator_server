@@ -7,24 +7,26 @@ use uuid;
 use uuid::Uuid;
 
 use config::Config;
+use db::core::migrator;
 use db::pool::connection_pool::ConnectionPool;
 use db::pool::connection_pool::ConnectionType;
 use db::pool::error::Error as PoolError;
 use server::error::Error as ServerError;
 use server::error::ErrorKind as ServerErrorKind;
 
+use super::error::Error;
 use super::constants;
 use super::client_cmd;
 use super::requests_handler::RequestsHandler;
 
-struct Error {
+struct RequestError {
     status: String,
     error_description: String
 }
 
-impl Error {
+impl RequestError {
     fn new(status: &str, error_description: &str) -> Self {
-        Error {
+        RequestError {
             status: status.to_string(),
             error_description: error_description.to_string()
         }
@@ -35,15 +37,20 @@ pub struct RequestsHandlerImpl {
     connection_pool: Mutex<ConnectionPool>,
 }
 
-
-
 impl RequestsHandlerImpl {
-    pub fn new(config: Config) -> RequestsHandlerImpl {
-        let pool = ConnectionPool::new(ConnectionType::UserConnection, config);
-        RequestsHandlerImpl{ connection_pool: Mutex::new(pool) }
+    pub fn new(config: Config) -> Result<RequestsHandlerImpl, Error> {
+        let pool = ConnectionPool::new(ConnectionType::UserConnection, config.clone());
+        let mut server_user_pool = ConnectionPool::new(ConnectionType::ServerConnection, config);
+
+        let server_user_connection = server_user_pool.borrow()?;
+        migrator::perform_migrations(&server_user_connection)?;
+
+        Ok(RequestsHandlerImpl {
+            connection_pool: Mutex::new(pool)
+        })
     }
 
-    fn handle_impl(&mut self, request: &str, query: Option<&str>) -> Result<JsonValue, Error> {
+    fn handle_impl(&mut self, request: &str, query: Option<&str>) -> Result<JsonValue, RequestError> {
         let args = query_to_args(query)?;
 
         let mut pool = self.connection_pool.lock().expect("Broken mutex means broken app");
@@ -66,7 +73,7 @@ impl RequestsHandlerImpl {
                             Some(query) => query,
                             None => ""
                         };
-                        return Err(Error::new(
+                        return Err(RequestError::new(
                             constants::FIELD_STATUS_INVALID_QUERY,
                             &format!("No device ID in query: {}", query)));
                     }
@@ -80,7 +87,7 @@ impl RequestsHandlerImpl {
                 }));
             },
             &_ => {
-                return Err(Error::new(
+                return Err(RequestError::new(
                     constants::FIELD_STATUS_UNKNOWN_REQUEST,
                     &format!("Unknown request: {}", request)));
             }
@@ -104,7 +111,7 @@ impl RequestsHandler for RequestsHandlerImpl {
     }
 }
 
-fn query_to_args(query: Option<&str>) -> Result<HashMap<&str, &str>, Error> {
+fn query_to_args(query: Option<&str>) -> Result<HashMap<&str, &str>, RequestError> {
     let mut result = HashMap::new();
 
     match query {
@@ -115,7 +122,7 @@ fn query_to_args(query: Option<&str>) -> Result<HashMap<&str, &str>, Error> {
                 let key = key_and_value.next();
                 let value = key_and_value.next();
                 if key_and_value.next().is_some() {
-                    return Err(Error::new(
+                    return Err(RequestError::new(
                         constants::FIELD_STATUS_INVALID_QUERY,
                         &format!("invalid key-value pair: {}", pair)));
                 }
@@ -124,7 +131,7 @@ fn query_to_args(query: Option<&str>) -> Result<HashMap<&str, &str>, Error> {
                         result.insert(key, value);
                     }
                     _ => {
-                        return Err(Error::new(
+                        return Err(RequestError::new(
                             constants::FIELD_STATUS_INVALID_QUERY,
                             &format!("invalid key-value pair: {}", pair)));
                     }
@@ -137,24 +144,24 @@ fn query_to_args(query: Option<&str>) -> Result<HashMap<&str, &str>, Error> {
     return Ok(result);
 }
 
-impl From<PoolError> for Error {
+impl From<PoolError> for RequestError {
     fn from(error: PoolError) -> Self {
-        Error::new(
+        RequestError::new(
             constants::FIELD_STATUS_INTERNAL_ERROR,
             &format!("Pool error: {}", error))
     }
 }
 
-impl From<ServerError> for Error {
+impl From<ServerError> for RequestError {
     fn from(error: ServerError) -> Self {
         match error {
             ServerError(ServerErrorKind::DeviceNotFoundError(device_id), _) => {
-                Error::new(
+                RequestError::new(
                     constants::FIELD_STATUS_UNKNOWN_DEVICE,
                     &format!("Unknown device, UUID: {}", device_id))
             },
             ServerError(error @ _, _) => {
-                Error::new(
+                RequestError::new(
                     constants::FIELD_STATUS_INTERNAL_ERROR,
                     &format!("Internal DB error: {}", error))
             }
@@ -162,9 +169,9 @@ impl From<ServerError> for Error {
     }
 }
 
-impl From<uuid::ParseError> for Error {
+impl From<uuid::ParseError> for RequestError {
     fn from(error: uuid::ParseError) -> Self {
-        Error::new(
+        RequestError::new(
             constants::FIELD_STATUS_INVALID_UUID,
             &format!("Invalid UUID: {}", error))
     }

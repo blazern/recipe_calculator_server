@@ -9,6 +9,7 @@ use db::core::connection::DBConnection;
 use db::core::diesel_connection;
 use db::core::foodstuff;
 use db::core::foodstuff::foodstuff as foodstuff_schema;
+use db::core::testing_util as dbtesting_utils;
 use testing_config;
 
 const FOODSTUFF_NAME: &'static str = "foodstuff name for tests";
@@ -33,7 +34,7 @@ fn insertion_and_selection_work() {
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -66,7 +67,7 @@ fn multiple_foodstuffs_can_depend_on_single_app_user() {
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -102,7 +103,7 @@ fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -138,7 +139,7 @@ fn can_make_foodstuff_unlisted() {
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -166,7 +167,7 @@ fn making_already_unlisted_foodstuff_unlisted_does_nothing() {
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 

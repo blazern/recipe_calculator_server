@@ -78,11 +78,6 @@ def main(args):
   step('Sleeping for {} seconds to wait for db container start'.format(sleep_time))
   time.sleep(sleep_time)
 
-  step('Running Diesel migrations')
-  postgres_url_template = 'postgres://{}:{}@localhost/recipe_calculator_main'
-  postgres_admin_url = postgres_url_template.format('recipe_calculator_admin', users_password)
-  check_call('diesel migration run --database-url={}'.format(postgres_admin_url))
-
   step('Generating testing config')
   config_template = '''
   {{
@@ -92,6 +87,8 @@ def main(args):
    "psql_url_user_admin": "{}"
   }}
   '''
+  postgres_url_template = 'postgres://{}:{}@localhost/recipe_calculator_main'
+  postgres_admin_url = postgres_url_template.format('recipe_calculator_admin', users_password)
   postgres_server_url = postgres_url_template.format('recipe_calculator_server', users_password)
   postgres_client_url = postgres_url_template.format('recipe_calculator_client', users_password)
   config = config_template.format(args.vk_server_token, postgres_server_url, postgres_client_url, postgres_admin_url)

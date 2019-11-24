@@ -3,7 +3,7 @@ extern crate serde_json;
 use error::Error;
 use std::io::Read;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Config {
     vk_server_token: String,
     psql_url_user_server: String,

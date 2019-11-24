@@ -7,6 +7,7 @@ use uuid::Uuid;
 use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::core::diesel_connection;
+use db::core::testing_util as dbtesting_utils;
 use db::core::vk_user;
 use db::core::vk_user::vk_user as vk_user_schema;
 use testing_config;
@@ -29,7 +30,7 @@ fn insertion_and_selection_work() {
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -52,7 +53,7 @@ fn cant_insert_vk_user_with_already_used_vk_uid() {
     delete_entries_with(&app_user_uid);
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -74,7 +75,7 @@ fn multiple_vk_users_cannot_depend_on_single_app_user() {
 
 
     let config = testing_config::get();
-    let connection = DBConnection::for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 

@@ -6,6 +6,7 @@ use db::core::transaction;
 error_chain! {
     links {
         DBCoreError(db::core::error::Error, db::core::error::ErrorKind);
+        DBPoolError(db::pool::error::Error, db::pool::error::ErrorKind);
     }
 
     errors {
