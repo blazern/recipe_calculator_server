@@ -83,15 +83,13 @@ def main(args):
   {{
    "vk_server_token": "{}",
    "psql_url_user_server": "{}",
-   "psql_url_user_client": "{}",
-   "psql_url_user_admin": "{}"
+   "psql_url_user_client": "{}"
   }}
   '''
   postgres_url_template = 'postgres://{}:{}@localhost/recipe_calculator_main'
-  postgres_admin_url = postgres_url_template.format('recipe_calculator_admin', users_password)
   postgres_server_url = postgres_url_template.format('recipe_calculator_server', users_password)
   postgres_client_url = postgres_url_template.format('recipe_calculator_client', users_password)
-  config = config_template.format(args.vk_server_token, postgres_server_url, postgres_client_url, postgres_admin_url)
+  config = config_template.format(args.vk_server_token, postgres_server_url, postgres_client_url)
 
   step('Writing config to a file')
   config_file = os.path.join(testing_env_dir, 'testing_config.json')

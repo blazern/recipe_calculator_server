@@ -20,7 +20,7 @@ use db::core::foodstuff::foodstuff as foodstuff_schema;
 use db::core::testing_util as dbtesting_utils;
 
 fn delete_user_by_uid(uid: &Uuid) {
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
     diesel::delete(
@@ -32,7 +32,7 @@ fn delete_user_by_uid(uid: &Uuid) {
 }
 
 fn select_user_by_uid(uid: &Uuid) -> Option<AppUser> {
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
     return app_user_schema::table.filter(app_user_schema::uid.eq(uid))
@@ -54,7 +54,7 @@ fn create_foodstuff(app_user: &AppUser, app_user_foodstuff_id: i32, name: String
 
 #[test]
 fn insert_macro_works() {
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
     let uid = Uuid::from_str("00000000-0000-0000-0000-008000000000").unwrap();
@@ -68,7 +68,7 @@ fn insert_macro_works() {
 
 #[test]
 fn select_macro_works() {
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
     let uid = Uuid::from_str("00000000-0000-0000-0000-008000000001").unwrap();
@@ -85,7 +85,7 @@ fn select_macro_works() {
 
 #[test]
 fn delete_macro_works() {
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
     let uid = Uuid::from_str("00000000-0000-0000-0000-008000000002").unwrap();
@@ -102,7 +102,7 @@ fn delete_macro_works() {
 
 #[test]
 fn update_macro_works() {
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
     let uid1 = Uuid::from_str("00000000-0000-0000-0000-008000000003").unwrap();
@@ -130,7 +130,7 @@ fn update_macro_works() {
 
 #[test]
 fn update_macro_returns_updated_values() {
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
     // cleaning up
@@ -189,7 +189,7 @@ fn update_macro_returns_updated_values() {
 
 #[test]
 fn unique_violation_error_returned_on_unique_violation() {
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
     let uid = Uuid::from_str("00000000-0000-0000-0000-008000000006").unwrap();

@@ -16,7 +16,7 @@ use db::core::testing_util as dbtesting_utils;
 fn transition_rolls_back_progress_when_interrupted() {
     let uid = Uuid::from_str("00000000-0000-0000-0000-006000000000").unwrap();
 
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let connection = diesel_connection(&connection);
 
     delete_by_column!(
@@ -43,7 +43,7 @@ fn transition_rolls_back_progress_when_interrupted() {
 #[test]
 fn operations_without_transactions_dont_roll_back() {
     let uid = Uuid::from_str("00000000-0000-0000-0000-006000000001").unwrap();
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let connection = diesel_connection(&connection);
 
     delete_by_column!(

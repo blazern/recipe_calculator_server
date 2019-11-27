@@ -3,14 +3,15 @@ use std::sync::Mutex;
 use super::connection::DBConnection;
 use super::error::Error;
 use super::migrator;
-use config::Config;
+use testing_config;
 
 // NOTE: target entries are expected to connect to app_user table by a foreign key.
 macro_rules! testing_util_delete_entries_with {
     ( $app_user_uid:expr, $entry_table:path, $entry_app_user_id_column:path ) => {
         use db::core::app_user::app_user as app_user_schema;
-        
-        let connection = DBConnection::for_admin_user().unwrap();
+        use db::core::testing_util::testing_connection_for_server_user;
+
+        let connection = testing_connection_for_server_user().unwrap();
         let raw_connection = diesel_connection(&connection);
 
         let app_user =
@@ -49,25 +50,19 @@ lazy_static! {
 }
 
 #[cfg(test)]
-pub fn testing_connection_for_client_user(config: &Config) -> Result<DBConnection, Error> {
+pub fn testing_connection_for_client_user() -> Result<DBConnection, Error> {
+    let config = testing_config::get();
+    let server_user = DBConnection::for_server_user(&config)?;
     let _migration_lock = MIGRATIONS_MUTEX.lock();
-    let admin_user = DBConnection::for_admin_user()?;
-    migrator::perform_migrations(&admin_user)?;
+    migrator::perform_migrations(&server_user)?;
     return DBConnection::for_client_user(&config);
 }
 
 #[cfg(test)]
-pub fn testing_connection_for_server_user(config: &Config) -> Result<DBConnection, Error> {
+pub fn testing_connection_for_server_user() -> Result<DBConnection, Error> {
+    let config = testing_config::get();
+    let server_user = DBConnection::for_server_user(&config)?;
     let _migration_lock = MIGRATIONS_MUTEX.lock();
-    let admin_user = DBConnection::for_admin_user()?;
-    migrator::perform_migrations(&admin_user)?;
-    return DBConnection::for_server_user(&config);
-}
-
-#[cfg(test)]
-pub fn testing_connection_for_admin_user() -> Result<DBConnection, Error> {
-    let _migration_lock = MIGRATIONS_MUTEX.lock();
-    let admin_user = DBConnection::for_admin_user()?;
-    migrator::perform_migrations(&admin_user)?;
-    return Ok(admin_user);
+    migrator::perform_migrations(&server_user)?;
+    return Ok(server_user);
 }

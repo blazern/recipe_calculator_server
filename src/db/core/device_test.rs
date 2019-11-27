@@ -5,12 +5,10 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use db::core::app_user;
-use db::core::connection::DBConnection;
 use db::core::device;
 use db::core::diesel_connection;
 use db::core::device::device as device_schema;
 use db::core::testing_util as dbtesting_utils;
-use testing_config;
 
 // Cleaning up before tests
 fn delete_entries_with(app_user_uid: &Uuid) {
@@ -29,8 +27,7 @@ fn insertion_and_selection_work() {
     let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-007000000001").unwrap();
     delete_entries_with(&app_user_uid);
 
-    let config = testing_config::get();
-    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -52,8 +49,7 @@ fn cant_insert_device_with_already_used_uuid() {
     let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-007000000003").unwrap();
     delete_entries_with(&app_user_uid);
 
-    let config = testing_config::get();
-    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -73,8 +69,7 @@ fn multiple_devices_can_depend_on_single_app_user() {
     let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-007000000006").unwrap();
     delete_entries_with(&app_user_uid);
 
-    let config = testing_config::get();
-    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -91,8 +86,7 @@ fn can_select_by_uuid() {
     let app_user_uid = Uuid::from_str("00000000-0000-0000-0000-007000000008").unwrap();
     delete_entries_with(&app_user_uid);
 
-    let config = testing_config::get();
-    let connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
 
@@ -108,7 +102,7 @@ fn can_delete_device_by_id() {
     let uid = Uuid::from_str("00000000-0000-0000-0000-007000000010").unwrap();
     delete_entries_with(&uid);
 
-    let connection = dbtesting_utils::testing_connection_for_admin_user().unwrap();
+    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &connection).unwrap();
     let inserted_device = device::insert(device::new(uuid, &inserted_user), &connection).unwrap();
@@ -125,8 +119,7 @@ fn cant_delete_device_with_client_connection() {
     let uid = Uuid::from_str("00000000-0000-0000-0000-007000000012").unwrap();
     delete_entries_with(&uid);
 
-    let config = testing_config::get();
-    let pg_client_connection = dbtesting_utils::testing_connection_for_client_user(&config).unwrap();
+    let pg_client_connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let inserted_user = app_user::insert(app_user::new(uid), &pg_client_connection).unwrap();
     let inserted_device = device::insert(device::new(uuid, &inserted_user), &pg_client_connection).unwrap();

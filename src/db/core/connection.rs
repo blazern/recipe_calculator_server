@@ -31,13 +31,6 @@ impl DBConnection {
         }
     }
 
-    #[cfg(test)]
-    pub fn for_admin_user() -> Result<DBConnection, Error> {
-        use testing_config;
-        let config = testing_config::get();
-        return Self::from_raw_params(config.psql_diesel_url_admin_user());
-    }
-
     pub (in super) fn diesel_connection(&self) -> &PgConnection {
         return &self.diesel_connection;
     }
