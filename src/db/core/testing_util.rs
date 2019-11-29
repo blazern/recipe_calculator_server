@@ -51,18 +51,21 @@ lazy_static! {
 
 #[cfg(test)]
 pub fn testing_connection_for_client_user() -> Result<DBConnection, Error> {
-    let config = testing_config::get();
-    let server_user = DBConnection::for_server_user(&config)?;
     let _migration_lock = MIGRATIONS_MUTEX.lock();
-    migrator::perform_migrations(&server_user)?;
-    return DBConnection::for_client_user(&config);
+    migrate_with_timeout().unwrap();
+    return DBConnection::for_client_user(&testing_config::get());
 }
 
 #[cfg(test)]
 pub fn testing_connection_for_server_user() -> Result<DBConnection, Error> {
-    let config = testing_config::get();
-    let server_user = DBConnection::for_server_user(&config)?;
     let _migration_lock = MIGRATIONS_MUTEX.lock();
-    migrator::perform_migrations(&server_user)?;
-    return Ok(server_user);
+    migrate_with_timeout().unwrap();
+    return DBConnection::for_server_user(&testing_config::get());
+}
+
+fn migrate_with_timeout() -> Result<(), Error> {
+    let config = testing_config::get();
+    migrator::migrate_with_timeout(
+        config.psql_diesel_url_server_user(),
+        config.db_connection_attempts_timeout_seconds() as i64)
 }

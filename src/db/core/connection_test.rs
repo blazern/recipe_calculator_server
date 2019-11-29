@@ -11,7 +11,7 @@ fn connection_constructs_with_valid_config() {
 
 #[test]
 fn connection_construction_fails_with_invalid_config() {
-    let invalid_config = Config::new("", "", "");
+    let invalid_config = Config::new("", "", "", 123);
     let connection = DBConnection::for_client_user(&invalid_config);
     assert!(connection.is_err());
 }

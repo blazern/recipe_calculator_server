@@ -8,6 +8,7 @@ use std::net::ToSocketAddrs;
 use clap::{Arg, App};
 
 use recipe_calculator_lib::config;
+use recipe_calculator_lib::db::core::migrator;
 use recipe_calculator_lib::server::entry_point;
 use recipe_calculator_lib::server::requests_handler_impl::RequestsHandlerImpl;
 
@@ -21,7 +22,8 @@ fn main() {
     let example_config = config::Config::new(
         "<large hex number>",
         "postgres://recipe_calculator_server:P@ssw0rd@localhost/recipe_calculator_main",
-        "postgres://recipe_calculator_client:P@ssw0rd@localhost/recipe_calculator_main");
+        "postgres://recipe_calculator_client:P@ssw0rd@localhost/recipe_calculator_main",
+        180);
     let example_config_json = serde_json::to_string_pretty(&example_config).unwrap();
 
     let matches = App::new("Recipe calculator server")
@@ -48,6 +50,11 @@ fn main() {
     let mut address = address.to_socket_addrs().unwrap();
     let address = address.next().unwrap();
     let shutdown_signal = futures::future::empty::<(),()>();
+
+    println!("Performing migrations");
+    migrator::migrate_with_timeout(
+        config.psql_diesel_url_server_user(),
+        config.db_connection_attempts_timeout_seconds() as i64).unwrap();
 
     println!("Starting listening to address: {}", address);
     entry_point::start_server(&address, shutdown_signal, RequestsHandlerImpl::new(config).unwrap());

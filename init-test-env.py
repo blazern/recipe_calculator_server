@@ -83,7 +83,8 @@ def main(args):
   {{
    "vk_server_token": "{}",
    "psql_url_user_server": "{}",
-   "psql_url_user_client": "{}"
+   "psql_url_user_client": "{}",
+   "db_connection_attempts_timeout_seconds": 10
   }}
   '''
   postgres_url_template = 'postgres://{}:{}@localhost/recipe_calculator_main'

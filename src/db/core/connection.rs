@@ -19,7 +19,7 @@ impl DBConnection {
         return Self::from_raw_params(config.psql_diesel_url_server_user());
     }
 
-    fn from_raw_params(raw_params: &str) -> Result<DBConnection, Error> {
+    pub fn from_raw_params(raw_params: &str) -> Result<DBConnection, Error> {
         let diesel_connection = diesel::PgConnection::establish(raw_params);
         match diesel_connection {
             Ok(connection) => {
