@@ -28,7 +28,7 @@ fn insertion_and_selection_work() {
     let uid = Uuid::from_str("00000000-0000-0000-0000-009000000000").unwrap();
     delete_entry_with(&uid);
 
-    let new_user = app_user::new(uid);
+    let new_user = app_user::new(uid, "name");
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let inserted_user = app_user::insert(new_user, &connection).unwrap();
@@ -47,8 +47,8 @@ fn cant_insert_user_with_already_used_uid() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let user1 = app_user::new(uid);
-    let user2 = app_user::new(uid);
+    let user1 = app_user::new(uid, "name1");
+    let user2 = app_user::new(uid, "name2");
 
     app_user::insert(user1, &connection).unwrap();
 
@@ -63,7 +63,7 @@ fn can_select_user_by_uid() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let inserted_user = app_user::insert(app_user::new(uid), &connection).unwrap();
+    let inserted_user = app_user::insert(app_user::new(uid, ""), &connection).unwrap();
 
     let selected_user = app_user::select_by_uid(&uid, &connection).unwrap().unwrap();
 
@@ -77,7 +77,7 @@ fn can_delete_user_by_id() {
 
     let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
 
-    let inserted_user = app_user::insert(app_user::new(uid), &connection).unwrap();
+    let inserted_user = app_user::insert(app_user::new(uid, ""), &connection).unwrap();
 
     app_user::delete_by_id(inserted_user.id(), &connection).unwrap();
     let deleted_user = app_user::select_by_uid(&uid, &connection).unwrap();
@@ -92,9 +92,26 @@ fn cant_delete_user_with_client_connection() {
 
     let pg_client_connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let inserted_user = app_user::insert(app_user::new(uid), &pg_client_connection).unwrap();
+    let inserted_user = app_user::insert(app_user::new(uid, ""), &pg_client_connection).unwrap();
 
     let user_deletion_result = app_user::delete_by_id(inserted_user.id(), &pg_client_connection);
 
     assert!(user_deletion_result.is_err());
+}
+
+#[test]
+fn can_insert_user_with_already_used_name() {
+    let uid1 = Uuid::from_str("00000000-0000-0000-0000-009000000005").unwrap();
+    let uid2 = Uuid::from_str("00000000-0000-0000-0000-009000000006").unwrap();
+    delete_entry_with(&uid1);
+    delete_entry_with(&uid2);
+
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
+
+    let user1 = app_user::new(uid1, "name");
+    let user2 = app_user::new(uid2, "name");
+
+    let user1_inserted = app_user::insert(user1, &connection).unwrap();
+    let user2_inserted = app_user::insert(user2, &connection).unwrap();
+    assert_eq!(user1_inserted.name(), user2_inserted.name());
 }

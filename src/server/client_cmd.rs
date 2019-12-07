@@ -1,11 +1,9 @@
 use uuid::Uuid;
 
 use super::error::Error;
-use super::error::ErrorKind::DeviceNotFoundError;
 use super::error::ErrorKind::UniqueUuidCreationError;
 use db::core::app_user;
 use db::core::connection::DBConnection;
-use db::core::device;
 use db::core::error::Error as DBError;
 use db::core::error::ErrorKind as DBErrorKind;
 use db::core::transaction;
@@ -22,27 +20,37 @@ impl UuidGenerator for DefaultUuidGenerator {
     }
 }
 
-// Registers new device by creating an 'app_user::AppUser' for it and storing
-// both device and app_user to DB.
-//
-pub fn register_device(db_connection: &DBConnection) -> Result<Uuid, Error> {
-    return register_device_by_uuid_generator(
-        &mut DefaultUuidGenerator{}, &mut DefaultUuidGenerator{}, &db_connection);
+pub struct UserRegistrationResult {
+    pub uid: Uuid,
 }
 
-fn register_device_by_uuid_generator(
+pub fn register_user(user_name: &str,
+                     social_network_type: &str,
+                     social_network_token: &str,
+                     db_connection: &DBConnection) -> Result<UserRegistrationResult, Error> {
+    return register_user_by_uuid_generator(
+        user_name,
+        social_network_type,
+        social_network_token,
+        &mut DefaultUuidGenerator{},
+        &db_connection);
+}
+
+fn register_user_by_uuid_generator(
+        user_name: &str,
+        _social_network_type: &str,
+        _social_network_token: &str,
         uid_generator: &mut UuidGenerator,
-        device_id_generator: &mut UuidGenerator,
-        db_connection: &DBConnection) -> Result<Uuid, Error> {
-    let device_id = device_id_generator.generate();
+        db_connection: &DBConnection) -> Result<UserRegistrationResult, Error> {
+    // TODO: check social network type, create an according entry in DB
     let uid = uid_generator.generate();
 
     return transaction::start(&db_connection, || {
-        let app_user = app_user::insert(app_user::new(uid), &db_connection);
+        let app_user = app_user::insert(app_user::new(uid, user_name), &db_connection);
         let app_user = app_user.map_err(extract_uuid_duplication_error)?;
-        let device = device::insert(device::new(device_id, &app_user), &db_connection);
-        let device = device.map_err(extract_uuid_duplication_error)?;
-        return Ok(device.uuid().clone());
+        return Ok(UserRegistrationResult {
+            uid: app_user.uid().clone(),
+        });
     });
 }
 
@@ -53,21 +61,6 @@ fn extract_uuid_duplication_error(db_error: DBError) -> Error {
         }
         error => {
             return error.into();
-        }
-    }
-}
-
-pub fn is_device_registered(db_connection: &DBConnection, device_id: &Uuid) -> Result<bool, Error> {
-    let _device = device::select_by_uuid(&device_id, &db_connection);
-    match _device {
-        Ok(Some(_device)) => {
-            return Ok(true);
-        },
-        Ok(None) => {
-            return Ok(false);
-        },
-        Err(_) => {
-            return Err(DeviceNotFoundError(device_id.clone()).into());
         }
     }
 }

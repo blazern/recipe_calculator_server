@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 use std::convert::From;
-use std::str::FromStr;
 use std::sync::Mutex;
 use serde_json::Value as JsonValue;
 use uuid;
-use uuid::Uuid;
 
 use config::Config;
 use db::core::migrator;
@@ -18,20 +16,6 @@ use super::error::Error;
 use super::constants;
 use super::client_cmd;
 use super::requests_handler::RequestsHandler;
-
-struct RequestError {
-    status: String,
-    error_description: String
-}
-
-impl RequestError {
-    fn new(status: &str, error_description: &str) -> Self {
-        RequestError {
-            status: status.to_string(),
-            error_description: error_description.to_string()
-        }
-    }
-}
 
 pub struct RequestsHandlerImpl {
     connection_pool: Mutex<ConnectionPool>,
@@ -57,33 +41,15 @@ impl RequestsHandlerImpl {
         let connection = (&mut pool).borrow()?;
 
         match request {
-            constants::CMD_REGISTER_DEVICE => {
-                let result = client_cmd::register_device(&connection)?;
+            constants::CMD_REGISTER_USER => {
+                let user_name = args.get_or_request_error(constants::ARG_USER_NAME, query)?;
+                let social_network_type = args.get_or_request_error(constants::ARG_SOCIAL_NETWORK_TYPE, query)?;
+                let social_network_token = args.get_or_request_error(constants::ARG_SOCIAL_NETWORK_TOKEN, query)?;
+                let result = client_cmd::register_user(user_name, social_network_type, social_network_token, &connection)?;
                 return Ok(json!({
                     constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK,
-                    constants::FIELD_NAME_DEVICE_ID: result.to_string()
-                }));
-            },
-            constants::CMD_IS_DEVICE_REGISTERED => {
-                let device_uuid = args.get(constants::ARG_DEVICE_ID);
-                let device_uuid = match device_uuid {
-                    Some(device_uuid) => device_uuid,
-                    None => {
-                        let query = match query {
-                            Some(query) => query,
-                            None => ""
-                        };
-                        return Err(RequestError::new(
-                            constants::FIELD_STATUS_INVALID_QUERY,
-                            &format!("No device ID in query: {}", query)));
-                    }
-                };
-                let device_uuid = Uuid::from_str(&device_uuid)?;
-                let is_registered = client_cmd::is_device_registered(&connection, &device_uuid)?;
-
-                return Ok(json!({
-                    constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK,
-                    constants::FIELD_NAME_REGISTERED: is_registered
+                    constants::FIELD_NAME_USER_ID: result.uid.to_string(),
+//                    constants::FIELD_NAME_CLIENT_TOKEN: result.client_token().to_string(),
                 }));
             },
             &_ => {
@@ -142,6 +108,41 @@ fn query_to_args(query: Option<&str>) -> Result<HashMap<&str, &str>, RequestErro
     }
 
     return Ok(result);
+}
+
+struct RequestError {
+    status: String,
+    error_description: String
+}
+
+impl RequestError {
+    fn new(status: &str, error_description: &str) -> Self {
+        RequestError {
+            status: status.to_string(),
+            error_description: error_description.to_string()
+        }
+    }
+}
+
+trait HashMapAdditionalOperations {
+    fn get_or_request_error<'a>(&'a self, key: &str, request_query: Option<&str>) -> Result<&'a str, RequestError>;
+}
+impl HashMapAdditionalOperations for HashMap<&str, &str> {
+    fn get_or_request_error<'a>(&'a self, key: &str, request_query: Option<&str>) -> Result<&'a str, RequestError> {
+        let result = self.get(key);
+        return match result {
+            Some(result) => Ok(result),
+            None => {
+                let request_query = match request_query {
+                    Some(request_query) => request_query,
+                    None => ""
+                };
+                Err(RequestError::new(
+                    constants::FIELD_STATUS_PARAM_MISSING,
+                    &format!("No param '{}' in query: {}", key, request_query)))
+            }
+        };
+    }
 }
 
 impl From<PoolError> for RequestError {

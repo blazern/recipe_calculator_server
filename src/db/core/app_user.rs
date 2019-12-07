@@ -9,6 +9,7 @@ table! {
     app_user {
         id -> Integer,
         uid -> Uuid,
+        name -> VarChar,
     }
 }
 use self::app_user as app_user_schema;
@@ -17,12 +18,14 @@ use self::app_user as app_user_schema;
 #[table_name="app_user"]
 pub struct NewAppUser {
     uid: Uuid,
+    name: String
 }
 
 #[derive(Debug, PartialEq, Eq, Queryable)]
 pub struct AppUser {
     id: i32,
     uid: Uuid,
+    name: String
 }
 
 impl AppUser {
@@ -33,10 +36,14 @@ impl AppUser {
     pub fn uid(&self) -> &Uuid {
         return &self.uid;
     }
+
+    pub fn name(&self) -> &str {
+        return &self.name;
+    }
 }
 
-pub fn new(uid: Uuid) -> NewAppUser {
-    NewAppUser{ uid }
+pub fn new(uid: Uuid, name: &str) -> NewAppUser {
+    NewAppUser{ uid, name: name.to_string() }
 }
 
 pub fn insert(app_user: NewAppUser, connection: &DBConnection) -> Result<AppUser, Error> {

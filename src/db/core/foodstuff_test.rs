@@ -33,7 +33,7 @@ fn insertion_and_selection_work() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
 
     let new_foodstuff = foodstuff::new(
         &app_user,
@@ -65,7 +65,7 @@ fn multiple_foodstuffs_can_depend_on_single_app_user() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
 
     let new_foodstuff1 = foodstuff::new(
         &app_user,
@@ -100,7 +100,7 @@ fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
 
     let new_foodstuff1 = foodstuff::new(
         &app_user,
@@ -135,7 +135,7 @@ fn can_make_foodstuff_unlisted() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
 
     let new_foodstuff = foodstuff::new(
         &app_user,
@@ -162,7 +162,7 @@ fn making_already_unlisted_foodstuff_unlisted_does_nothing() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid), &connection).unwrap();
+    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
 
     let new_foodstuff = foodstuff::new(
         &app_user,

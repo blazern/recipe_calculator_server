@@ -22,10 +22,14 @@ fn make_request(url: &str) -> JsonValue {
 }
 
 fn assert_status_ok(response: &JsonValue) {
+    assert_status(response, constants::FIELD_STATUS_OK);
+}
+
+fn assert_status(response: &JsonValue, expected_status: &str) {
     match response {
         JsonValue::Object(fields) => {
             match fields.get(constants::FIELD_NAME_STATUS) {
-                Some(JsonValue::String(status)) => assert_eq!(status, constants::FIELD_STATUS_OK),
+                Some(JsonValue::String(status)) => assert_eq!(status, expected_status),
                 _ => panic!("Response must have status, but it didn't: {}", response)
             };
         },
@@ -34,61 +38,50 @@ fn assert_status_ok(response: &JsonValue) {
 }
 
 #[test]
-fn random_client_doesnt_exists() {
-    let server = start_server();
-    // NOTE: there's close to 0 possibility that the generated UUID exists in DB
-    let random_uuid = Uuid::new_v4();
-    let url = format!("http://{}{}?{}={}",
-                      server.address(), &constants::CMD_IS_DEVICE_REGISTERED,
-                      &constants::ARG_DEVICE_ID, random_uuid.to_string());
-
-    let response = make_request(&url);
-    assert_status_ok(&response);
-
-    match &response {
-        JsonValue::Object(fields) => {
-            match fields.get(constants::FIELD_NAME_REGISTERED) {
-                Some(JsonValue::Bool(is_registered)) => assert!(!is_registered),
-                _ => panic!("Expected response with registration status, got: {}", &response)
-            };
-        },
-        _ => panic!("Response expected to be json object, but was: {}", &response)
-    };
-}
-
-#[test]
 fn test_register_client_cmd() {
     let server = start_server();
 
-    let url = format!("http://{}{}", server.address(), &constants::CMD_REGISTER_DEVICE);
+    let url = format!("http://{}{}?{}={}&{}={}&{}={}",
+                      server.address(), &constants::CMD_REGISTER_USER,
+                      &constants::ARG_USER_NAME, "name",
+                      &constants::ARG_SOCIAL_NETWORK_TYPE, "type",
+                      &constants::ARG_SOCIAL_NETWORK_TOKEN, "token");
     let response = make_request(&url);
     assert_status_ok(&response);
 
-    let device_id: Uuid;
     match &response {
         JsonValue::Object(fields) => {
-            match fields.get(constants::FIELD_NAME_DEVICE_ID) {
+            match fields.get(constants::FIELD_NAME_USER_ID) {
                 Some(JsonValue::String(uuid)) => {
-                    device_id = Uuid::parse_str(uuid).expect("Expecting valid uuid");
+                    Uuid::parse_str(uuid).expect("Expecting valid uuid");
                 },
-                _ => panic!("Response must have device ID, but it didn't: {}", response)
+                _ => panic!("Response must have uid, but it didn't: {}", response)
             }
         },
         _ => panic!("Response expected to be json object, but was: {}", response)
     };
+}
 
+#[test]
+fn test_register_client_fails_when_no_social_network_type_provided() {
+    let server = start_server();
 
-    let url = format!("http://{}{}?{}={}",
-                      server.address(), &constants::CMD_IS_DEVICE_REGISTERED,
-                      &constants::ARG_DEVICE_ID, device_id.to_string());
+    let url = format!("http://{}{}?{}={}&{}={}",
+                      server.address(), &constants::CMD_REGISTER_USER,
+                      &constants::ARG_USER_NAME, "name",
+                      &constants::ARG_SOCIAL_NETWORK_TYPE, "type");
     let response = make_request(&url);
-    match &response {
-        JsonValue::Object(fields) => {
-            match fields.get(constants::FIELD_NAME_REGISTERED) {
-                Some(JsonValue::Bool(is_registered)) => assert!(is_registered),
-                _ => panic!("Expected response with registration status, got: {}", response)
-            };
-        },
-        _ => panic!("Response expected to be json object, but was: {}", response)
-    };
+    assert_status(&response, constants::FIELD_STATUS_PARAM_MISSING);
+}
+
+#[test]
+fn test_register_client_fails_when_no_social_network_token_provided() {
+    let server = start_server();
+
+    let url = format!("http://{}{}?{}={}&{}={}",
+                      server.address(), &constants::CMD_REGISTER_USER,
+                      &constants::ARG_USER_NAME, "name",
+                      &constants::ARG_SOCIAL_NETWORK_TOKEN, "token");
+    let response = make_request(&url);
+    assert_status(&response, constants::FIELD_STATUS_PARAM_MISSING);
 }
