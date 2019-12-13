@@ -2,14 +2,18 @@ extern crate diesel;
 extern crate uuid;
 
 use std::str::FromStr;
+use std::sync::Arc;
 
 use uuid::Uuid;
 
+use http_client::HttpClient;
 use server::error::Error;
 use server::error::ErrorKind::UniqueUuidCreationError;
 use db::core::app_user;
 use db::core::testing_util as dbtesting_utils;
 use server::client_cmd;
+use testing_utils::testing_config;
+use testing_utils::exhaust_future;
 
 struct SameUuidGenerator {
     uuid: Uuid,
@@ -47,10 +51,20 @@ fn user_registration_works() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let mut uid_generator = SameUuidGenerator::new(uid.clone());
-    client_cmd::register_user_by_uuid_generator("name", "type", "token", &mut uid_generator, &connection).unwrap();
+    let uid_generator = SameUuidGenerator::new(uid.clone());
+    let config = testing_config();
+
+    let result =
+        client_cmd::register_user_by_uuid_generator(
+            "name".to_string(),
+            uid_generator,
+            config,
+            connection,
+            Arc::new(HttpClient::new().unwrap()));
+    exhaust_future(result).unwrap();
 
     // making sure app_user is inserted
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
     let user = app_user::select_by_uid(&uid, &connection).unwrap().unwrap();
     assert_eq!("name", user.name())
 }
@@ -60,13 +74,24 @@ fn user_registration_returns_duplication_error_on_uid_duplication() {
     let uid = Uuid::from_str("00000000-0000-0000-0000-001000000005").unwrap();
     delete_app_user_with(&uid);
 
-    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
-
-    let mut uid_generator = SameUuidGenerator::new(uid.clone());
-    client_cmd::register_user_by_uuid_generator("name1", "type1", "token1", &mut uid_generator, &connection).unwrap();
+    let result1 =
+        client_cmd::register_user_by_uuid_generator(
+            "name1".to_string(),
+            SameUuidGenerator::new(uid.clone()),
+            testing_config(),
+            dbtesting_utils::testing_connection_for_client_user().unwrap(),
+            Arc::new(HttpClient::new().unwrap()));
+    exhaust_future(result1).unwrap();
 
     let second_registration_result =
-        client_cmd::register_user_by_uuid_generator("name2", "type2", "token2", &mut uid_generator, &connection);
+        client_cmd::register_user_by_uuid_generator(
+            "name2".to_string(),
+            SameUuidGenerator::new(uid.clone()),
+            testing_config(),
+            dbtesting_utils::testing_connection_for_client_user().unwrap(),
+            Arc::new(HttpClient::new().unwrap()));
+    let second_registration_result = exhaust_future(second_registration_result);
+
     match second_registration_result {
         Err(Error(UniqueUuidCreationError(_), _)) => {
             // OK
@@ -80,32 +105,12 @@ fn user_registration_returns_duplication_error_on_uid_duplication() {
     }
 }
 
-#[test]
-fn uid_duplication_leaves_vk_user_not_created() {
-    // TODO
-//    let uid1 = Uuid::from_str("00000000-0000-0000-0000-001000000008").unwrap();
-//    let uid2 = Uuid::from_str("00000000-0000-0000-0000-001000000009").unwrap();
-//    let device_uuid = Uuid::from_str("00000000-0000-0000-0000-001000000010").unwrap();
-//    delete_device_with(&device_uuid);
-//    delete_app_user_with(&uid1);
-//    delete_app_user_with(&uid2);
+//#[test]
+//fn uid_duplication_leaves_vk_user_not_created() {
+//    // TODO
+//}
 //
-//    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
-//
-//    let mut uid_generator1 = SameUuidGenerator::new(uid1.clone());
-//    let mut uid_generator2 = SameUuidGenerator::new(uid2.clone());
-//    let mut device_id_generator = SameUuidGenerator::new(device_uuid.clone());
-//    client_cmd::register_device_by_uuid_generator(&mut uid_generator1, &mut device_id_generator, &connection).unwrap();
-//
-//    let second_registration_result =
-//        client_cmd::register_device_by_uuid_generator(&mut uid_generator2, &mut device_id_generator, &connection);
-//    assert!(second_registration_result.is_err()); // test doesn't make sense otherwise
-//
-//    let app_user = app_user::select_by_uid(&uid2, &connection);
-//    assert!(app_user.unwrap().is_none());
-}
-
-#[test]
-fn uid_duplication_leaves_google_user_not_created() {
-  // TODO
-}
+//#[test]
+//fn uid_duplication_leaves_google_user_not_created() {
+//  // TODO
+//}

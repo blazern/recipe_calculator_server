@@ -11,7 +11,7 @@ extern crate serde;
 #[macro_use] extern crate serde_json;
 extern crate tokio_core;
 extern crate uuid;
-#[cfg(test)] pub mod testing_config;
+#[cfg(test)] pub mod testing_utils;
 pub mod db;
 pub mod error;
 pub mod config;

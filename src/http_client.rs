@@ -1,30 +1,39 @@
-use std::str::FromStr;
 
 use futures::Future;
 use futures::Stream;
 
 use hyper::Client;
 use hyper::Uri;
+use hyper::client::HttpConnector;
 use hyper_tls::HttpsConnector;
-
-use tokio_core;
 
 use error::Error;
 
-// TODO: remove this function, all requests must be asynchronous
-pub fn make_blocking_request(url_str: &str) -> Result<String, Error> {
-    let https = HttpsConnector::new(1)?;
-    let client = Client::builder().build::<_, hyper::Body>(https);
-    let url = Uri::from_str(url_str)?;
+pub struct HttpClient {
+    hyper_client: Client<HttpsConnector<HttpConnector>>
+}
 
-    let mut tokio_core = tokio_core::reactor::Core::new()?;
-    let response = tokio_core.run(client.get(url))?;
+impl HttpClient {
+    pub fn new() -> Result<HttpClient, Error> {
+        // TODO: control number of threads
+        let https = HttpsConnector::new(1)?;
+        let client = Client::builder().build::<_, hyper::Body>(https);
+        Ok(HttpClient {
+            hyper_client: client
+        })
+    }
 
-    let body = response.into_body();
-    let result = body.concat2()
-        .map(|body| {
-            String::from_utf8_lossy(&body).to_string()
-        }).wait()?;
-
-    return Ok(result);
+    pub fn make_request(&self, url: Uri) -> impl Future<Item=String, Error=Error> {
+        let response = self.hyper_client.get(url);
+        response
+            .map(|val| {
+                val.into_body()
+                    .concat2()
+                    .map(|body| {
+                        String::from_utf8_lossy(&body).to_string()
+                    })
+            })
+            .flatten()
+            .map_err(|err| err.into())
+    }
 }

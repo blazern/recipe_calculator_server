@@ -1,16 +1,30 @@
+use hyper::Uri;
+use futures::Future;
+use futures::future::ok;
+use std::str::FromStr;
+use std::sync::Arc;
+
 use server::requests_handler::RequestsHandler;
 use server::testing_server_wrapper;
 
-use http_client;
+use http_client::HttpClient;
 
 struct Echo {
     string: String,
 }
 
 impl RequestsHandler for Echo {
-    fn handle(&mut self, _request: &str, _query: Option<&str>) -> String {
-        self.string.clone()
+    fn handle(&mut self, _request: String, _query: String)
+            -> Box<Future<Item=String, Error=()>> {
+        Box::new(ok(self.string.clone()))
     }
+}
+
+fn make_request(url: &str) -> String {
+    let http_client = Arc::new(HttpClient::new().unwrap());
+    let response = http_client.make_request(Uri::from_str(url).unwrap());
+    let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
+    return tokio_core.run(response).unwrap();
 }
 
 #[test]
@@ -19,7 +33,7 @@ fn test_server_responses() {
     let server = testing_server_wrapper::start_server(Echo{ string: expected_response.to_string() });
 
     let url = format!("http://{}", server.address());
-    let response = http_client::make_blocking_request(&url).unwrap();
+    let response = make_request(&url);
 
     assert_eq!(expected_response, response);
 }

@@ -30,14 +30,21 @@ pub fn start_server<F, RH>(address: &SocketAddr, shutdown_signal: F, requests_ha
     let requests_handler = RefCell::new(requests_handler);
     let entry_point = Arc::new(EntryPoint::new(requests_handler));
 
-    // TODO: current implementation blocks the threads it's called on. For a real world app its unacceptable.
+    let mut tokio_core = tokio_core::reactor::Core::new().unwrap(); // TODO remove unwrap
+
     let new_service = move || {
         let entry_point = entry_point.clone();
         service_fn_ok(move |req| {
             let uri = req.uri();
 
-            let requests_handler = entry_point.requests_handler.lock().unwrap();
-            let str_response = requests_handler.borrow_mut().handle(uri.path(), uri.query());
+            let requests_handler = entry_point.requests_handler.lock().expect("Broken mutex == broken app");
+            let request = uri.path().to_string();
+            let query = match uri.query() {
+                Some(query) => query.to_string(),
+                None => "".to_string(),
+            };
+            let response = requests_handler.borrow_mut().handle(request, query);
+            let str_response = response.wait().expect("Request handling is not expected to ever send an error");
             Response::new(Body::from(str_response))
         })
     };
@@ -48,8 +55,6 @@ pub fn start_server<F, RH>(address: &SocketAddr, shutdown_signal: F, requests_ha
     let server = Server::bind(&address)
         .serve(new_service)
         .map_err(|e| panic!("No error was expected, but got: {}", e));
-
-    let mut tokio_core = tokio_core::reactor::Core::new().unwrap(); // TODO remove unwrap
 
     let server_with_shutdown_signal = shutdown_signal.select(server);
     let server_result = tokio_core.run(server_with_shutdown_signal);

@@ -1,9 +1,10 @@
 extern crate serde_json;
 use std::sync::Once;
+use futures::Future;
 use config;
 
 #[cfg(test)]
-pub fn get() -> config::Config {
+pub fn testing_config() -> config::Config {
     use std;
 
     let config_path = std::env::var("CONFIG_FILE_PATH");
@@ -22,4 +23,14 @@ pub fn get() -> config::Config {
     });
 
     return result;
+}
+
+#[cfg(test)]
+pub fn exhaust_future<Fut, Item, Error>(future: Fut)
+        -> Result<Item, Error>
+        where Fut: Future<Item=Item, Error=Error>,
+              Error: std::fmt::Debug {
+    use tokio_core;
+    let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
+    return tokio_core.run(future);
 }

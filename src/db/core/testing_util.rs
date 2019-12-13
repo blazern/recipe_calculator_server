@@ -1,9 +1,10 @@
 use std::sync::Mutex;
 
 use super::connection::DBConnection;
+use super::connection::DBConnectionImpl;
 use super::error::Error;
 use super::migrator;
-use testing_config;
+use testing_utils::testing_config;
 
 // NOTE: target entries are expected to connect to app_user table by a foreign key.
 macro_rules! testing_util_delete_entries_with {
@@ -50,21 +51,21 @@ lazy_static! {
 }
 
 #[cfg(test)]
-pub fn testing_connection_for_client_user() -> Result<DBConnection, Error> {
+pub fn testing_connection_for_client_user() -> Result<impl DBConnection, Error> {
     let _migration_lock = MIGRATIONS_MUTEX.lock();
     migrate_with_timeout().unwrap();
-    return DBConnection::for_client_user(&testing_config::get());
+    return DBConnectionImpl::for_client_user(&testing_config());
 }
 
 #[cfg(test)]
-pub fn testing_connection_for_server_user() -> Result<DBConnection, Error> {
+pub fn testing_connection_for_server_user() -> Result<impl DBConnection, Error> {
     let _migration_lock = MIGRATIONS_MUTEX.lock();
     migrate_with_timeout().unwrap();
-    return DBConnection::for_server_user(&testing_config::get());
+    return DBConnectionImpl::for_server_user(&testing_config());
 }
 
 fn migrate_with_timeout() -> Result<(), Error> {
-    let config = testing_config::get();
+    let config = testing_config();
     migrator::migrate_with_timeout(
         config.psql_diesel_url_server_user(),
         config.db_connection_attempts_timeout_seconds() as i64)

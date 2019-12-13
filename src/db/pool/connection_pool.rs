@@ -1,15 +1,16 @@
 use config::Config;
 use db::core::connection::DBConnection;
+use db::core::connection::DBConnectionImpl;
+use db::core::connection::UnderlyingConnectionSource;
 use db::core::error::Error as DBCoreError;
 use super::error::Error;
 
-use std::ops::Deref;
 use std::sync::Arc;
 use std::sync::Mutex;
 
 // Thread-safe connection pool for connections reusing.
 
-type WrappedPool = Arc<Mutex<Vec<DBConnection>>>;
+type WrappedPool = Arc<Mutex<Vec<DBConnectionImpl>>>;
 
 pub enum ConnectionType {
     UserConnection,
@@ -23,7 +24,7 @@ pub struct ConnectionPool {
 }
 
 pub struct BorrowedDBConnection {
-    connection: Option<DBConnection>,
+    connection: Option<DBConnectionImpl>,
     connections: WrappedPool,
 }
 
@@ -53,7 +54,7 @@ impl ConnectionPool {
     }
 
     pub fn borrow(&mut self) -> Result<BorrowedDBConnection, Error> {
-        let connection: Option<DBConnection>;
+        let connection: Option<DBConnectionImpl>;
         {
             let mut connections = self.connections.lock().unwrap();
             connection = (&mut connections).pop();
@@ -69,7 +70,7 @@ impl ConnectionPool {
         }
     }
 
-    fn connection_to_borrowed(&mut self, connection: DBConnection) -> BorrowedDBConnection {
+    fn connection_to_borrowed(&mut self, connection: DBConnectionImpl) -> BorrowedDBConnection {
         let result = BorrowedDBConnection {
             connection: Some(connection),
             connections: self.connections.clone()
@@ -77,13 +78,13 @@ impl ConnectionPool {
         return result;
     }
 
-    fn new_connection(&self) -> Result<DBConnection, DBCoreError> {
+    fn new_connection(&self) -> Result<DBConnectionImpl, DBCoreError> {
         match self.connection_type {
             ConnectionType::UserConnection => {
-                return DBConnection::for_client_user(&self.config);
+                return DBConnectionImpl::for_client_user(&self.config);
             }
             ConnectionType::ServerConnection => {
-                return DBConnection::for_server_user(&self.config);
+                return DBConnectionImpl::for_server_user(&self.config);
             }
         }
     }
@@ -102,11 +103,12 @@ impl Drop for BorrowedDBConnection {
     }
 }
 
-impl Deref for BorrowedDBConnection {
-    type Target = DBConnection;
-
-    fn deref(&self) -> &DBConnection {
-        &self.connection.as_ref().expect("Connection expected to be moved out only in drop")
+impl DBConnection for BorrowedDBConnection {
+    fn underlying_connection_source(&self) -> &UnderlyingConnectionSource {
+        return &self.connection
+            .as_ref()
+            .expect("Connection expected to be moved out only in drop")
+            .underlying_connection_source();
     }
 }
 
