@@ -46,7 +46,7 @@ impl RequestsHandlerImpl {
     }
 
     fn handle_impl(&mut self, request: String, query: String)
-            -> impl Future<Item=JsonValue, Error=RequestError> {
+            -> impl Future<Item=JsonValue, Error=RequestError> + Send {
         let mut pool = self.connection_pool.lock().expect("Broken mutex means broken app");
         let connection = (&mut pool).borrow();
         let config = self.config.clone();
@@ -71,27 +71,30 @@ fn handle_prepared_request(
     connection: BorrowedDBConnection,
     config: Config,
     http_client: Arc<HttpClient>)
-        -> Box<Future<Item=JsonValue, Error=RequestError>> {
+        -> Box<Future<Item=JsonValue, Error=RequestError> + Send> {
     match request.as_ref() {
         constants::CMD_REGISTER_USER => {
-//          let social_network_type = args.get_or_request_error(constants::ARG_SOCIAL_NETWORK_TYPE, query)?;
-//          let social_network_token = args.get_or_request_error(constants::ARG_SOCIAL_NETWORK_TOKEN, query)?;
             let result =
                 done(args.get_or_request_error(constants::ARG_USER_NAME))
-                    .and_then(|user_name| {
-                        client_cmd::register_user(user_name.to_string(),
-//                                                social_network_type.to_string(),
-//                                                social_network_token.to_string(),
+                    .join4(
+                        done(args.get_or_request_error(constants::ARG_SOCIAL_NETWORK_TYPE)),
+                        done(args.get_or_request_error(constants::ARG_SOCIAL_NETWORK_TOKEN)),
+                        ok(args.get_or_empty(constants::ARG_OVERRIDES)))
+                    .and_then(move |(user_name, social_network_type, social_network_token, overrides)| {
+                        client_cmd::register_user(user_name,
+                                                  social_network_type,
+                                                  social_network_token,
+                                                  overrides,
                                                   config,
                                                   connection,
                                                   http_client)
                             .map_err(|err| err.into())
                     }).map(|result| {
                     json!({
-                                            constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK,
-                                            constants::FIELD_NAME_USER_ID: result.uid.to_string(),
-//                                          constants::FIELD_NAME_CLIENT_TOKEN: result.client_token().to_string(),
-                                        })
+                        constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK,
+                        constants::FIELD_NAME_USER_ID: result.uid.to_string(),
+//                      constants::FIELD_NAME_CLIENT_TOKEN: result.client_token().to_string(),
+                    })
                 }).map_err(|err| err.into());
             Box::new(result)
         },
@@ -105,7 +108,7 @@ fn handle_prepared_request(
 
 impl RequestsHandler for RequestsHandlerImpl {
     fn handle(&mut self, request: String, query: String)
-            -> Box<Future<Item=String, Error=()>> {
+            -> Box<Future<Item=String, Error=()> + Send> {
         let result =
             self.handle_impl(request, query)
                 .map(|response| response.to_string())
@@ -167,18 +170,26 @@ impl RequestError {
 
 trait HashMapAdditionalOperations {
     fn get_or_request_error(&self, key: &str) -> Result<String, RequestError>;
+    fn get_or_empty(&self, key: &str) -> String;
 }
 impl HashMapAdditionalOperations for HashMap<std::string::String, std::string::String> {
     fn get_or_request_error(&self, key: &str) -> Result<String, RequestError> {
         let result = self.get(key);
-        return match result {
+        match result {
             Some(result) => Ok(result.to_string()),
             None => {
                 Err(RequestError::new(
                     constants::FIELD_STATUS_PARAM_MISSING,
                     &format!("No param '{}' in query", key)))
             }
-        };
+        }
+    }
+    fn get_or_empty(&self, key: &str) -> String {
+        let result = self.get(key);
+        match result {
+            Some(result) => result.to_string(),
+            None => "".to_string(),
+        }
     }
 }
 
@@ -193,15 +204,20 @@ impl From<PoolError> for RequestError {
 impl From<ServerError> for RequestError {
     fn from(error: ServerError) -> Self {
         match error {
-            ServerError(ServerErrorKind::DeviceNotFoundError(device_id), _) => {
+            ServerError(error @ ServerErrorKind::VkUidDuplicationError, _) => {
                 RequestError::new(
-                    constants::FIELD_STATUS_UNKNOWN_DEVICE,
-                    &format!("Unknown device, UUID: {}", device_id))
+                    constants::FIELD_STATUS_ALREADY_REGISTERED,
+                    &format!("User already registered: {}", error))
+            },
+            ServerError(error @ ServerErrorKind::VKTokenCheckError(_, _), _) => {
+                RequestError::new(
+                    constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
+                    &format!("Token check fail: {}", error))
             },
             ServerError(error @ _, _) => {
                 RequestError::new(
                     constants::FIELD_STATUS_INTERNAL_ERROR,
-                    &format!("Internal DB error: {}", error))
+                    &format!("Internal error: {}", error))
             }
         }
     }

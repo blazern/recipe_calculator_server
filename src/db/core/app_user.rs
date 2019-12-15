@@ -58,10 +58,6 @@ pub fn select_by_uid(uid: &Uuid, connection: &DBConnection) -> Result<Option<App
     return select_by_column!(AppUser, app_user_schema::table, app_user_schema::uid, uid, diesel_connection(connection));
 }
 
-pub fn delete_by_id(id: i32, connection: &DBConnection) -> Result<(), Error> {
-    return delete_by_column!(app_user_schema::table, app_user_schema::id, id, diesel_connection(connection));
-}
-
 #[cfg(test)]
 #[path = "./app_user_test.rs"]
 mod app_user_test;

@@ -1,9 +1,14 @@
 extern crate serde_json;
 
 use std;
+use std::str::FromStr;
+use std::sync::Arc;
+use futures::IntoFuture;
+use futures::Future;
 
 use error::Error;
-use http_client;
+use http_client::HttpClient;
+use hyper::Uri;
 
 #[allow(dead_code)]
 pub const ERROR_CODE_SERVER_TOKEN_INVALID: i64 = 5;
@@ -39,7 +44,7 @@ struct VkTokenCheckResult {
     user_id: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CheckResult {
     is_success: bool,
     user_id: Option<String>,
@@ -100,15 +105,22 @@ pub fn check_token_from_server_response<R>(response: R) -> Result<CheckResult, E
     return Ok(CheckResult::from_vk_check_result(vk_check_result));
 }
 
-pub fn check_token(server_token: &str, client_token: &str) -> Result<CheckResult, Error> {
+pub fn check_token(server_token: &str, client_token: &str, http_client: Arc<HttpClient>)
+        -> impl Future<Item=CheckResult, Error=Error> + Send {
     let url = [HOST_METHOD, METHOD_CHECK_TOKEN].join("");
     let url = format!("{}?{}={}&{}={}&{}={}",
                         url, PARAM_ACCESS_TOKEN, server_token,
                         PARAM_TOKEN, client_token,
                         PARAM_API_VERSION, API_VERSION);
 
-    let response = http_client::make_blocking_request(&url)?;
-    return check_token_from_server_response(response.as_bytes());
+    let url = Uri::from_str(&url);
+    return
+        url.into_future()
+            .map_err(|err| err.into())
+            .and_then(move |url| {
+                http_client.make_request(url)
+            })
+            .and_then(|response| check_token_from_server_response(response.as_bytes()));
 }
 
 #[cfg(test)]

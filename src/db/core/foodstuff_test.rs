@@ -5,9 +5,7 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use db::core::app_user;
-use db::core::diesel_connection;
 use db::core::foodstuff;
-use db::core::foodstuff::foodstuff as foodstuff_schema;
 use db::core::testing_util as dbtesting_utils;
 
 const FOODSTUFF_NAME: &'static str = "foodstuff name for tests";
@@ -18,10 +16,10 @@ const FOODSTUFF_CALORIES: i32 = 123456789_i32;
 
 // Cleaning up before tests
 fn delete_entries_with(app_user_uid: &Uuid) {
-    testing_util_delete_entries_with!(
-        app_user_uid,
-        foodstuff_schema::table,
-        foodstuff_schema::app_user_id);
+    use db::core::util::delete_app_user;
+    delete_app_user(
+        &app_user_uid,
+        &dbtesting_utils::testing_connection_for_server_user().unwrap()).unwrap();
 }
 
 #[test]

@@ -34,14 +34,10 @@ impl From<TransactionError<TestError>> for TestError {
 
 // Cleaning up before tests
 fn delete_entry_with(uid: &Uuid) {
-    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
-    let user = app_user::select_by_uid(uid, &connection).unwrap();
-    match user {
-        Some(user) => {
-            app_user::delete_by_id(user.id(), &connection).unwrap();
-        }
-        _ => {}
-    }
+    use db::core::util::delete_app_user;
+    delete_app_user(
+        &uid,
+        &dbtesting_utils::testing_connection_for_server_user().unwrap()).unwrap();
 }
 
 #[test]

@@ -13,6 +13,7 @@ pub mod foodstuff;
 pub mod migrator;
 pub mod transaction;
 pub mod vk_user;
+pub mod util;
 
 // Implementation details.
 use diesel;

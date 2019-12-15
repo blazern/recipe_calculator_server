@@ -15,7 +15,7 @@ struct Echo {
 
 impl RequestsHandler for Echo {
     fn handle(&mut self, _request: String, _query: String)
-            -> Box<Future<Item=String, Error=()>> {
+            -> Box<Future<Item=String, Error=()> + Send> {
         Box::new(ok(self.string.clone()))
     }
 }

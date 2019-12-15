@@ -7,6 +7,7 @@
 extern crate hyper;
 extern crate hyper_tls;
 extern crate futures;
+extern crate percent_encoding;
 extern crate serde;
 #[macro_use] extern crate serde_json;
 extern crate tokio_core;

@@ -1,12 +1,14 @@
 use db;
 
-use uuid::Uuid;
 use db::core::transaction;
+use error;
+use uuid::Uuid;
 
 error_chain! {
     links {
         DBCoreError(db::core::error::Error, db::core::error::ErrorKind);
         DBPoolError(db::pool::error::Error, db::pool::error::ErrorKind);
+        BaseError(error::Error, error::ErrorKind);
     }
 
     errors {
@@ -18,6 +20,18 @@ error_chain! {
         DeviceNotFoundError(device_id: Uuid) {
             description("Device ID not found"),
             display("Device ID not found: {:?}", device_id),
+        }
+        UnsupportedSocialNetwork(social_network_type: String) {
+            description("Unsupported social network"),
+            display("Unsupported social network: {:?}", social_network_type),
+        }
+        VKTokenCheckError(error_msg: String, error_code: i64) {
+            description("VK token check error"),
+            display("VK token check error, code: {:?}, msg: {:?}", error_code, error_msg),
+        }
+        VkUidDuplicationError {
+            description("VK user already registered"),
+            display("VK user already registered"),
         }
     }
 }

@@ -71,35 +71,6 @@ fn can_select_user_by_uid() {
 }
 
 #[test]
-fn can_delete_user_by_id() {
-    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000003").unwrap();
-    delete_entry_with(&uid);
-
-    let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
-
-    let inserted_user = app_user::insert(app_user::new(uid, ""), &connection).unwrap();
-
-    app_user::delete_by_id(inserted_user.id(), &connection).unwrap();
-    let deleted_user = app_user::select_by_uid(&uid, &connection).unwrap();
-
-    assert!(deleted_user.is_none());
-}
-
-#[test]
-fn cant_delete_user_with_client_connection() {
-    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000004").unwrap();
-    delete_entry_with(&uid);
-
-    let pg_client_connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
-
-    let inserted_user = app_user::insert(app_user::new(uid, ""), &pg_client_connection).unwrap();
-
-    let user_deletion_result = app_user::delete_by_id(inserted_user.id(), &pg_client_connection);
-
-    assert!(user_deletion_result.is_err());
-}
-
-#[test]
 fn can_insert_user_with_already_used_name() {
     let uid1 = Uuid::from_str("00000000-0000-0000-0000-009000000005").unwrap();
     let uid2 = Uuid::from_str("00000000-0000-0000-0000-009000000006").unwrap();
