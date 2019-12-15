@@ -9,7 +9,7 @@ pub const FIELD_NAME_ERROR_DESCRIPTION: &str = "error_description";
 pub const FIELD_NAME_STATUS: &str = "status";
 pub const FIELD_NAME_REGISTERED: &str = "registered";
 pub const FIELD_NAME_USER_ID: &str = "device_id";
-//pub const FIELD_NAME_CLIENT_TOKEN: &str = "client_token";
+pub const FIELD_NAME_CLIENT_TOKEN: &str = "client_token";
 
 pub const FIELD_STATUS_OK: &str = "ok";
 pub const FIELD_STATUS_CONNECTION_BROKEN: &str = "connection_broken";

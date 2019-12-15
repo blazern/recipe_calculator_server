@@ -27,7 +27,10 @@ fn insertion_and_selection_work() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
+    let app_user =
+        app_user::insert(
+            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
 
     let new_vk_user = vk_user::new(vk_uid.to_string(), &app_user);
 
@@ -53,7 +56,10 @@ fn cant_insert_vk_user_with_already_used_vk_uid() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
+    let app_user =
+        app_user::insert(
+            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
 
     let vk_user_copy1 = vk_user::new(vk_uid.to_string(), &app_user);
     let vk_user_copy2 = vk_user::new(vk_uid.to_string(), &app_user);
@@ -73,7 +79,9 @@ fn multiple_vk_users_cannot_depend_on_single_app_user() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
+    let app_user =
+        app_user::insert(app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+                         &connection).unwrap();
 
     let vk_user1 = vk_user::new(vk_uid1.to_string(), &app_user);
     let vk_user2 = vk_user::new(vk_uid2.to_string(), &app_user);

@@ -28,7 +28,7 @@ fn insertion_and_selection_work() {
     let uid = Uuid::from_str("00000000-0000-0000-0000-009000000000").unwrap();
     delete_entry_with(&uid);
 
-    let new_user = app_user::new(uid, "name");
+    let new_user = app_user::new(uid, "name".to_string(), Uuid::new_v4());
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let inserted_user = app_user::insert(new_user, &connection).unwrap();
@@ -47,8 +47,8 @@ fn cant_insert_user_with_already_used_uid() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let user1 = app_user::new(uid, "name1");
-    let user2 = app_user::new(uid, "name2");
+    let user1 = app_user::new(uid, "name1".to_string(), Uuid::new_v4());
+    let user2 = app_user::new(uid, "name2".to_string(), Uuid::new_v4());
 
     app_user::insert(user1, &connection).unwrap();
 
@@ -63,7 +63,10 @@ fn can_select_user_by_uid() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let inserted_user = app_user::insert(app_user::new(uid, ""), &connection).unwrap();
+    let inserted_user =
+        app_user::insert(
+            app_user::new(uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
 
     let selected_user = app_user::select_by_uid(&uid, &connection).unwrap().unwrap();
 
@@ -79,8 +82,8 @@ fn can_insert_user_with_already_used_name() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let user1 = app_user::new(uid1, "name");
-    let user2 = app_user::new(uid2, "name");
+    let user1 = app_user::new(uid1, "name".to_string(), Uuid::new_v4());
+    let user2 = app_user::new(uid2, "name".to_string(), Uuid::new_v4());
 
     let user1_inserted = app_user::insert(user1, &connection).unwrap();
     let user2_inserted = app_user::insert(user2, &connection).unwrap();

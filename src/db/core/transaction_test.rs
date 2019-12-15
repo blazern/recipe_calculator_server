@@ -48,7 +48,9 @@ fn transaction_works() {
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let transaction_result = transaction::start::<(), _, _>(&connection, || {
-        app_user::insert(app_user::new(uid, ""), &connection).unwrap();
+        app_user::insert(
+            app_user::new(uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
         return Err(TestError::new());
     });
     assert!(transaction_result.is_err());

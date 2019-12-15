@@ -25,7 +25,7 @@ fn transition_rolls_back_progress_when_interrupted() {
     let invalid_id_value = -1;
     let mut id: i32 = invalid_id_value;
     let transaction_result = connection.transaction::<(), db::core::error::Error, _>(|| {
-        let new_user = app_user::new(uid, "");
+        let new_user = app_user::new(uid, "".to_string(), Uuid::new_v4());
         let user = insert!(AppUser, new_user, app_user_schema::table, connection);
         let user = user.unwrap();
         id = user.id();
@@ -49,7 +49,7 @@ fn operations_without_transactions_dont_roll_back() {
     delete_by_column!(
         app_user_schema::table, app_user_schema::uid, uid, connection).unwrap();
 
-    let new_user = app_user::new(uid, "");
+    let new_user = app_user::new(uid, "".to_string(), Uuid::new_v4());
     let inserted_user = insert!(AppUser, new_user, app_user_schema::table, connection);
     assert!(inserted_user.is_ok());
 

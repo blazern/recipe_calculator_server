@@ -17,7 +17,10 @@ fn deleting_app_user_deletes_all_related_data() {
     // clean up data before testing.
     delete_app_user(&uid, &conn).unwrap();
 
-    let app_user = app_user::insert(app_user::new(uid.clone(), "name"), &conn).unwrap();
+    let app_user =
+        app_user::insert(
+            app_user::new(uid.clone(), "name".to_string(), Uuid::new_v4()),
+            &conn).unwrap();
     let device = device::insert(device::new(Uuid::new_v4(), &app_user), &conn).unwrap();
     let vk_user = vk_user::insert(vk_user::new("vkuid".to_string(), &app_user), &conn).unwrap();
     let foodstuff1 = foodstuff::insert(

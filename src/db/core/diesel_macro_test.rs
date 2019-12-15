@@ -61,7 +61,7 @@ fn insert_macro_works() {
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
-    let new_user = app_user::new(uid, "");
+    let new_user = app_user::new(uid, "".to_string(), Uuid::new_v4());
     insert!(AppUser, new_user, app_user_schema::table, raw_connection).unwrap();
     assert!(select_user_by_uid(&uid).is_some());
 }
@@ -75,7 +75,7 @@ fn select_macro_works() {
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
-    let new_user = app_user::new(uid, "");
+    let new_user = app_user::new(uid, "".to_string(), Uuid::new_v4());
     insert!(AppUser, new_user, app_user_schema::table, raw_connection).unwrap();
     assert!(select_user_by_uid(&uid).is_some());
 
@@ -92,7 +92,7 @@ fn delete_macro_works() {
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
-    let new_user = app_user::new(uid, "");
+    let new_user = app_user::new(uid, "".to_string(), Uuid::new_v4());
     insert!(AppUser, new_user, app_user_schema::table, raw_connection).unwrap();
     assert!(select_user_by_uid(&uid).is_some());
 
@@ -112,7 +112,12 @@ fn update_macro_works() {
     assert!(select_user_by_uid(&uid1).is_none());
     assert!(select_user_by_uid(&uid2).is_none());
 
-    let inserted_user = insert!(AppUser, app_user::new(uid1, ""), app_user_schema::table, raw_connection).unwrap();
+    let inserted_user =
+        insert!(
+            AppUser,
+            app_user::new(uid1, "".to_string(), Uuid::new_v4()),
+            app_user_schema::table,
+            raw_connection).unwrap();
     assert!(select_user_by_uid(&uid1).is_some());
     assert!(select_user_by_uid(&uid2).is_none());
 
@@ -148,7 +153,12 @@ fn update_macro_returns_updated_values() {
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
-    let user = insert!(AppUser, app_user::new(uid, ""), app_user_schema::table, raw_connection).unwrap();
+    let user =
+        insert!(
+            AppUser,
+            app_user::new(uid, "".to_string(), Uuid::new_v4()),
+            app_user_schema::table,
+            raw_connection).unwrap();
 
     let app_user_foodstuff_id1 = 1;
     let app_user_foodstuff_id2 = 2;
@@ -196,8 +206,8 @@ fn unique_violation_error_returned_on_unique_violation() {
     delete_user_by_uid(&uid);
     assert!(select_user_by_uid(&uid).is_none());
 
-    let new_user1 = app_user::new(uid, "name1");
-    let new_user2 = app_user::new(uid, "name2");
+    let new_user1 = app_user::new(uid, "name1".to_string(), Uuid::new_v4());
+    let new_user2 = app_user::new(uid, "name2".to_string(), Uuid::new_v4());
     insert!(AppUser, new_user1, app_user_schema::table, raw_connection).unwrap();
 
     let second_insertion_result = insert!(AppUser, new_user2, app_user_schema::table, raw_connection);

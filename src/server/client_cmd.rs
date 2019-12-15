@@ -25,6 +25,7 @@ use http_client::HttpClient;
 
 pub struct UserRegistrationResult {
     pub uid: Uuid,
+    pub client_token: Uuid,
 }
 
 pub fn register_user<Conn>(user_name: String,
@@ -85,7 +86,11 @@ fn register_user_impl<Conn>(
 
             let result = transaction::start(&db_connection, move || {
                 let uid = user_uuid_generator.generate();
-                let app_user = app_user::insert(app_user::new(uid, &user_name), db_connection_ref);
+                let client_token = Uuid::new_v4();
+
+                let app_user = app_user::insert(
+                    app_user::new(uid, user_name.to_string(), client_token.clone()),
+                    db_connection_ref);
                 let app_user = app_user.map_err(extract_uuid_duplication_error)?;
 
                 let vk_user =
@@ -97,6 +102,7 @@ fn register_user_impl<Conn>(
 
                 return Ok(UserRegistrationResult {
                     uid: app_user.uid().clone(),
+                    client_token: app_user.client_token().clone(),
                 });
             });
             done(result)

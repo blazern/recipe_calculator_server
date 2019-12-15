@@ -93,7 +93,7 @@ fn handle_prepared_request(
                     json!({
                         constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK,
                         constants::FIELD_NAME_USER_ID: result.uid.to_string(),
-//                      constants::FIELD_NAME_CLIENT_TOKEN: result.client_token().to_string(),
+                        constants::FIELD_NAME_CLIENT_TOKEN: result.client_token.to_string(),
                     })
                 }).map_err(|err| err.into());
             Box::new(result)

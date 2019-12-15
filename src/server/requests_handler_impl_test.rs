@@ -37,19 +37,11 @@ fn assert_status_ok(response: &JsonValue) {
 }
 
 fn assert_status(response: &JsonValue, expected_status: &str) {
-    match response {
-        JsonValue::Object(fields) => {
-            match fields.get(constants::FIELD_NAME_STATUS) {
-                Some(JsonValue::String(status)) => {
-                    if status != expected_status {
-                        panic!("{} != {}, response: {}", status, expected_status, response)
-                    }
-                },
-                _ => panic!("Response must have status, but it didn't: {}", response)
-            };
-        },
-        _ => panic!("Response expected to be json object, but was: {}", response)
-    };
+    let status = response[constants::FIELD_NAME_STATUS].as_str()
+        .expect(&format!("Response must have status, but it didn't: {}", response));
+    if status != expected_status {
+        panic!("{} != {}, response: {}", status, expected_status, response)
+    }
 }
 
 /// Cleaning up before tests
@@ -86,6 +78,11 @@ fn register_client_cmd() {
     let response = make_request(&url);
     assert_status_ok(&response);
 
+    // Make sure we received a client token and it's a valid UUID
+    let client_token = response[constants::FIELD_NAME_CLIENT_TOKEN].as_str().unwrap();
+    Uuid::parse_str(client_token).unwrap();
+
+    // Make sure app_user and vk_user were created
     let conn = testing_connection_for_server_user().unwrap();
     let app_user = app_user::select_by_uid(
         &uid, &conn).unwrap().unwrap();

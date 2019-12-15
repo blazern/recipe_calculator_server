@@ -27,7 +27,10 @@ fn insertion_and_selection_work() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
+    let app_user =
+        app_user::insert(
+            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
 
     let new_device = device::new(uuid, &app_user);
 
@@ -49,7 +52,10 @@ fn cant_insert_device_with_already_used_uuid() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
+    let app_user =
+        app_user::insert(
+            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
 
     let device_copy1 = device::new(uuid, &app_user);
     let device_copy2 = device::new(uuid, &app_user);
@@ -69,7 +75,10 @@ fn multiple_devices_can_depend_on_single_app_user() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
+    let app_user =
+        app_user::insert(
+            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
 
     let device1 = device::new(uuid1, &app_user);
     let device2 = device::new(uuid2, &app_user);
@@ -86,7 +95,10 @@ fn can_select_by_uuid() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user = app_user::insert(app_user::new(app_user_uid, ""), &connection).unwrap();
+    let app_user =
+        app_user::insert(
+            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
 
     let inserted_device = device::insert(device::new(uuid.clone(), &app_user), &connection).unwrap();
     let selected_device = device::select_by_uuid(&uuid, &connection).unwrap().unwrap();
@@ -102,7 +114,10 @@ fn can_delete_device_by_id() {
 
     let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
 
-    let inserted_user = app_user::insert(app_user::new(uid, ""), &connection).unwrap();
+    let inserted_user =
+        app_user::insert(
+            app_user::new(uid, "".to_string(), Uuid::new_v4()),
+            &connection).unwrap();
     let inserted_device = device::insert(device::new(uuid, &inserted_user), &connection).unwrap();
 
     device::delete_by_id(inserted_device.id(), &connection).unwrap();
@@ -119,7 +134,10 @@ fn cant_delete_device_with_client_connection() {
 
     let pg_client_connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let inserted_user = app_user::insert(app_user::new(uid, ""), &pg_client_connection).unwrap();
+    let inserted_user =
+        app_user::insert(
+            app_user::new(uid, "".to_string(), Uuid::new_v4()),
+            &pg_client_connection).unwrap();
     let inserted_device = device::insert(device::new(uuid, &inserted_user), &pg_client_connection).unwrap();
 
     let device_deletion_result = device::delete_by_id(inserted_device.id(), &pg_client_connection);
