@@ -1,6 +1,6 @@
-use hyper::Uri;
-use futures::Future;
 use futures::future::ok;
+use futures::Future;
+use hyper::Uri;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -14,8 +14,11 @@ struct Echo {
 }
 
 impl RequestsHandler for Echo {
-    fn handle(&mut self, _request: String, _query: String)
-            -> Box<dyn Future<Item=String, Error=()> + Send> {
+    fn handle(
+        &mut self,
+        _request: String,
+        _query: String,
+    ) -> Box<dyn Future<Item = String, Error = ()> + Send> {
         Box::new(ok(self.string.clone()))
     }
 }
@@ -30,7 +33,9 @@ fn make_request(url: &str) -> String {
 #[test]
 fn test_server_responses() {
     let expected_response = "Hello, world";
-    let server = testing_server_wrapper::start_server(Echo{ string: expected_response.to_string() });
+    let server = testing_server_wrapper::start_server(Echo {
+        string: expected_response.to_string(),
+    });
 
     let url = format!("http://{}", server.address());
     let response = make_request(&url);

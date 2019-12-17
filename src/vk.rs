@@ -1,10 +1,10 @@
 extern crate serde_json;
 
+use futures::Future;
+use futures::IntoFuture;
 use std;
 use std::str::FromStr;
 use std::sync::Arc;
-use futures::IntoFuture;
-use futures::Future;
 
 use error::Error;
 use http_client::HttpClient;
@@ -64,7 +64,11 @@ impl CheckResult {
 
     fn from_vk_check_result(vk_check_result: VkTokenCheckResult) -> CheckResult {
         let is_success = vk_check_result.success == 1;
-        let user_id = if is_success { Some(vk_check_result.user_id) } else { None };
+        let user_id = if is_success {
+            Some(vk_check_result.user_id)
+        } else {
+            None
+        };
         CheckResult {
             is_success: is_success,
             user_id: user_id,
@@ -91,36 +95,45 @@ impl CheckResult {
 }
 
 pub fn check_token_from_server_response<R>(response: R) -> Result<CheckResult, Error>
-        where R: std::io::Read {
+where
+    R: std::io::Read,
+{
     let response: serde_json::Value = serde_json::from_reader(response)?;
     match &response[PARAM_ERROR] {
-        &serde_json::Value::Null => {}, // nothing to do, there's no error
+        &serde_json::Value::Null => {} // nothing to do, there's no error
         _ => {
             let vk_error: VkErrorResponse = serde_json::from_value(response)?;
             return Ok(CheckResult::from_vk_error(vk_error));
-        },
+        }
     }
 
     let vk_check_result: VkTokenCheckResult = serde_json::from_value(response)?;
     return Ok(CheckResult::from_vk_check_result(vk_check_result));
 }
 
-pub fn check_token(server_token: &str, client_token: &str, http_client: Arc<HttpClient>)
-        -> impl Future<Item=CheckResult, Error=Error> + Send {
+pub fn check_token(
+    server_token: &str,
+    client_token: &str,
+    http_client: Arc<HttpClient>,
+) -> impl Future<Item = CheckResult, Error = Error> + Send {
     let url = [HOST_METHOD, METHOD_CHECK_TOKEN].join("");
-    let url = format!("{}?{}={}&{}={}&{}={}",
-                        url, PARAM_ACCESS_TOKEN, server_token,
-                        PARAM_TOKEN, client_token,
-                        PARAM_API_VERSION, API_VERSION);
+    let url = format!(
+        "{}?{}={}&{}={}&{}={}",
+        url,
+        PARAM_ACCESS_TOKEN,
+        server_token,
+        PARAM_TOKEN,
+        client_token,
+        PARAM_API_VERSION,
+        API_VERSION
+    );
 
     let url = Uri::from_str(&url);
-    return
-        url.into_future()
-            .map_err(|err| err.into())
-            .and_then(move |url| {
-                http_client.make_request(url)
-            })
-            .and_then(|response| check_token_from_server_response(response.as_bytes()));
+    return url
+        .into_future()
+        .map_err(|err| err.into())
+        .and_then(move |url| http_client.make_request(url))
+        .and_then(|response| check_token_from_server_response(response.as_bytes()));
 }
 
 #[cfg(test)]

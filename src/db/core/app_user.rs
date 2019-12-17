@@ -16,7 +16,7 @@ table! {
 use self::app_user as app_user_schema;
 
 #[derive(Insertable)]
-#[table_name="app_user"]
+#[table_name = "app_user"]
 pub struct NewAppUser {
     uid: Uuid,
     name: String,
@@ -50,19 +50,40 @@ impl AppUser {
 }
 
 pub fn new(uid: Uuid, name: String, client_token: Uuid) -> NewAppUser {
-    NewAppUser{ uid, name, client_token }
+    NewAppUser {
+        uid,
+        name,
+        client_token,
+    }
 }
 
 pub fn insert(app_user: NewAppUser, connection: &dyn DBConnection) -> Result<AppUser, Error> {
-    return insert!(AppUser, app_user, app_user_schema::table, diesel_connection(connection));
+    return insert!(
+        AppUser,
+        app_user,
+        app_user_schema::table,
+        diesel_connection(connection)
+    );
 }
 
 pub fn select_by_id(id: i32, connection: &dyn DBConnection) -> Result<Option<AppUser>, Error> {
-    return select_by_column!(AppUser, app_user_schema::table, app_user_schema::id, id, diesel_connection(connection));
+    return select_by_column!(
+        AppUser,
+        app_user_schema::table,
+        app_user_schema::id,
+        id,
+        diesel_connection(connection)
+    );
 }
 
 pub fn select_by_uid(uid: &Uuid, connection: &dyn DBConnection) -> Result<Option<AppUser>, Error> {
-    return select_by_column!(AppUser, app_user_schema::table, app_user_schema::uid, uid, diesel_connection(connection));
+    return select_by_column!(
+        AppUser,
+        app_user_schema::table,
+        app_user_schema::uid,
+        uid,
+        diesel_connection(connection)
+    );
 }
 
 #[cfg(test)]

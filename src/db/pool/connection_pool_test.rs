@@ -21,12 +21,18 @@ fn connections_are_reused() {
         let _connection1 = pool.borrow().unwrap();
         assert_eq!(initial_connections_count, pool.pooled_connections_count());
     }
-    assert_eq!(initial_connections_count + 1, pool.pooled_connections_count());
+    assert_eq!(
+        initial_connections_count + 1,
+        pool.pooled_connections_count()
+    );
 
     {
         let _connection2 = pool.borrow().unwrap();
         assert_eq!(initial_connections_count, pool.pooled_connections_count());
     }
 
-    assert_eq!(initial_connections_count + 1, pool.pooled_connections_count());
+    assert_eq!(
+        initial_connections_count + 1,
+        pool.pooled_connections_count()
+    );
 }

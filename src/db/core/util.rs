@@ -1,14 +1,14 @@
-use uuid::Uuid;
-use super::diesel_connection;
 use super::connection::DBConnection;
+use super::diesel_connection;
 use super::error::Error;
+use uuid::Uuid;
 
 pub fn delete_app_user(app_user_uid: &Uuid, connection: &dyn DBConnection) -> Result<(), Error> {
     use super::app_user;
     use super::app_user::app_user as app_user_schema;
     use super::device::device as device_schema;
-    use super::vk_user::vk_user as vk_user_schema;
     use super::foodstuff::foodstuff as foodstuff_schema;
+    use super::vk_user::vk_user as vk_user_schema;
     let raw_connection = diesel_connection(connection);
 
     let app_user = app_user::select_by_uid(&app_user_uid, connection)?;
@@ -20,28 +20,32 @@ pub fn delete_app_user(app_user_uid: &Uuid, connection: &dyn DBConnection) -> Re
     let app_user = app_user.unwrap();
 
     delete_by_column!(
-            device_schema::table,
-            device_schema::app_user_id,
-            app_user.id(),
-            raw_connection)?;
+        device_schema::table,
+        device_schema::app_user_id,
+        app_user.id(),
+        raw_connection
+    )?;
 
     delete_by_column!(
-            vk_user_schema::table,
-            vk_user_schema::app_user_id,
-            app_user.id(),
-            raw_connection)?;
+        vk_user_schema::table,
+        vk_user_schema::app_user_id,
+        app_user.id(),
+        raw_connection
+    )?;
 
     delete_by_column!(
-            foodstuff_schema::table,
-            foodstuff_schema::app_user_id,
-            app_user.id(),
-            raw_connection)?;
+        foodstuff_schema::table,
+        foodstuff_schema::app_user_id,
+        app_user.id(),
+        raw_connection
+    )?;
 
     delete_by_column!(
-            app_user_schema::table,
-            app_user_schema::id,
-            app_user.id(),
-            raw_connection)?;
+        app_user_schema::table,
+        app_user_schema::id,
+        app_user.id(),
+        raw_connection
+    )?;
 
     Ok(())
 }

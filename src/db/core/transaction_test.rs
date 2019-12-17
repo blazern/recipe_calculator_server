@@ -16,10 +16,10 @@ struct TestError {
 
 impl TestError {
     fn new() -> TestError {
-        TestError{ val: 123 }
+        TestError { val: 123 }
     }
     fn with(val: i32) -> TestError {
-        TestError{ val }
+        TestError { val }
     }
 }
 
@@ -27,8 +27,10 @@ impl From<TransactionError<TestError>> for TestError {
     fn from(error: TransactionError<TestError>) -> Self {
         return match error {
             TransactionError::DBFail(db_fail) => panic!("Unexpected db fail: {:?}", db_fail),
-            TransactionError::OperationFail(test_error) => TestError{ val: test_error.val },
-        }
+            TransactionError::OperationFail(test_error) => TestError {
+                val: test_error.val,
+            },
+        };
     }
 }
 
@@ -37,7 +39,9 @@ fn delete_entry_with(uid: &Uuid) {
     use db::core::util::delete_app_user;
     delete_app_user(
         &uid,
-        &dbtesting_utils::testing_connection_for_server_user().unwrap()).unwrap();
+        &dbtesting_utils::testing_connection_for_server_user().unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
@@ -50,7 +54,9 @@ fn transaction_works() {
     let transaction_result = transaction::start::<(), _, _>(&connection, || {
         app_user::insert(
             app_user::new(uid, "".to_string(), Uuid::new_v4()),
-            &connection).unwrap();
+            &connection,
+        )
+        .unwrap();
         return Err(TestError::new());
     });
     assert!(transaction_result.is_err());
@@ -71,7 +77,7 @@ fn returns_correct_error() {
     match transaction_result {
         Err(error) => {
             assert_eq!(val, error.val);
-        },
+        }
         Ok(_) => {
             panic!("Expecting to fail");
         }
@@ -90,7 +96,7 @@ fn returns_correct_value() {
     match transaction_result {
         Ok(result_val) => {
             assert_eq!(val, result_val);
-        },
+        }
         Err(_) => {
             panic!("Expecting to succeed");
         }

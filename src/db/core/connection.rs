@@ -1,6 +1,6 @@
 use diesel;
-use diesel::Connection;
 use diesel::pg::PgConnection;
+use diesel::Connection;
 
 use super::error::Error;
 use super::error::ErrorKind;
@@ -18,7 +18,7 @@ pub struct UnderlyingConnectionSource {
     diesel_connection: PgConnection,
 }
 impl UnderlyingConnectionSource {
-    pub (in super) fn diesel_connection(&self) -> &PgConnection {
+    pub(super) fn diesel_connection(&self) -> &PgConnection {
         return &self.diesel_connection;
     }
 }
@@ -48,7 +48,7 @@ impl DBConnectionImpl {
         match diesel_connection {
             Ok(connection) => {
                 let connection_source = UnderlyingConnectionSource {
-                    diesel_connection:connection,
+                    diesel_connection: connection,
                 };
                 return Ok(DBConnectionImpl {
                     underlying_connection_source: connection_source,

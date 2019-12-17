@@ -39,12 +39,8 @@ error_chain! {
 impl From<transaction::TransactionError<Error>> for Error {
     fn from(error: transaction::TransactionError<Error>) -> Self {
         return match error {
-            transaction::TransactionError::DBFail(db_fail) => {
-                db_fail.into()
-            },
-            transaction::TransactionError::OperationFail(test_error) => {
-                test_error
-            },
-        }
+            transaction::TransactionError::DBFail(db_fail) => db_fail.into(),
+            transaction::TransactionError::OperationFail(test_error) => test_error,
+        };
     }
 }

@@ -19,7 +19,9 @@ fn delete_entries_with(app_user_uid: &Uuid) {
     use db::core::util::delete_app_user;
     delete_app_user(
         &app_user_uid,
-        &dbtesting_utils::testing_connection_for_server_user().unwrap()).unwrap();
+        &dbtesting_utils::testing_connection_for_server_user().unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
@@ -31,10 +33,11 @@ fn insertion_and_selection_work() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user =
-        app_user::insert(
-            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
-            &connection).unwrap();
+    let app_user = app_user::insert(
+        app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+        &connection,
+    )
+    .unwrap();
 
     let new_foodstuff = foodstuff::new(
         &app_user,
@@ -44,11 +47,15 @@ fn insertion_and_selection_work() {
         FOODSTUFF_FATS,
         FOODSTUFF_CARBS,
         FOODSTUFF_CALORIES,
-        true);
+        true,
+    );
 
     let inserted_foodstuff = foodstuff::insert(new_foodstuff, &connection).unwrap();
     assert!(inserted_foodstuff.id() > 0);
-    assert_eq!(inserted_foodstuff.app_user_foodstuff_id(), app_user_foodstuff_id);
+    assert_eq!(
+        inserted_foodstuff.app_user_foodstuff_id(),
+        app_user_foodstuff_id
+    );
     assert_eq!(inserted_foodstuff.app_user_id(), app_user.id());
 
     let selected_foodstuff = foodstuff::select_by_id(inserted_foodstuff.id(), &connection);
@@ -66,10 +73,11 @@ fn multiple_foodstuffs_can_depend_on_single_app_user() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user =
-        app_user::insert(
-            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
-            &connection).unwrap();
+    let app_user = app_user::insert(
+        app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+        &connection,
+    )
+    .unwrap();
 
     let new_foodstuff1 = foodstuff::new(
         &app_user,
@@ -79,7 +87,8 @@ fn multiple_foodstuffs_can_depend_on_single_app_user() {
         FOODSTUFF_FATS,
         FOODSTUFF_CARBS,
         FOODSTUFF_CALORIES,
-        true);
+        true,
+    );
     let new_foodstuff2 = foodstuff::new(
         &app_user,
         app_user_foodstuff_id2,
@@ -88,7 +97,8 @@ fn multiple_foodstuffs_can_depend_on_single_app_user() {
         FOODSTUFF_FATS,
         FOODSTUFF_CARBS,
         FOODSTUFF_CALORIES,
-        true);
+        true,
+    );
 
     foodstuff::insert(new_foodstuff1, &connection).unwrap();
     foodstuff::insert(new_foodstuff2, &connection).unwrap();
@@ -104,10 +114,11 @@ fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user =
-        app_user::insert(
-            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
-            &connection).unwrap();
+    let app_user = app_user::insert(
+        app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+        &connection,
+    )
+    .unwrap();
 
     let new_foodstuff1 = foodstuff::new(
         &app_user,
@@ -117,7 +128,8 @@ fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
         FOODSTUFF_FATS,
         FOODSTUFF_CARBS,
         FOODSTUFF_CALORIES,
-        true);
+        true,
+    );
     let new_foodstuff2 = foodstuff::new(
         &app_user,
         app_user_foodstuff_id,
@@ -126,7 +138,8 @@ fn multiple_foodstuffs_with_same_aufi_cannot_depend_on_single_app_user() {
         FOODSTUFF_FATS,
         FOODSTUFF_CARBS,
         FOODSTUFF_CALORIES,
-        true);
+        true,
+    );
 
     foodstuff::insert(new_foodstuff1, &connection).unwrap();
     let second_insertion_result = foodstuff::insert(new_foodstuff2, &connection);
@@ -142,10 +155,11 @@ fn can_make_foodstuff_unlisted() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user =
-        app_user::insert(
-            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
-            &connection).unwrap();
+    let app_user = app_user::insert(
+        app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+        &connection,
+    )
+    .unwrap();
 
     let new_foodstuff = foodstuff::new(
         &app_user,
@@ -155,7 +169,8 @@ fn can_make_foodstuff_unlisted() {
         FOODSTUFF_FATS,
         FOODSTUFF_CARBS,
         FOODSTUFF_CALORIES,
-        true);
+        true,
+    );
 
     let inserted_foodstuff = foodstuff::insert(new_foodstuff, &connection).unwrap();
     assert!(inserted_foodstuff.is_listed());
@@ -172,10 +187,11 @@ fn making_already_unlisted_foodstuff_unlisted_does_nothing() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let app_user =
-        app_user::insert(
-            app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
-            &connection).unwrap();
+    let app_user = app_user::insert(
+        app_user::new(app_user_uid, "".to_string(), Uuid::new_v4()),
+        &connection,
+    )
+    .unwrap();
 
     let new_foodstuff = foodstuff::new(
         &app_user,
@@ -185,7 +201,8 @@ fn making_already_unlisted_foodstuff_unlisted_does_nothing() {
         FOODSTUFF_FATS,
         FOODSTUFF_CARBS,
         FOODSTUFF_CALORIES,
-        false);
+        false,
+    );
 
     let inserted_foodstuff = foodstuff::insert(new_foodstuff, &connection).unwrap();
     assert!(!inserted_foodstuff.is_listed());

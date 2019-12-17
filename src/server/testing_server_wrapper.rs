@@ -13,12 +13,15 @@ use server::testing_hostname;
 #[cfg(test)]
 pub struct ServerWrapper {
     finish_cmd_sender: Option<oneshot::Sender<()>>,
-    finish_event_receiver: Option<Box<dyn Future<Item=(),Error=()>>>,
+    finish_event_receiver: Option<Box<dyn Future<Item = (), Error = ()>>>,
     address: MutexGuard<'static, String>,
 }
 
 impl ServerWrapper {
-    fn new<RH>(requests_handler: RH) -> ServerWrapper where RH: RequestsHandler + 'static {
+    fn new<RH>(requests_handler: RH) -> ServerWrapper
+    where
+        RH: RequestsHandler + 'static,
+    {
         // Channel for sending finish cmd - generates a Future to send a STOP cmd to Hyper.
         let (finish_cmd_sender, finish_cmd_receiver) = oneshot::channel::<()>();
         let finish_cmd_receiver = finish_cmd_receiver.map_err(|_| ());
@@ -46,7 +49,7 @@ impl ServerWrapper {
         ServerWrapper {
             finish_cmd_sender: Some(finish_cmd_sender),
             finish_event_receiver: Some(Box::new(finish_event_receiver)),
-            address
+            address,
         }
     }
 
@@ -57,11 +60,14 @@ impl ServerWrapper {
 
 impl Drop for ServerWrapper {
     fn drop(&mut self) {
-        match (self.finish_cmd_sender.take(), self.finish_event_receiver.take()) {
+        match (
+            self.finish_cmd_sender.take(),
+            self.finish_event_receiver.take(),
+        ) {
             (Some(finish_cmd_sender), Some(finish_event_receiver)) => {
                 finish_cmd_sender.send(()).unwrap();
                 finish_event_receiver.wait().unwrap();
-            },
+            }
             (_, _) => {
                 panic!("Sender or Receiver is None already somehow!");
             }
@@ -69,6 +75,9 @@ impl Drop for ServerWrapper {
     }
 }
 
-pub fn start_server<RH>(requests_handler: RH) -> ServerWrapper where RH: RequestsHandler + 'static {
+pub fn start_server<RH>(requests_handler: RH) -> ServerWrapper
+where
+    RH: RequestsHandler + 'static,
+{
     return ServerWrapper::new(requests_handler);
 }

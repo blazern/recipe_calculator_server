@@ -12,15 +12,18 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(vk_server_token: &str,
-               psql_url_user_server: &str,
-               psql_url_user_client: &str,
-               db_connection_attempts_timeout_seconds: i32) -> Config {
-        Config{
+    pub fn new(
+        vk_server_token: &str,
+        psql_url_user_server: &str,
+        psql_url_user_client: &str,
+        db_connection_attempts_timeout_seconds: i32,
+    ) -> Config {
+        Config {
             vk_server_token: vk_server_token.to_string(),
             psql_url_user_server: psql_url_user_server.to_string(),
             psql_url_user_client: psql_url_user_client.to_string(),
-            db_connection_attempts_timeout_seconds}
+            db_connection_attempts_timeout_seconds,
+        }
     }
 
     pub fn from(reader: &mut dyn Read) -> Result<Config, Error> {
@@ -41,7 +44,7 @@ impl Config {
     }
 
     pub fn db_connection_attempts_timeout_seconds(&self) -> i32 {
-        return self.db_connection_attempts_timeout_seconds
+        return self.db_connection_attempts_timeout_seconds;
     }
 }
 

@@ -5,7 +5,7 @@ extern crate serde_json;
 
 use std::net::ToSocketAddrs;
 
-use clap::{Arg, App};
+use clap::{App, Arg};
 
 use recipe_calculator_lib::config;
 use recipe_calculator_lib::db::core::migrator;
@@ -23,39 +23,56 @@ fn main() {
         "<large hex number>",
         "postgres://recipe_calculator_server:P@ssw0rd@localhost/recipe_calculator_main",
         "postgres://recipe_calculator_client:P@ssw0rd@localhost/recipe_calculator_main",
-        180);
+        180,
+    );
     let example_config_json = serde_json::to_string_pretty(&example_config).unwrap();
 
     let matches = App::new("Recipe calculator server")
-        .arg(Arg::with_name(CONFIG_ARG)
-            .long(CONFIG_ARG)
-            .help(&format!("Path to config file, needed config format:\n{}", &example_config_json))
-            .required(true)
-            .takes_value(true))
-        .arg(Arg::with_name(ADDRESS_ARG)
-            .long(ADDRESS_ARG)
-            .help("Address of the server")
-            .required(true)
-            .takes_value(true))
+        .arg(
+            Arg::with_name(CONFIG_ARG)
+                .long(CONFIG_ARG)
+                .help(&format!(
+                    "Path to config file, needed config format:\n{}",
+                    &example_config_json
+                ))
+                .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name(ADDRESS_ARG)
+                .long(ADDRESS_ARG)
+                .help("Address of the server")
+                .required(true)
+                .takes_value(true),
+        )
         .get_matches();
 
     let config_path = matches.value_of(CONFIG_ARG).unwrap();
     let address = matches.value_of(ADDRESS_ARG).unwrap();
 
-    let mut config_file = std::fs::OpenOptions::new().read(true).open(config_path).unwrap();
+    let mut config_file = std::fs::OpenOptions::new()
+        .read(true)
+        .open(config_path)
+        .unwrap();
     let config = config::Config::from(&mut config_file).unwrap();
     let config_json = serde_json::to_string_pretty(&config).unwrap();
     println!("Received config:\n{}", config_json);
 
     let mut address = address.to_socket_addrs().unwrap();
     let address = address.next().unwrap();
-    let shutdown_signal = futures::future::empty::<(),()>();
+    let shutdown_signal = futures::future::empty::<(), ()>();
 
     println!("Performing migrations");
     migrator::migrate_with_timeout(
         config.psql_diesel_url_server_user(),
-        config.db_connection_attempts_timeout_seconds() as i64).unwrap();
+        config.db_connection_attempts_timeout_seconds() as i64,
+    )
+    .unwrap();
 
     println!("Starting listening to address: {}", address);
-    entry_point::start_server(&address, shutdown_signal, RequestsHandlerImpl::new(config).unwrap());
+    entry_point::start_server(
+        &address,
+        shutdown_signal,
+        RequestsHandlerImpl::new(config).unwrap(),
+    );
 }

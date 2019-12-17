@@ -1,9 +1,9 @@
+use super::error::Error;
 use config::Config;
 use db::core::connection::DBConnection;
 use db::core::connection::DBConnectionImpl;
 use db::core::connection::UnderlyingConnectionSource;
 use db::core::error::Error as DBCoreError;
-use super::error::Error;
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -14,7 +14,7 @@ type WrappedPool = Arc<Mutex<Vec<DBConnectionImpl>>>;
 
 pub enum ConnectionType {
     UserConnection,
-    ServerConnection
+    ServerConnection,
 }
 
 pub struct ConnectionPool {
@@ -33,7 +33,7 @@ impl ConnectionPool {
         ConnectionPool {
             connection_type,
             config,
-            connections: Arc::new(Mutex::new(Vec::new()))
+            connections: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -41,7 +41,7 @@ impl ConnectionPool {
         return ConnectionPool {
             connection_type: ConnectionType::UserConnection,
             config,
-            connections: Arc::new(Mutex::new(Vec::new()))
+            connections: Arc::new(Mutex::new(Vec::new())),
         };
     }
 
@@ -49,7 +49,7 @@ impl ConnectionPool {
         return ConnectionPool {
             connection_type: ConnectionType::ServerConnection,
             config,
-            connections: Arc::new(Mutex::new(Vec::new()))
+            connections: Arc::new(Mutex::new(Vec::new())),
         };
     }
 
@@ -73,7 +73,7 @@ impl ConnectionPool {
     fn connection_to_borrowed(&mut self, connection: DBConnectionImpl) -> BorrowedDBConnection {
         let result = BorrowedDBConnection {
             connection: Some(connection),
-            connections: self.connections.clone()
+            connections: self.connections.clone(),
         };
         return result;
     }
@@ -98,14 +98,18 @@ impl ConnectionPool {
 impl Drop for BorrowedDBConnection {
     fn drop(&mut self) {
         let mut connections = self.connections.lock().unwrap();
-        (&mut connections).push(self.connection.take().expect(
-            "Connection expected to be moved out only in drop"));
+        (&mut connections).push(
+            self.connection
+                .take()
+                .expect("Connection expected to be moved out only in drop"),
+        );
     }
 }
 
 impl DBConnection for BorrowedDBConnection {
     fn underlying_connection_source(&self) -> &UnderlyingConnectionSource {
-        return &self.connection
+        return &self
+            .connection
             .as_ref()
             .expect("Connection expected to be moved out only in drop")
             .underlying_connection_source();

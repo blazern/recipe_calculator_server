@@ -5,18 +5,28 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use db::core::app_user;
-use db::core::diesel_connection;
 use db::core::app_user::app_user as app_user_schema;
+use db::core::diesel_connection;
 use db::core::testing_util as dbtesting_utils;
 
 // Cleaning up before tests
 fn delete_entry_with(uid: &Uuid) {
     let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
-    delete_by_column!(app_user_schema::table, app_user_schema::uid, uid, raw_connection)
-        .expect("Deletion shouldn't fail");
-    let deleted_user =
-        select_by_column!(app_user::AppUser, app_user_schema::table, app_user_schema::uid, uid, raw_connection);
+    delete_by_column!(
+        app_user_schema::table,
+        app_user_schema::uid,
+        uid,
+        raw_connection
+    )
+    .expect("Deletion shouldn't fail");
+    let deleted_user = select_by_column!(
+        app_user::AppUser,
+        app_user_schema::table,
+        app_user_schema::uid,
+        uid,
+        raw_connection
+    );
     assert!(deleted_user.expect("Selection shouldn't fail").is_none());
 }
 
@@ -63,10 +73,11 @@ fn can_select_user_by_uid() {
 
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let inserted_user =
-        app_user::insert(
-            app_user::new(uid, "".to_string(), Uuid::new_v4()),
-            &connection).unwrap();
+    let inserted_user = app_user::insert(
+        app_user::new(uid, "".to_string(), Uuid::new_v4()),
+        &connection,
+    )
+    .unwrap();
 
     let selected_user = app_user::select_by_uid(&uid, &connection).unwrap().unwrap();
 

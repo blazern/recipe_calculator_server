@@ -29,5 +29,6 @@ fn migrate_with_timeout() -> Result<(), Error> {
     let config = testing_config();
     migrator::migrate_with_timeout(
         config.psql_diesel_url_server_user(),
-        config.db_connection_attempts_timeout_seconds() as i64)
+        config.db_connection_attempts_timeout_seconds() as i64,
+    )
 }

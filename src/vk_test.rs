@@ -3,9 +3,9 @@ extern crate serde_json;
 use std::sync::Arc;
 
 use http_client::HttpClient;
-use vk;
 use testing_utils::exhaust_future;
 use testing_utils::testing_config;
+use vk;
 
 #[test]
 fn can_check_client_token() {
@@ -22,7 +22,10 @@ fn can_check_client_token() {
     let check_result = exhaust_future(check_result).unwrap();
 
     assert!(!check_result.is_success());
-    assert_eq!(check_result.error_code().unwrap(), vk::ERROR_CODE_CLIENT_TOKEN_INVALID);
+    assert_eq!(
+        check_result.error_code().unwrap(),
+        vk::ERROR_CODE_CLIENT_TOKEN_INVALID
+    );
     assert!(!check_result.error_msg().as_ref().unwrap().is_empty());
     assert!(check_result.user_id().is_none());
 }
@@ -37,7 +40,10 @@ fn cant_check_client_token_if_server_token_invalid() {
     let check_result = exhaust_future(check_result).unwrap();
 
     assert!(!check_result.is_success());
-    assert_eq!(check_result.error_code().unwrap(), vk::ERROR_CODE_SERVER_TOKEN_INVALID);
+    assert_eq!(
+        check_result.error_code().unwrap(),
+        vk::ERROR_CODE_SERVER_TOKEN_INVALID
+    );
     assert!(!check_result.error_msg().as_ref().unwrap().is_empty());
     assert!(check_result.user_id().is_none());
 }
@@ -52,8 +58,8 @@ fn successful_check_response_is_parsed() {
       "expire": 1234
     }"#;
 
-    let check_result = vk::check_token_from_server_response(
-        response.to_string().as_bytes()).unwrap();
+    let check_result =
+        vk::check_token_from_server_response(response.to_string().as_bytes()).unwrap();
 
     assert!(check_result.is_success());
     assert_eq!(check_result.user_id().as_ref().unwrap(), "asd");
@@ -71,8 +77,8 @@ fn failed_check_response_is_parsed() {
       }
     }"#;
 
-    let check_result = vk::check_token_from_server_response(
-        response.to_string().as_bytes()).unwrap();
+    let check_result =
+        vk::check_token_from_server_response(response.to_string().as_bytes()).unwrap();
 
     assert!(!check_result.is_success());
     assert_eq!(123, check_result.error_code().unwrap());

@@ -1,7 +1,7 @@
-extern crate serde_json;
 extern crate diesel;
 extern crate hyper;
 extern crate hyper_tls;
+extern crate serde_json;
 extern crate uuid;
 
 use std;

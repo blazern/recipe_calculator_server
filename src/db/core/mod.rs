@@ -12,13 +12,15 @@ pub mod error;
 pub mod foodstuff;
 pub mod migrator;
 pub mod transaction;
-pub mod vk_user;
 pub mod util;
+pub mod vk_user;
 
 // Implementation details.
 use diesel;
 fn diesel_connection(connection: &dyn connection::DBConnection) -> &diesel::pg::PgConnection {
-    return connection.underlying_connection_source().diesel_connection();
+    return connection
+        .underlying_connection_source()
+        .diesel_connection();
 }
 
 #[cfg(test)]

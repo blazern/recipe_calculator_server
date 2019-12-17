@@ -7,8 +7,8 @@ use uuid::Uuid;
 
 use db;
 use db::core::app_user;
-use db::core::app_user::AppUser;
 use db::core::app_user::app_user as app_user_schema;
+use db::core::app_user::AppUser;
 use db::core::diesel_connection;
 use db::core::testing_util as dbtesting_utils;
 
@@ -20,7 +20,12 @@ fn transition_rolls_back_progress_when_interrupted() {
     let connection = diesel_connection(&connection);
 
     delete_by_column!(
-        app_user_schema::table, app_user_schema::uid, uid, connection).unwrap();
+        app_user_schema::table,
+        app_user_schema::uid,
+        uid,
+        connection
+    )
+    .unwrap();
 
     let invalid_id_value = -1;
     let mut id: i32 = invalid_id_value;
@@ -34,8 +39,13 @@ fn transition_rolls_back_progress_when_interrupted() {
     assert!(transaction_result.is_err());
     assert_ne!(invalid_id_value, id);
 
-    let user =
-        select_by_column!(AppUser, app_user_schema::table, app_user_schema::id, id, connection);
+    let user = select_by_column!(
+        AppUser,
+        app_user_schema::table,
+        app_user_schema::id,
+        id,
+        connection
+    );
 
     assert!(user.unwrap().is_none());
 }
@@ -47,19 +57,24 @@ fn operations_without_transactions_dont_roll_back() {
     let connection = diesel_connection(&connection);
 
     delete_by_column!(
-        app_user_schema::table, app_user_schema::uid, uid, connection).unwrap();
+        app_user_schema::table,
+        app_user_schema::uid,
+        uid,
+        connection
+    )
+    .unwrap();
 
     let new_user = app_user::new(uid, "".to_string(), Uuid::new_v4());
     let inserted_user = insert!(AppUser, new_user, app_user_schema::table, connection);
     assert!(inserted_user.is_ok());
 
-    let selected_user =
-        select_by_column!(
-            AppUser,
-            app_user_schema::table,
-            app_user_schema::id,
-            inserted_user.unwrap().id(),
-            connection);
+    let selected_user = select_by_column!(
+        AppUser,
+        app_user_schema::table,
+        app_user_schema::id,
+        inserted_user.unwrap().id(),
+        connection
+    );
 
     assert!(selected_user.unwrap().is_some());
 }
