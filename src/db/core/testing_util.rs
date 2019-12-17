@@ -15,14 +15,14 @@ lazy_static! {
 pub fn testing_connection_for_client_user() -> Result<impl DBConnection, Error> {
     let _migration_lock = MIGRATIONS_MUTEX.lock();
     migrate_with_timeout().unwrap();
-    return DBConnectionImpl::for_client_user(&testing_config());
+    DBConnectionImpl::for_client_user(&testing_config())
 }
 
 #[cfg(test)]
 pub fn testing_connection_for_server_user() -> Result<impl DBConnection, Error> {
     let _migration_lock = MIGRATIONS_MUTEX.lock();
     migrate_with_timeout().unwrap();
-    return DBConnectionImpl::for_server_user(&testing_config());
+    DBConnectionImpl::for_server_user(&testing_config())
 }
 
 fn migrate_with_timeout() -> Result<(), Error> {

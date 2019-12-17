@@ -79,5 +79,5 @@ pub fn start_server<RH>(requests_handler: RH) -> ServerWrapper
 where
     RH: RequestsHandler + 'static,
 {
-    return ServerWrapper::new(requests_handler);
+    ServerWrapper::new(requests_handler)
 }

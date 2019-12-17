@@ -15,15 +15,15 @@ pub const ERROR_CODE_SERVER_TOKEN_INVALID: i64 = 5;
 #[allow(dead_code)]
 pub const ERROR_CODE_CLIENT_TOKEN_INVALID: i64 = 15;
 
-const HOST_METHOD: &'static str = "https://api.vk.com/method/";
-const METHOD_CHECK_TOKEN: &'static str = "secure.checkToken";
-const API_VERSION: &'static str = "5.68";
+const HOST_METHOD: &str = "https://api.vk.com/method/";
+const METHOD_CHECK_TOKEN: &str = "secure.checkToken";
+const API_VERSION: &str = "5.68";
 
-const PARAM_ACCESS_TOKEN: &'static str = "access_token";
-const PARAM_TOKEN: &'static str = "token";
-const PARAM_API_VERSION: &'static str = "v";
+const PARAM_ACCESS_TOKEN: &str = "access_token";
+const PARAM_TOKEN: &str = "token";
+const PARAM_API_VERSION: &str = "v";
 
-const PARAM_ERROR: &'static str = "error";
+const PARAM_ERROR: &str = "error";
 
 #[derive(Debug, Deserialize)]
 struct VkError {
@@ -70,8 +70,8 @@ impl CheckResult {
             None
         };
         CheckResult {
-            is_success: is_success,
-            user_id: user_id,
+            is_success,
+            user_id,
             error_code: None,
             error_msg: None,
         }
@@ -100,7 +100,7 @@ where
 {
     let response: serde_json::Value = serde_json::from_reader(response)?;
     match &response[PARAM_ERROR] {
-        &serde_json::Value::Null => {} // nothing to do, there's no error
+        serde_json::Value::Null => {} // nothing to do, there's no error
         _ => {
             let vk_error: VkErrorResponse = serde_json::from_value(response)?;
             return Ok(CheckResult::from_vk_error(vk_error));
@@ -108,7 +108,7 @@ where
     }
 
     let vk_check_result: VkTokenCheckResult = serde_json::from_value(response)?;
-    return Ok(CheckResult::from_vk_check_result(vk_check_result));
+    Ok(CheckResult::from_vk_check_result(vk_check_result))
 }
 
 pub fn check_token(
@@ -129,11 +129,11 @@ pub fn check_token(
     );
 
     let url = Uri::from_str(&url);
-    return url
+    url
         .into_future()
         .map_err(|err| err.into())
         .and_then(move |url| http_client.make_request(url))
-        .and_then(|response| check_token_from_server_response(response.as_bytes()));
+        .and_then(|response| check_token_from_server_response(response.as_bytes()))
 }
 
 #[cfg(test)]

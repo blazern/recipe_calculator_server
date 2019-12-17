@@ -19,7 +19,7 @@ pub struct UnderlyingConnectionSource {
 }
 impl UnderlyingConnectionSource {
     pub(super) fn diesel_connection(&self) -> &PgConnection {
-        return &self.diesel_connection;
+        &self.diesel_connection
     }
 }
 
@@ -30,17 +30,17 @@ pub struct DBConnectionImpl {
 }
 impl DBConnection for DBConnectionImpl {
     fn underlying_connection_source(&self) -> &UnderlyingConnectionSource {
-        return &self.underlying_connection_source;
+        &self.underlying_connection_source
     }
 }
 
 impl DBConnectionImpl {
     pub fn for_client_user(config: &Config) -> Result<DBConnectionImpl, Error> {
-        return Self::from_raw_params(config.psql_diesel_url_client_user());
+        Self::from_raw_params(config.psql_diesel_url_client_user())
     }
 
     pub fn for_server_user(config: &Config) -> Result<DBConnectionImpl, Error> {
-        return Self::from_raw_params(config.psql_diesel_url_server_user());
+        Self::from_raw_params(config.psql_diesel_url_server_user())
     }
 
     pub fn from_raw_params(raw_params: &str) -> Result<DBConnectionImpl, Error> {
@@ -50,12 +50,12 @@ impl DBConnectionImpl {
                 let connection_source = UnderlyingConnectionSource {
                     diesel_connection: connection,
                 };
-                return Ok(DBConnectionImpl {
+                Ok(DBConnectionImpl {
                     underlying_connection_source: connection_source,
-                });
+                })
             }
             Err(diesel_error) => {
-                return Err(ErrorKind::ConnectionError(diesel_error).into());
+                Err(ErrorKind::ConnectionError(diesel_error).into())
             }
         }
     }

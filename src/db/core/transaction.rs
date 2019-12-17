@@ -13,7 +13,7 @@ pub enum TransactionError<E> {
 impl<E> From<diesel::result::Error> for TransactionError<E> {
     fn from(diesel_error: diesel::result::Error) -> Self {
         let db_error = error::ErrorKind::TransactionError(diesel_error);
-        return TransactionError::DBFail::<E>(db_error.into());
+        TransactionError::DBFail::<E>(db_error.into())
     }
 }
 
@@ -32,10 +32,10 @@ where
     });
 
     // TODO: log
-    return match transaction_result {
+    match transaction_result {
         Ok(result) => result,
         Err(error) => Err(error.into()),
-    };
+    }
 }
 
 #[cfg(test)]

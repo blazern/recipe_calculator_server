@@ -7,9 +7,9 @@ use std::io::Seek;
 use std::io::SeekFrom;
 use std::io::Write;
 
-const FILE_PREFIX: &'static str = "/tmp/recipe_calculator_server_test_config";
-const VK_SERVER_TOKEN: &'static str = "asdasdasd";
-const PSQL_URL: &'static str = "DSASD";
+const FILE_PREFIX: &str = "/tmp/recipe_calculator_server_test_config";
+const VK_SERVER_TOKEN: &str = "asdasdasd";
+const PSQL_URL: &str = "DSASD";
 const DB_CONNECTION_TIMEOUT: i32 = 123;
 
 #[test]

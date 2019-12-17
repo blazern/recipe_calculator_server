@@ -9,13 +9,13 @@ use super::error::ErrorKind;
 embed_migrations!("migrations");
 
 pub fn perform_migrations(connection: &dyn DBConnection) -> Result<(), Error> {
-    let result = embedded_migrations::run_with_output(
+    embedded_migrations::run_with_output(
         connection
             .underlying_connection_source()
             .diesel_connection(),
         &mut std::io::stdout(),
     )?;
-    Ok(result)
+    Ok(())
 }
 
 pub fn migrate_with_timeout(raw_connection_params: &str, timeout_secs: i64) -> Result<(), Error> {
@@ -54,8 +54,8 @@ fn get_connection_with_timeout(
 }
 
 fn now() -> i64 {
-    return SystemTime::now()
+    SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("If there's no system time, something has gone horribly wrong")
-        .as_secs() as i64;
+        .as_secs() as i64
 }

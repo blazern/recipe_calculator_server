@@ -27,7 +27,7 @@ fn make_request(url: &str) -> String {
     let http_client = Arc::new(HttpClient::new().unwrap());
     let response = http_client.make_request(Uri::from_str(url).unwrap());
     let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
-    return tokio_core.run(response).unwrap();
+    tokio_core.run(response).unwrap()
 }
 
 #[test]

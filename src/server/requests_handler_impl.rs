@@ -107,7 +107,7 @@ fn handle_prepared_request(
                         constants::FIELD_NAME_CLIENT_TOKEN: result.client_token.to_string(),
                     })
                 })
-                .map_err(|err| err.into());
+                .map_err(|err| err);
             Box::new(result)
         }
         &_ => Box::new(err(RequestError::new(
@@ -143,9 +143,9 @@ fn query_to_args(query: String) -> Result<HashMap<String, String>, RequestError>
         return Ok(result);
     }
 
-    let pairs = query.split("&");
+    let pairs = query.split('&');
     for pair in pairs {
-        let mut key_and_value = pair.split("=");
+        let mut key_and_value = pair.split('=');
         let key = key_and_value.next();
         let value = key_and_value.next();
         if key_and_value.next().is_some() {
@@ -167,7 +167,7 @@ fn query_to_args(query: String) -> Result<HashMap<String, String>, RequestError>
         }
     }
 
-    return Ok(result);
+    Ok(result)
 }
 
 struct RequestError {
@@ -228,7 +228,7 @@ impl From<ServerError> for RequestError {
                 constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
                 &format!("Token check fail: {}", error),
             ),
-            ServerError(error @ _, _) => RequestError::new(
+            ServerError(error, _) => RequestError::new(
                 constants::FIELD_STATUS_INTERNAL_ERROR,
                 &format!("Internal error: {}", error),
             ),

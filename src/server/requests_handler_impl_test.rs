@@ -28,10 +28,7 @@ fn make_request(url: &str) -> JsonValue {
     let response = http_client.make_request(Uri::from_str(url).unwrap());
     let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
     let response = tokio_core.run(response).unwrap();
-    serde_json::from_str(&response).expect(&format!(
-        "Expected JSON response for query: {}, got: {}",
-        url, response
-    ))
+    serde_json::from_str(&response).unwrap_or_else(|_| panic!("Expected JSON response for query: {}, got: {}", url, response))
 }
 
 fn assert_status_ok(response: &JsonValue) {
@@ -41,10 +38,7 @@ fn assert_status_ok(response: &JsonValue) {
 fn assert_status(response: &JsonValue, expected_status: &str) {
     let status = response[constants::FIELD_NAME_STATUS]
         .as_str()
-        .expect(&format!(
-            "Response must have status, but it didn't: {}",
-            response
-        ));
+        .unwrap_or_else(|| panic!("Response must have status, but it didn't: {}", response));
     if status != expected_status {
         panic!("{} != {}, response: {}", status, expected_status, response)
     }

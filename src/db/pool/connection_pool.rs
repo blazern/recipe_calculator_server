@@ -38,19 +38,19 @@ impl ConnectionPool {
     }
 
     pub fn for_client_user(config: Config) -> Self {
-        return ConnectionPool {
+        ConnectionPool {
             connection_type: ConnectionType::UserConnection,
             config,
             connections: Arc::new(Mutex::new(Vec::new())),
-        };
+        }
     }
 
     pub fn for_server_user(config: Config) -> Self {
-        return ConnectionPool {
+        ConnectionPool {
             connection_type: ConnectionType::ServerConnection,
             config,
             connections: Arc::new(Mutex::new(Vec::new())),
-        };
+        }
     }
 
     pub fn borrow(&mut self) -> Result<BorrowedDBConnection, Error> {
@@ -61,37 +61,36 @@ impl ConnectionPool {
         }
         match connection {
             Some(connection) => {
-                return Ok(self.connection_to_borrowed(connection));
+                Ok(self.connection_to_borrowed(connection))
             }
             None => {
                 let new_connection = self.new_connection()?;
-                return Ok(self.connection_to_borrowed(new_connection));
+                Ok(self.connection_to_borrowed(new_connection))
             }
         }
     }
 
     fn connection_to_borrowed(&mut self, connection: DBConnectionImpl) -> BorrowedDBConnection {
-        let result = BorrowedDBConnection {
+        BorrowedDBConnection {
             connection: Some(connection),
             connections: self.connections.clone(),
-        };
-        return result;
+        }
     }
 
     fn new_connection(&self) -> Result<DBConnectionImpl, DBCoreError> {
         match self.connection_type {
             ConnectionType::UserConnection => {
-                return DBConnectionImpl::for_client_user(&self.config);
+                DBConnectionImpl::for_client_user(&self.config)
             }
             ConnectionType::ServerConnection => {
-                return DBConnectionImpl::for_server_user(&self.config);
+                DBConnectionImpl::for_server_user(&self.config)
             }
         }
     }
 
     pub fn pooled_connections_count(&self) -> usize {
         let connections = self.connections.lock().unwrap();
-        return (&connections).len();
+        (&connections).len()
     }
 }
 
@@ -108,11 +107,11 @@ impl Drop for BorrowedDBConnection {
 
 impl DBConnection for BorrowedDBConnection {
     fn underlying_connection_source(&self) -> &UnderlyingConnectionSource {
-        return &self
+        &self
             .connection
             .as_ref()
             .expect("Connection expected to be moved out only in drop")
-            .underlying_connection_source();
+            .underlying_connection_source()
     }
 }
 

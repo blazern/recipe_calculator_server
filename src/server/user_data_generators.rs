@@ -47,7 +47,7 @@ pub fn new_vk_token_checker_for(
 struct DefaultUserUuidGenerator;
 impl UserUuidGenerator for DefaultUserUuidGenerator {
     fn generate(&self) -> Uuid {
-        return Uuid::new_v4();
+        Uuid::new_v4()
     }
 }
 
@@ -165,10 +165,7 @@ fn maybe_override_vk_check_for(overrides: &str) -> Option<Box<dyn VkTokenChecker
         override_json @ &JsonValue::Object(_) => {
             let check_result =
                 vk::check_token_from_server_response(override_json.to_string().as_bytes());
-            let check_result = check_result.expect(&format!(
-                "Expected a correct override, got: {}",
-                json.to_string()
-            ));
+            let check_result = check_result.unwrap_or_else(|_| panic!("Expected a correct override, got: {}", json.to_string()));
             return Some(Box::new(overriders::VkTokenOverrider { check_result }));
         }
         &JsonValue::Null => {}

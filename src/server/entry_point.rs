@@ -62,7 +62,7 @@ where
     let server_result = tokio_core.run(server_with_shutdown_signal);
     match server_result {
         Ok(_) => {}
-        Err(_) => panic!("Server finished with unexpected error"),
+        Err(_) => unreachable!("Server finished with unexpected error"),
     }
 }
 

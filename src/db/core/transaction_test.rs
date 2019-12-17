@@ -25,12 +25,12 @@ impl TestError {
 
 impl From<TransactionError<TestError>> for TestError {
     fn from(error: TransactionError<TestError>) -> Self {
-        return match error {
+        match error {
             TransactionError::DBFail(db_fail) => panic!("Unexpected db fail: {:?}", db_fail),
             TransactionError::OperationFail(test_error) => TestError {
                 val: test_error.val,
             },
-        };
+        }
     }
 }
 
@@ -57,7 +57,7 @@ fn transaction_works() {
             &connection,
         )
         .unwrap();
-        return Err(TestError::new());
+        Err(TestError::new())
     });
     assert!(transaction_result.is_err());
 
@@ -69,9 +69,9 @@ fn transaction_works() {
 fn returns_correct_error() {
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let val = 100500;
+    let val = 100_500;
     let transaction_result = transaction::start::<(), TestError, _>(&connection, || {
-        return Err(TestError::with(val));
+        Err(TestError::with(val))
     });
 
     match transaction_result {
@@ -88,9 +88,9 @@ fn returns_correct_error() {
 fn returns_correct_value() {
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
-    let val = 100500;
+    let val = 100_500;
     let transaction_result = transaction::start::<i32, TestError, _>(&connection, || {
-        return Ok(val);
+        Ok(val)
     });
 
     match transaction_result {

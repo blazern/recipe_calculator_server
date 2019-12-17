@@ -12,8 +12,8 @@ use recipe_calculator_lib::db::core::migrator;
 use recipe_calculator_lib::server::entry_point;
 use recipe_calculator_lib::server::requests_handler_impl::RequestsHandlerImpl;
 
-const CONFIG_ARG: &'static str = "config";
-const ADDRESS_ARG: &'static str = "address";
+const CONFIG_ARG: &str = "config";
+const ADDRESS_ARG: &str = "address";
 
 fn main() {
     // NOTE: we have a lot of unwraps bellow, but this is intentional - if something goes wrong

@@ -23,7 +23,7 @@ pub fn testing_config() -> config::Config {
         println!("Received testing config:\n{}", config_json);
     });
 
-    return result;
+    result
 }
 
 #[cfg(test)]
@@ -33,5 +33,5 @@ where
     Error: std::fmt::Debug,
 {
     let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
-    return tokio_core.run(future);
+    tokio_core.run(future)
 }

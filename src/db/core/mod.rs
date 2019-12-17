@@ -18,9 +18,9 @@ pub mod vk_user;
 // Implementation details.
 use diesel;
 fn diesel_connection(connection: &dyn connection::DBConnection) -> &diesel::pg::PgConnection {
-    return connection
+    connection
         .underlying_connection_source()
-        .diesel_connection();
+        .diesel_connection()
 }
 
 #[cfg(test)]

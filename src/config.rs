@@ -28,23 +28,23 @@ impl Config {
 
     pub fn from(reader: &mut dyn Read) -> Result<Config, Error> {
         let result: Config = serde_json::from_reader(reader)?;
-        return Ok(result);
+        Ok(result)
     }
 
     pub fn vk_server_token(&self) -> &str {
-        return &self.vk_server_token;
+        &self.vk_server_token
     }
 
     pub fn psql_diesel_url_server_user(&self) -> &str {
-        return &self.psql_url_user_server;
+        &self.psql_url_user_server
     }
 
     pub fn psql_diesel_url_client_user(&self) -> &str {
-        return &self.psql_url_user_client;
+        &self.psql_url_user_client
     }
 
     pub fn db_connection_attempts_timeout_seconds(&self) -> i32 {
-        return self.db_connection_attempts_timeout_seconds;
+        self.db_connection_attempts_timeout_seconds
     }
 }
 

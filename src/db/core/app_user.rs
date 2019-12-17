@@ -33,19 +33,19 @@ pub struct AppUser {
 
 impl AppUser {
     pub fn id(&self) -> i32 {
-        return self.id;
+        self.id
     }
 
     pub fn uid(&self) -> &Uuid {
-        return &self.uid;
+        &self.uid
     }
 
     pub fn name(&self) -> &str {
-        return &self.name;
+        &self.name
     }
 
     pub fn client_token(&self) -> &Uuid {
-        return &self.client_token;
+        &self.client_token
     }
 }
 

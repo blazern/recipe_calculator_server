@@ -30,15 +30,15 @@ pub struct VkUser {
 
 impl VkUser {
     pub fn id(&self) -> i32 {
-        return self.id;
+        self.id
     }
 
     pub fn vk_uid(&self) -> &str {
-        return &self.vk_uid;
+        &self.vk_uid
     }
 
     pub fn app_user_id(&self) -> i32 {
-        return self.app_user_id;
+        self.app_user_id
     }
 }
 

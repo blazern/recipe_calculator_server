@@ -48,13 +48,13 @@ where
         http_client,
     );
 
-    return register_user_impl(
+    register_user_impl(
         user_name,
         social_network_type,
         db_connection,
         user_uuid_generator,
         vk_token_checker,
-    );
+    )
 }
 
 fn register_user_impl<Conn>(
@@ -77,24 +77,22 @@ where
         })
         .and_then(|vk_token_checker| vk_token_checker.check_token().map_err(|err| err.into()))
         .and_then(|vk_check_result| {
-            return if vk_check_result.is_success() {
+            if vk_check_result.is_success() {
                 futures::done(Ok(vk_check_result))
             } else {
                 let result = Err(VKTokenCheckError(
                     vk_check_result
                         .error_msg()
                         .as_ref()
-                        .expect("check result is success")
-                        .clone(),
+                        .expect("check result is success").clone(),
                     vk_check_result
                         .error_code()
                         .as_ref()
-                        .expect("check result is success")
-                        .clone(),
+                        .expect("check result is success").clone(),
                 )
                 .into());
                 futures::done(result)
-            };
+            }
         })
         .and_then(move |vk_check_result| {
             let db_connection_ref = &db_connection;
@@ -104,7 +102,7 @@ where
                 let client_token = Uuid::new_v4();
 
                 let app_user = app_user::insert(
-                    app_user::new(uid, user_name.to_string(), client_token.clone()),
+                    app_user::new(uid, user_name.to_string(), client_token),
                     db_connection_ref,
                 );
                 let app_user = app_user.map_err(extract_uuid_duplication_error)?;
@@ -120,10 +118,10 @@ where
                 let vk_user_insertion = vk_user::insert(vk_user, db_connection_ref);
                 vk_user_insertion.map_err(extract_vk_uid_duplication_error)?;
 
-                return Ok(UserRegistrationResult {
-                    uid: app_user.uid().clone(),
-                    client_token: app_user.client_token().clone(),
-                });
+                Ok(UserRegistrationResult {
+                    uid: *app_user.uid(),
+                    client_token: *app_user.client_token(),
+                })
             });
             done(result)
         })
@@ -132,10 +130,10 @@ where
 fn extract_uuid_duplication_error(db_error: DBError) -> Error {
     match db_error {
         error @ DBError(DBErrorKind::UniqueViolation(_), _) => {
-            return UniqueUuidCreationError(error).into();
+            UniqueUuidCreationError(error).into()
         }
         error => {
-            return error.into();
+            error.into()
         }
     }
 }
@@ -143,10 +141,10 @@ fn extract_uuid_duplication_error(db_error: DBError) -> Error {
 fn extract_vk_uid_duplication_error(db_error: DBError) -> Error {
     match db_error {
         DBError(DBErrorKind::UniqueViolation(_), _) => {
-            return VkUidDuplicationError {}.into();
+            VkUidDuplicationError {}.into()
         }
         error => {
-            return error.into();
+            error.into()
         }
     }
 }

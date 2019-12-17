@@ -48,39 +48,39 @@ pub struct Foodstuff {
 
 impl Foodstuff {
     pub fn id(&self) -> i32 {
-        return self.id;
+        self.id
     }
 
     pub fn app_user_id(&self) -> i32 {
-        return self.app_user_id;
+        self.app_user_id
     }
 
     pub fn app_user_foodstuff_id(&self) -> i32 {
-        return self.app_user_foodstuff_id;
+        self.app_user_foodstuff_id
     }
 
     pub fn name(&self) -> &str {
-        return &self.name;
+        &self.name
     }
 
     pub fn protein(&self) -> i32 {
-        return self.protein;
+        self.protein
     }
 
     pub fn fats(&self) -> i32 {
-        return self.fats;
+        self.fats
     }
 
     pub fn carbs(&self) -> i32 {
-        return self.carbs;
+        self.carbs
     }
 
     pub fn calories(&self) -> i32 {
-        return self.calories;
+        self.calories
     }
 
     pub fn is_listed(&self) -> bool {
-        return self.is_listed;
+        self.is_listed
     }
 }
 
@@ -136,7 +136,7 @@ pub fn unlist(foodstuff: Foodstuff, connection: &dyn DBConnection) -> Result<Foo
         diesel_connection(connection)
     );
 
-    return match result {
+    match result {
         Ok(mut vec) => {
             if vec.len() > 1 {
                 panic!("Count of unlisted foodstuffs is {}! Data in DB most likely was just corrupted!", vec.len());
@@ -144,7 +144,7 @@ pub fn unlist(foodstuff: Foodstuff, connection: &dyn DBConnection) -> Result<Foo
             Ok(vec.pop().expect("Expect 1 foodstuff"))
         }
         Err(err) => Err(err),
-    };
+    }
 }
 
 #[cfg(test)]

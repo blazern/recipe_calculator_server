@@ -31,21 +31,21 @@ pub struct Device {
 
 impl Device {
     pub fn id(&self) -> i32 {
-        return self.id;
+        self.id
     }
 
     pub fn uuid(&self) -> &Uuid {
-        return &self.uuid;
+        &self.uuid
     }
 
     pub fn app_user_id(&self) -> i32 {
-        return self.app_user_id;
+        self.app_user_id
     }
 }
 
 pub fn new(uuid: Uuid, app_user: &AppUser) -> NewDevice {
     NewDevice {
-        uuid: uuid,
+        uuid,
         app_user_id: app_user.id(),
     }
 }

@@ -34,11 +34,11 @@ fn select_user_by_uid(uid: &Uuid) -> Option<AppUser> {
     let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
 
-    return app_user_schema::table
+    app_user_schema::table
         .filter(app_user_schema::uid.eq(uid))
         .first::<AppUser>(raw_connection)
         .optional()
-        .unwrap();
+        .unwrap()
 }
 
 fn create_foodstuff(
@@ -46,7 +46,7 @@ fn create_foodstuff(
     app_user_foodstuff_id: i32,
     name: String,
 ) -> foodstuff::NewFoodstuff {
-    return foodstuff::new(
+    foodstuff::new(
         &app_user,
         app_user_foodstuff_id,
         name,
@@ -55,7 +55,7 @@ fn create_foodstuff(
         0i32,
         0i32,
         false,
-    );
+    )
 }
 
 #[test]
