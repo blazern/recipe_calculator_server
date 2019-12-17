@@ -23,7 +23,7 @@ impl Config {
             db_connection_attempts_timeout_seconds}
     }
 
-    pub fn from(reader: &mut Read) -> Result<Config, Error> {
+    pub fn from(reader: &mut dyn Read) -> Result<Config, Error> {
         let result: Config = serde_json::from_reader(reader)?;
         return Ok(result);
     }

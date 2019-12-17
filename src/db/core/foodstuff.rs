@@ -105,11 +105,11 @@ pub fn new(
         is_listed
     }
 }
-pub fn insert(foodstuff: NewFoodstuff, connection: &DBConnection) -> Result<Foodstuff, Error> {
+pub fn insert(foodstuff: NewFoodstuff, connection: &dyn DBConnection) -> Result<Foodstuff, Error> {
     return insert!(Foodstuff, foodstuff, foodstuff_schema::table, diesel_connection(connection));
 }
 
-pub fn select_by_id(id: i32, connection: &DBConnection) -> Result<Option<Foodstuff>, Error> {
+pub fn select_by_id(id: i32, connection: &dyn DBConnection) -> Result<Option<Foodstuff>, Error> {
     return select_by_column!(
         Foodstuff,
         foodstuff_schema::table,
@@ -118,7 +118,7 @@ pub fn select_by_id(id: i32, connection: &DBConnection) -> Result<Option<Foodstu
         diesel_connection(connection));
 }
 
-pub fn unlist(foodstuff: Foodstuff, connection: &DBConnection) -> Result<Foodstuff, Error> {
+pub fn unlist(foodstuff: Foodstuff, connection: &dyn DBConnection) -> Result<Foodstuff, Error> {
     let result =
         update_column!(
             Foodstuff,

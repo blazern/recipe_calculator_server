@@ -71,7 +71,7 @@ fn handle_prepared_request(
     connection: BorrowedDBConnection,
     config: Config,
     http_client: Arc<HttpClient>)
-        -> Box<Future<Item=JsonValue, Error=RequestError> + Send> {
+        -> Box<dyn Future<Item=JsonValue, Error=RequestError> + Send> {
     match request.as_ref() {
         constants::CMD_REGISTER_USER => {
             let result =
@@ -108,7 +108,7 @@ fn handle_prepared_request(
 
 impl RequestsHandler for RequestsHandlerImpl {
     fn handle(&mut self, request: String, query: String)
-            -> Box<Future<Item=String, Error=()> + Send> {
+            -> Box<dyn Future<Item=String, Error=()> + Send> {
         let result =
             self.handle_impl(request, query)
                 .map(|response| response.to_string())

@@ -13,7 +13,7 @@ use server::testing_hostname;
 #[cfg(test)]
 pub struct ServerWrapper {
     finish_cmd_sender: Option<oneshot::Sender<()>>,
-    finish_event_receiver: Option<Box<Future<Item=(),Error=()>>>,
+    finish_event_receiver: Option<Box<dyn Future<Item=(),Error=()>>>,
     address: MutexGuard<'static, String>,
 }
 

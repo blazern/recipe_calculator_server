@@ -8,7 +8,7 @@ use super::error::ErrorKind;
 
 embed_migrations!("migrations");
 
-pub fn perform_migrations(connection: &DBConnection) -> Result<(), Error> {
+pub fn perform_migrations(connection: &dyn DBConnection) -> Result<(), Error> {
     let result = embedded_migrations::run_with_output(
         connection.underlying_connection_source().diesel_connection(),
         &mut std::io::stdout())?;

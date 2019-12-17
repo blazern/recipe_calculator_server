@@ -17,7 +17,7 @@ impl<E> From<diesel::result::Error> for TransactionError<E> {
     }
 }
 
-pub fn start<T, E, F>(connection: &DBConnection, action: F) -> Result<T, E> where
+pub fn start<T, E, F>(connection: &dyn DBConnection, action: F) -> Result<T, E> where
         F: FnOnce() -> Result<T, E>,
         E: From<TransactionError<E>> {
     let connection = diesel_connection(connection);

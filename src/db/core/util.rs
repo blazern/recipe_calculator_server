@@ -3,7 +3,7 @@ use super::diesel_connection;
 use super::connection::DBConnection;
 use super::error::Error;
 
-pub fn delete_app_user(app_user_uid: &Uuid, connection: &DBConnection) -> Result<(), Error> {
+pub fn delete_app_user(app_user_uid: &Uuid, connection: &dyn DBConnection) -> Result<(), Error> {
     use super::app_user;
     use super::app_user::app_user as app_user_schema;
     use super::device::device as device_schema;

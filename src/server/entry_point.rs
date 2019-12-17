@@ -65,7 +65,7 @@ impl<RH> Service for MyHyperService<RH> where RH: RequestsHandler {
     type ReqBody = Body;
     type ResBody = Body;
     type Error = Never; // No errors
-    type Future = Box<Future<Item=Response<Body>, Error=Never> + Send>;
+    type Future = Box<dyn Future<Item=Response<Body>, Error=Never> + Send>;
 
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         let uri = req.uri();

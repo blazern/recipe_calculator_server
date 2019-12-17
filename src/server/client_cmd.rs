@@ -54,8 +54,8 @@ fn register_user_impl<Conn>(
         user_name: String,
         social_network_type: String,
         db_connection: Conn,
-        user_uuid_generator: Box<UserUuidGenerator>,
-        vk_token_checker: Box<VkTokenChecker>)
+        user_uuid_generator: Box<dyn UserUuidGenerator>,
+        vk_token_checker: Box<dyn VkTokenChecker>)
             -> impl Future<Item=UserRegistrationResult, Error=Error> + Send
                 where Conn: DBConnection + Send {
     ok((social_network_type, vk_token_checker))

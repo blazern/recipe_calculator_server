@@ -49,15 +49,15 @@ pub fn new(vk_uid: String, app_user: &AppUser) -> NewVkUser {
     }
 }
 
-pub fn insert(vk_user: NewVkUser, connection: &DBConnection) -> Result<VkUser, Error> {
+pub fn insert(vk_user: NewVkUser, connection: &dyn DBConnection) -> Result<VkUser, Error> {
     return insert!(VkUser, vk_user, vk_user_schema::table, diesel_connection(connection));
 }
 
-pub fn select_by_id(id: i32, connection: &DBConnection) -> Result<Option<VkUser>, Error> {
+pub fn select_by_id(id: i32, connection: &dyn DBConnection) -> Result<Option<VkUser>, Error> {
     return select_by_column!(VkUser, vk_user_schema::table, vk_user_schema::id, id, diesel_connection(connection));
 }
 
-pub fn select_by_vk_uid(uid: &str, connection: &DBConnection) -> Result<Option<VkUser>, Error> {
+pub fn select_by_vk_uid(uid: &str, connection: &dyn DBConnection) -> Result<Option<VkUser>, Error> {
     return select_by_column!(VkUser, vk_user_schema::table, vk_user_schema::vk_uid, uid, diesel_connection(connection));
 }
 

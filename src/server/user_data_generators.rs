@@ -12,10 +12,10 @@ pub trait UserUuidGenerator : Send {
 }
 
 pub trait VkTokenChecker : Send {
-    fn check_token(&self) -> Box<Future<Item=vk::CheckResult, Error=Error> + Send>;
+    fn check_token(&self) -> Box<dyn Future<Item=vk::CheckResult, Error=Error> + Send>;
 }
 
-pub fn new_user_uuid_generator_for(overrides: &str) -> Box<UserUuidGenerator> {
+pub fn new_user_uuid_generator_for(overrides: &str) -> Box<dyn UserUuidGenerator> {
     let overridden = maybe_override_uuid_for(&overrides);
     match overridden {
         Some(overridden) => overridden,
@@ -27,7 +27,7 @@ pub fn new_vk_token_checker_for(
         overrides: &str,
         client_token: String,
         server_token: String,
-        http_client: Arc<HttpClient>) -> Box<VkTokenChecker> {
+        http_client: Arc<HttpClient>) -> Box<dyn VkTokenChecker> {
     let overridden = maybe_override_vk_check_for(&overrides);
     match overridden {
         Some(overridden) => overridden,
@@ -56,7 +56,7 @@ struct DefaultVkTokenChecker {
     http_client: Arc<HttpClient>
 }
 impl VkTokenChecker for DefaultVkTokenChecker {
-    fn check_token(&self) -> Box<Future<Item=vk::CheckResult, Error=Error> + Send> {
+    fn check_token(&self) -> Box<dyn Future<Item=vk::CheckResult, Error=Error> + Send> {
         Box::new(vk::check_token(&self.server_token, &self.client_token, self.http_client.clone()))
     }
 }
@@ -70,7 +70,6 @@ pub fn create_overrides(uid_override: Option<&Uuid>, vk_token_check_override: Op
     use std::str::FromStr;
     use percent_encoding::percent_encode;
     use percent_encoding::DEFAULT_ENCODE_SET;
-    use serde_json;
     use serde_json::Value as JsonValue;
 
     let mut map = serde_json::map::Map::new();
@@ -102,11 +101,10 @@ fn decode_overrides(overrides: &str) -> String {
 }
 
 #[cfg(not(test))]
-fn maybe_override_uuid_for(_overrides: &str) -> Option<Box<UserUuidGenerator>> { None }
+fn maybe_override_uuid_for(_overrides: &str) -> Option<Box<dyn UserUuidGenerator>> { None }
 #[cfg(test)]
-fn maybe_override_uuid_for(overrides: &str) -> Option<Box<UserUuidGenerator>> {
+fn maybe_override_uuid_for(overrides: &str) -> Option<Box<dyn UserUuidGenerator>> {
     use std::str::FromStr;
-    use serde_json;
     use serde_json::Value as JsonValue;
 
     let json = serde_json::from_str(&decode_overrides(overrides));
@@ -133,10 +131,9 @@ fn maybe_override_uuid_for(overrides: &str) -> Option<Box<UserUuidGenerator>> {
 }
 
 #[cfg(not(test))]
-fn maybe_override_vk_check_for(_overrides: &str) -> Option<Box<VkTokenChecker>> { None }
+fn maybe_override_vk_check_for(_overrides: &str) -> Option<Box<dyn VkTokenChecker>> { None }
 #[cfg(test)]
-fn maybe_override_vk_check_for(overrides: &str) -> Option<Box<VkTokenChecker>> {
-    use serde_json;
+fn maybe_override_vk_check_for(overrides: &str) -> Option<Box<dyn VkTokenChecker>> {
     use serde_json::Value as JsonValue;
 
     let json = serde_json::from_str(&decode_overrides(overrides));
@@ -181,7 +178,7 @@ mod overriders {
         pub check_result: vk::CheckResult,
     }
     impl super::VkTokenChecker for VkTokenOverrider {
-        fn check_token(&self) -> Box<Future<Item=vk::CheckResult, Error=Error> + Send> {
+        fn check_token(&self) -> Box<dyn Future<Item=vk::CheckResult, Error=Error> + Send> {
             Box::new(future::ok(self.check_result.clone()))
         }
     }

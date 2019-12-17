@@ -13,7 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 # error handling
-error-chain = "0.11.0"
+error-chain = "0.12.1"
 
 # command line args
 clap = "2.31.2"

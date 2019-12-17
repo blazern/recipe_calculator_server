@@ -17,7 +17,7 @@ pub mod util;
 
 // Implementation details.
 use diesel;
-fn diesel_connection(connection: &connection::DBConnection) -> &diesel::pg::PgConnection {
+fn diesel_connection(connection: &dyn connection::DBConnection) -> &diesel::pg::PgConnection {
     return connection.underlying_connection_source().diesel_connection();
 }
 
