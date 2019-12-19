@@ -25,7 +25,11 @@ error_chain! {
             description("Unsupported social network"),
             display("Unsupported social network: {:?}", social_network_type),
         }
-        VKTokenCheckError(error_msg: String, error_code: i64) {
+        VKTokenCheckFail {
+            description("VK token check fail"),
+            display("VK token check fail, is given token valid?"),
+        }
+        VKTokenCheckError(error_code: i64, error_msg: String) {
             description("VK token check error"),
             display("VK token check error, code: {:?}, msg: {:?}", error_code, error_msg),
         }

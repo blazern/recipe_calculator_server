@@ -3,9 +3,9 @@ extern crate serde_json;
 use std::sync::Arc;
 
 use http_client::HttpClient;
+use outside::vk;
 use testing_utils::exhaust_future;
 use testing_utils::testing_config;
-use vk;
 
 #[test]
 fn can_check_client_token() {
@@ -21,13 +21,19 @@ fn can_check_client_token() {
     let check_result = vk::check_token(&config.vk_server_token(), user_token, http_client);
     let check_result = exhaust_future(check_result).unwrap();
 
-    assert!(!check_result.is_success());
-    assert_eq!(
-        check_result.error_code().unwrap(),
-        vk::ERROR_CODE_CLIENT_TOKEN_INVALID
-    );
-    assert!(!check_result.error_msg().as_ref().unwrap().is_empty());
-    assert!(check_result.user_id().is_none());
+    match check_result {
+        vk::CheckResult::Error {
+            error_code,
+            error_msg,
+        } => {
+            assert_eq!(vk::ERROR_CODE_CLIENT_TOKEN_INVALID, error_code);
+            assert!(!error_msg.is_empty());
+        }
+        _ => panic!(
+            "Expected check result to be err, but it was: {:?}",
+            check_result
+        ),
+    }
 }
 
 #[test]
@@ -39,13 +45,19 @@ fn cant_check_client_token_if_server_token_invalid() {
     let check_result = vk::check_token(server_token, user_token, http_client);
     let check_result = exhaust_future(check_result).unwrap();
 
-    assert!(!check_result.is_success());
-    assert_eq!(
-        check_result.error_code().unwrap(),
-        vk::ERROR_CODE_SERVER_TOKEN_INVALID
-    );
-    assert!(!check_result.error_msg().as_ref().unwrap().is_empty());
-    assert!(check_result.user_id().is_none());
+    match check_result {
+        vk::CheckResult::Error {
+            error_code,
+            error_msg,
+        } => {
+            assert_eq!(vk::ERROR_CODE_SERVER_TOKEN_INVALID, error_code);
+            assert!(!error_msg.is_empty());
+        }
+        _ => panic!(
+            "Expected check result to be err, but it was: {:?}",
+            check_result
+        ),
+    }
 }
 
 #[test]
@@ -61,10 +73,15 @@ fn successful_check_response_is_parsed() {
     let check_result =
         vk::check_token_from_server_response(response.to_string().as_bytes()).unwrap();
 
-    assert!(check_result.is_success());
-    assert_eq!(check_result.user_id().as_ref().unwrap(), "asd");
-    assert!(check_result.error_code().is_none());
-    assert!(check_result.error_msg().is_none());
+    match check_result {
+        vk::CheckResult::Success { user_id } => {
+            assert_eq!("asd", user_id);
+        }
+        _ => panic!(
+            "Expected check result to be success, but it was: {:?}",
+            check_result
+        ),
+    }
 }
 
 #[test]
@@ -80,7 +97,17 @@ fn failed_check_response_is_parsed() {
     let check_result =
         vk::check_token_from_server_response(response.to_string().as_bytes()).unwrap();
 
-    assert!(!check_result.is_success());
-    assert_eq!(123, check_result.error_code().unwrap());
-    assert_eq!("asd", check_result.error_msg().as_ref().unwrap());
+    match check_result {
+        vk::CheckResult::Error {
+            error_code,
+            error_msg,
+        } => {
+            assert_eq!(123, error_code);
+            assert_eq!("asd", error_msg);
+        }
+        _ => panic!(
+            "Expected check result to be err, but it was: {:?}",
+            check_result
+        ),
+    }
 }

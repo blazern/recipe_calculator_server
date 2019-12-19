@@ -19,11 +19,12 @@ extern crate serde;
 extern crate serde_json;
 extern crate tokio_core;
 extern crate uuid;
+
 pub mod config;
 pub mod db;
 pub mod error;
 pub mod http_client;
+pub mod outside;
 pub mod server;
 #[cfg(test)]
 pub mod testing_utils;
-pub mod vk;

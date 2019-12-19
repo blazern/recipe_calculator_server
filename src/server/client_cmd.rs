@@ -9,6 +9,7 @@ use super::error::Error;
 use super::error::ErrorKind::UniqueUuidCreationError;
 use super::error::ErrorKind::UnsupportedSocialNetwork;
 use super::error::ErrorKind::VKTokenCheckError;
+use super::error::ErrorKind::VKTokenCheckFail;
 use super::error::ErrorKind::VkUidDuplicationError;
 use super::user_data_generators::new_user_uuid_generator_for;
 use super::user_data_generators::new_vk_token_checker_for;
@@ -22,6 +23,7 @@ use db::core::error::ErrorKind as DBErrorKind;
 use db::core::transaction;
 use db::core::vk_user;
 use http_client::HttpClient;
+use outside::vk;
 
 pub struct UserRegistrationResult {
     pub uid: Uuid,
@@ -77,24 +79,17 @@ where
         })
         .and_then(|vk_token_checker| vk_token_checker.check_token().map_err(|err| err.into()))
         .and_then(|vk_check_result| {
-            if vk_check_result.is_success() {
-                futures::done(Ok(vk_check_result))
-            } else {
-                let result = Err(VKTokenCheckError(
-                    vk_check_result
-                        .error_msg()
-                        .as_ref()
-                        .expect("check result is success").clone(),
-                    vk_check_result
-                        .error_code()
-                        .as_ref()
-                        .expect("check result is success").clone(),
-                )
-                .into());
-                futures::done(result)
-            }
+            let result = match vk_check_result {
+                vk::CheckResult::Success { user_id } => Ok(user_id),
+                vk::CheckResult::Fail => Err(VKTokenCheckFail.into()),
+                vk::CheckResult::Error {
+                    error_code,
+                    error_msg,
+                } => Err(VKTokenCheckError(error_code, error_msg).into()),
+            };
+            futures::done(result)
         })
-        .and_then(move |vk_check_result| {
+        .and_then(move |vk_uid| {
             let db_connection_ref = &db_connection;
 
             let result = transaction::start(&db_connection, move || {
@@ -107,14 +102,7 @@ where
                 );
                 let app_user = app_user.map_err(extract_uuid_duplication_error)?;
 
-                let vk_user = vk_user::new(
-                    vk_check_result
-                        .user_id()
-                        .as_ref()
-                        .expect("check result is success")
-                        .clone(),
-                    &app_user,
-                );
+                let vk_user = vk_user::new(vk_uid, &app_user);
                 let vk_user_insertion = vk_user::insert(vk_user, db_connection_ref);
                 vk_user_insertion.map_err(extract_vk_uid_duplication_error)?;
 
@@ -132,19 +120,13 @@ fn extract_uuid_duplication_error(db_error: DBError) -> Error {
         error @ DBError(DBErrorKind::UniqueViolation(_), _) => {
             UniqueUuidCreationError(error).into()
         }
-        error => {
-            error.into()
-        }
+        error => error.into(),
     }
 }
 
 fn extract_vk_uid_duplication_error(db_error: DBError) -> Error {
     match db_error {
-        DBError(DBErrorKind::UniqueViolation(_), _) => {
-            VkUidDuplicationError {}.into()
-        }
-        error => {
-            error.into()
-        }
+        DBError(DBErrorKind::UniqueViolation(_), _) => VkUidDuplicationError {}.into(),
+        error => error.into(),
     }
 }

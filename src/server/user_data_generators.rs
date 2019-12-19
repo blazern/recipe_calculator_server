@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use error::Error;
 use http_client::HttpClient;
-use vk;
+use outside::vk;
 
 pub trait UserUuidGenerator: Send {
     fn generate(&self) -> Uuid;
@@ -165,7 +165,9 @@ fn maybe_override_vk_check_for(overrides: &str) -> Option<Box<dyn VkTokenChecker
         override_json @ &JsonValue::Object(_) => {
             let check_result =
                 vk::check_token_from_server_response(override_json.to_string().as_bytes());
-            let check_result = check_result.unwrap_or_else(|_| panic!("Expected a correct override, got: {}", json.to_string()));
+            let check_result = check_result.unwrap_or_else(|_| {
+                panic!("Expected a correct override, got: {}", json.to_string())
+            });
             return Some(Box::new(overriders::VkTokenOverrider { check_result }));
         }
         &JsonValue::Null => {}
@@ -180,8 +182,8 @@ mod overriders {
     use error::Error;
     use futures::future;
     use futures::Future;
+    use outside::vk;
     use uuid::Uuid;
-    use vk;
 
     pub(super) struct UserUuidOverrider {
         pub uid: Uuid,

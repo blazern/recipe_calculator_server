@@ -45,52 +45,29 @@ struct VkTokenCheckResult {
 }
 
 #[derive(Debug, Clone)]
-pub struct CheckResult {
-    is_success: bool,
-    user_id: Option<String>,
-    error_code: Option<i64>,
-    error_msg: Option<String>,
+pub enum CheckResult {
+    Success { user_id: String },
+    Fail,
+    Error { error_code: i64, error_msg: String },
 }
 
 impl CheckResult {
     fn from_vk_error(vk_error: VkErrorResponse) -> CheckResult {
-        CheckResult {
-            is_success: false,
-            user_id: None,
-            error_code: Some(vk_error.error.code),
-            error_msg: Some(vk_error.error.msg),
+        CheckResult::Error {
+            error_code: vk_error.error.code,
+            error_msg: vk_error.error.msg,
         }
     }
 
     fn from_vk_check_result(vk_check_result: VkTokenCheckResult) -> CheckResult {
         let is_success = vk_check_result.success == 1;
-        let user_id = if is_success {
-            Some(vk_check_result.user_id)
+        if is_success {
+            CheckResult::Success {
+                user_id: vk_check_result.user_id,
+            }
         } else {
-            None
-        };
-        CheckResult {
-            is_success,
-            user_id,
-            error_code: None,
-            error_msg: None,
+            CheckResult::Fail
         }
-    }
-
-    pub fn is_success(&self) -> bool {
-        self.is_success
-    }
-
-    pub fn user_id(&self) -> &Option<String> {
-        &self.user_id
-    }
-
-    pub fn error_code(&self) -> &Option<i64> {
-        &self.error_code
-    }
-
-    pub fn error_msg(&self) -> &Option<String> {
-        &self.error_msg
     }
 }
 
@@ -129,8 +106,7 @@ pub fn check_token(
     );
 
     let url = Uri::from_str(&url);
-    url
-        .into_future()
+    url.into_future()
         .map_err(|err| err.into())
         .and_then(move |url| http_client.make_request(url))
         .and_then(|response| check_token_from_server_response(response.as_bytes()))
