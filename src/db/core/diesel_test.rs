@@ -34,7 +34,7 @@ fn transition_rolls_back_progress_when_interrupted() {
         let user = insert!(AppUser, new_user, app_user_schema::table, connection);
         let user = user.unwrap();
         id = user.id();
-        return Err("Failing transaction by test design".into())
+        return Err("Failing transaction by test design".into());
     });
     assert!(transaction_result.is_err());
     assert_ne!(invalid_id_value, id);

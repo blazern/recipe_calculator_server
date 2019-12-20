@@ -54,9 +54,7 @@ impl DBConnectionImpl {
                     underlying_connection_source: connection_source,
                 })
             }
-            Err(diesel_error) => {
-                Err(ErrorKind::ConnectionError(diesel_error).into())
-            }
+            Err(diesel_error) => Err(ErrorKind::ConnectionError(diesel_error).into()),
         }
     }
 }

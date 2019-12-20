@@ -70,9 +70,8 @@ fn returns_correct_error() {
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let val = 100_500;
-    let transaction_result = transaction::start::<(), TestError, _>(&connection, || {
-        Err(TestError::with(val))
-    });
+    let transaction_result =
+        transaction::start::<(), TestError, _>(&connection, || Err(TestError::with(val)));
 
     match transaction_result {
         Err(error) => {
@@ -89,9 +88,7 @@ fn returns_correct_value() {
     let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
 
     let val = 100_500;
-    let transaction_result = transaction::start::<i32, TestError, _>(&connection, || {
-        Ok(val)
-    });
+    let transaction_result = transaction::start::<i32, TestError, _>(&connection, || Ok(val));
 
     match transaction_result {
         Ok(result_val) => {

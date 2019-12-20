@@ -8,6 +8,7 @@ pub fn delete_app_user(app_user_uid: &Uuid, connection: &dyn DBConnection) -> Re
     use super::app_user::app_user as app_user_schema;
     use super::device::device as device_schema;
     use super::foodstuff::foodstuff as foodstuff_schema;
+    use super::gp_user::gp_user as gp_user_schema;
     use super::vk_user::vk_user as vk_user_schema;
     let raw_connection = diesel_connection(connection);
 
@@ -29,6 +30,13 @@ pub fn delete_app_user(app_user_uid: &Uuid, connection: &dyn DBConnection) -> Re
     delete_by_column!(
         vk_user_schema::table,
         vk_user_schema::app_user_id,
+        app_user.id(),
+        raw_connection
+    )?;
+
+    delete_by_column!(
+        gp_user_schema::table,
+        gp_user_schema::app_user_id,
         app_user.id(),
         raw_connection
     )?;

@@ -60,9 +60,7 @@ impl ConnectionPool {
             connection = (&mut connections).pop();
         }
         match connection {
-            Some(connection) => {
-                Ok(self.connection_to_borrowed(connection))
-            }
+            Some(connection) => Ok(self.connection_to_borrowed(connection)),
             None => {
                 let new_connection = self.new_connection()?;
                 Ok(self.connection_to_borrowed(new_connection))
@@ -79,12 +77,8 @@ impl ConnectionPool {
 
     fn new_connection(&self) -> Result<DBConnectionImpl, DBCoreError> {
         match self.connection_type {
-            ConnectionType::UserConnection => {
-                DBConnectionImpl::for_client_user(&self.config)
-            }
-            ConnectionType::ServerConnection => {
-                DBConnectionImpl::for_server_user(&self.config)
-            }
+            ConnectionType::UserConnection => DBConnectionImpl::for_client_user(&self.config),
+            ConnectionType::ServerConnection => DBConnectionImpl::for_server_user(&self.config),
         }
     }
 

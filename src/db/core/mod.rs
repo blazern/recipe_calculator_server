@@ -10,6 +10,7 @@ pub mod connection;
 pub mod device;
 pub mod error;
 pub mod foodstuff;
+pub mod gp_user;
 pub mod migrator;
 pub mod transaction;
 pub mod util;

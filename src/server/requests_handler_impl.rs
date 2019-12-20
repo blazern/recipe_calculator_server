@@ -220,7 +220,11 @@ impl From<PoolError> for RequestError {
 impl From<ServerError> for RequestError {
     fn from(error: ServerError) -> Self {
         match error {
-            ServerError(error @ ServerErrorKind::VkUidDuplicationError, _) => RequestError::new(
+            ServerError(error @ ServerErrorKind::VKUidDuplicationError, _) => RequestError::new(
+                constants::FIELD_STATUS_ALREADY_REGISTERED,
+                &format!("User already registered: {}", error),
+            ),
+            ServerError(error @ ServerErrorKind::GPUidDuplicationError, _) => RequestError::new(
                 constants::FIELD_STATUS_ALREADY_REGISTERED,
                 &format!("User already registered: {}", error),
             ),
@@ -228,6 +232,20 @@ impl From<ServerError> for RequestError {
                 constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
                 &format!("Token check fail: {}", error),
             ),
+            ServerError(error @ ServerErrorKind::VKTokenCheckFail {}, _) => RequestError::new(
+                constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
+                &format!("Token check fail: {}", error),
+            ),
+            ServerError(error @ ServerErrorKind::GPTokenCheckError(_, _), _) => RequestError::new(
+                constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
+                &format!("Token check fail: {}", error),
+            ),
+            ServerError(error @ ServerErrorKind::GPTokenCheckUnknownError {}, _) => {
+                RequestError::new(
+                    constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
+                    &format!("Token check fail: {}", error),
+                )
+            }
             ServerError(error, _) => RequestError::new(
                 constants::FIELD_STATUS_INTERNAL_ERROR,
                 &format!("Internal error: {}", error),

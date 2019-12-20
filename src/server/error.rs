@@ -33,9 +33,21 @@ error_chain! {
             description("VK token check error"),
             display("VK token check error, code: {:?}, msg: {:?}", error_code, error_msg),
         }
-        VkUidDuplicationError {
+        GPTokenCheckUnknownError {
+            description("GP token check fail"),
+            display("GP token check fail, is given token valid?"),
+        }
+        GPTokenCheckError(error_title: String, error_descr: String) {
+            description("GP token check error"),
+            display("GP token check error, error tile: {:?}, error description: {:?}", error_title, error_descr),
+        }
+        VKUidDuplicationError {
             description("VK user already registered"),
             display("VK user already registered"),
+        }
+        GPUidDuplicationError {
+            description("GP user already registered"),
+            display("GP user already registered"),
         }
     }
 }
