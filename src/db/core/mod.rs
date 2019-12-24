@@ -12,6 +12,7 @@ pub mod error;
 pub mod foodstuff;
 pub mod gp_user;
 pub mod migrator;
+pub mod pairing_code_range;
 pub mod transaction;
 pub mod util;
 pub mod vk_user;

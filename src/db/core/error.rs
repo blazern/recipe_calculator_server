@@ -23,5 +23,9 @@ error_chain! {
             description("Transaction error"),
             display("Transaction error: {:?}", diesel_error),
         }
+        PreconditionsNotSatisfiedError(msg: String) {
+            description("Preconditions not satisfied"),
+            display("Preconditions not satisfied: {}", msg),
+        }
     }
 }
