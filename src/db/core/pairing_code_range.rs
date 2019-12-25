@@ -2,6 +2,7 @@ use diesel;
 
 use super::connection::DBConnection;
 use super::diesel_connection;
+use super::transform_diesel_single_result;
 use super::error::Error;
 use super::error::ErrorKind::PreconditionsNotSatisfiedError;
 
@@ -25,7 +26,7 @@ pub struct NewPairingCodeRange {
     family: String,
 }
 
-#[derive(Debug, PartialEq, Queryable)]
+#[derive(Debug, PartialEq, Eq, Queryable)]
 pub struct PairingCodeRange {
     id: i32,
     left: i32,
@@ -114,17 +115,7 @@ pub fn select_first_to_the_left_of(
         .filter(pairing_code_range_schema::family.eq(&family))
         .order(pairing_code_range_schema::right.desc())
         .first::<PairingCodeRange>(diesel_connection(connection));
-    transform_diesel_select_result(result)
-}
-
-fn transform_diesel_select_result<T>(
-    diesel_result: Result<T, diesel::result::Error>,
-) -> Result<Option<T>, Error> {
-    match diesel_result {
-        Err(diesel::result::Error::NotFound) => Ok(None),
-        Err(error) => Err(error.into()),
-        Ok(val) => Ok(Some(val)),
-    }
+    transform_diesel_single_result(result)
 }
 
 pub fn select_first_to_the_right_of(
@@ -141,7 +132,7 @@ pub fn select_first_to_the_right_of(
         .filter(pairing_code_range_schema::family.eq(&family))
         .order(pairing_code_range_schema::left.asc())
         .first::<PairingCodeRange>(diesel_connection(connection));
-    transform_diesel_select_result(result)
+    transform_diesel_single_result(result)
 }
 
 pub fn select_first_range_with_value_inside(
@@ -158,7 +149,7 @@ pub fn select_first_range_with_value_inside(
         .filter(pairing_code_range_schema::right.ge(pairing_code))
         .filter(pairing_code_range_schema::family.eq(&family))
         .first::<PairingCodeRange>(diesel_connection(connection));
-    transform_diesel_select_result(result)
+    transform_diesel_single_result(result)
 }
 
 #[cfg(test)]

@@ -1,4 +1,3 @@
-use diesel;
 use uuid::Uuid;
 
 use super::connection::DBConnection;

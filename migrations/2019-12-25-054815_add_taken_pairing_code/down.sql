@@ -1,0 +1,3 @@
+DROP INDEX taken_pairing_code_val_index;
+DROP INDEX taken_pairing_code_creation_time_index;
+DROP TABLE taken_pairing_code;

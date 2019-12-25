@@ -1,5 +1,3 @@
-use diesel;
-
 use super::app_user::AppUser;
 use super::connection::DBConnection;
 use super::diesel_connection;

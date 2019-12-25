@@ -373,12 +373,3 @@ fn range_with_value_inside_is_not_found_when_it_has_different_family() {
             .unwrap();
     assert!(ri.is_none());
 }
-
-//#[test]
-//fn can_delete_old_ranges() {
-//}
-//
-//#[test]
-//fn multiple_pairing_code_ranges_cannot_depend_on_single_app_user() {
-//}
-//

@@ -26,7 +26,7 @@ macro_rules! insert {
 #[macro_export]
 macro_rules! select_by_column {
     ( $Type:ty, $table:path, $column:path, $value:expr, $connection:expr ) => {{
-        use db::core::error;
+        use db::core::transform_diesel_single_result;
         use diesel::ExpressionMethods;
         use diesel::QueryDsl;
         use diesel::RunQueryDsl;
@@ -34,12 +34,7 @@ macro_rules! select_by_column {
         let result = $table
             .filter($column.eq($value))
             .first::<$Type>($connection);
-        let result: Result<Option<$Type>, error::Error> = match result {
-            Err(diesel::result::Error::NotFound) => Ok(None),
-            Err(error) => Err(error.into()),
-            Ok(val) => Ok(Some(val)),
-        };
-        result
+        transform_diesel_single_result(result)
     }};
 }
 
