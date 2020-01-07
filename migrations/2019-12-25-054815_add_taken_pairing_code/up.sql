@@ -1,6 +1,6 @@
 CREATE TABLE taken_pairing_code (
   id SERIAL PRIMARY KEY,
-  app_user_id INTEGER NOT NULL REFERENCES app_user(id),
+  app_user_id INTEGER NOT NULL,
   val INTEGER NOT NULL,
   creation_time BIGINT NOT NULL,
   family TEXT NOT NULL,

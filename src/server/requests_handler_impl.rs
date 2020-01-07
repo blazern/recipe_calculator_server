@@ -254,8 +254,8 @@ impl From<ServerError> for RequestError {
     }
 }
 
-impl From<uuid::ParseError> for RequestError {
-    fn from(error: uuid::ParseError) -> Self {
+impl From<uuid::parser::ParseError> for RequestError {
+    fn from(error: uuid::parser::ParseError) -> Self {
         RequestError::new(
             constants::FIELD_STATUS_INVALID_UUID,
             &format!("Invalid UUID: {}", error),

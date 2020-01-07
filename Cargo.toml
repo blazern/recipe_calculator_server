@@ -1,7 +1,7 @@
 [package]
 name = "recipe_calculator_server"
 version = "0.1.0"
-authors = ["blazern <blazer007@yandex.ru>"]
+authors = ["blazern <danil.garmanov@protonmail.com>"]
 
 [lib]
 name = "recipe_calculator_lib"
@@ -25,6 +25,7 @@ serde_json = "1.0.38"
 
 # testing
 time = "0.1"
+trybuild = "1.0.19"
 
 # HTTP
 futures = "0.1.25"
@@ -34,11 +35,12 @@ tokio-core = "0.1.17"
 percent-encoding = "1.0.1"
 
 # diesel
-diesel = { version = "1.4.1", features = ["postgres", "uuid"] }
+diesel = { version = "1.4.1", features = ["postgres", "uuidv07"] }
 diesel_migrations = { version = "1.4.0" }
 
 # uuid
-uuid = { version = "0.5.1", features = ["serde", "v4"] }
+uuid = { version = "0.7.4", features = ["serde", "v4"] }
 
 # util
 lazy_static = "1.0"
+rand = "0.7.2"

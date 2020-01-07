@@ -7,13 +7,13 @@ extern crate diesel_migrations;
 extern crate serde_derive;
 #[macro_use]
 extern crate error_chain;
-#[cfg(test)]
 #[macro_use]
 extern crate lazy_static;
 extern crate futures;
 extern crate hyper;
 extern crate hyper_tls;
 extern crate percent_encoding;
+extern crate rand;
 extern crate serde;
 #[macro_use]
 extern crate serde_json;

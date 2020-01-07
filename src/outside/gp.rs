@@ -63,20 +63,17 @@ where
     R: std::io::Read,
 {
     let response: serde_json::Value = serde_json::from_reader(response)?;
-    match &response[PARAM_ERROR_TITLE] {
-        serde_json::Value::String(error_title) => {
-            let error_descr = match &response[PARAM_ERROR_DESCR] {
-                serde_json::Value::String(error_description) => error_description,
-                _ => "",
-            };
-            let error_title = error_title.to_owned();
-            let error_descr = error_descr.to_owned();
-            return Ok(CheckResult::Error {
-                error_title,
-                error_descr,
-            });
-        }
-        _ => {}
+    if let serde_json::Value::String(error_title) = &response[PARAM_ERROR_TITLE] {
+        let error_descr = match &response[PARAM_ERROR_DESCR] {
+            serde_json::Value::String(error_description) => error_description,
+            _ => "",
+        };
+        let error_title = error_title.to_owned();
+        let error_descr = error_descr.to_owned();
+        return Ok(CheckResult::Error {
+            error_title,
+            error_descr,
+        });
     }
 
     match &response[PARAM_UID] {

@@ -84,6 +84,7 @@ impl Foodstuff {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn new(
     app_user: &AppUser,
     app_user_foodstuff_id: i32,

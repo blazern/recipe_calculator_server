@@ -2,9 +2,9 @@ use diesel;
 
 use super::connection::DBConnection;
 use super::diesel_connection;
-use super::transform_diesel_single_result;
 use super::error::Error;
 use super::error::ErrorKind::PreconditionsNotSatisfiedError;
+use super::transform_diesel_single_result;
 
 table! {
     pairing_code_range {
@@ -85,6 +85,33 @@ pub fn select_by_id(
 ) -> Result<Option<PairingCodeRange>, Error> {
     select_by_column!(
         PairingCodeRange,
+        pairing_code_range_schema::table,
+        pairing_code_range_schema::id,
+        id,
+        diesel_connection(connection)
+    )
+}
+
+/// Selects all ranges in family ordered by the |left| value.
+pub fn select_family(
+    family: &str,
+    connection: &dyn DBConnection,
+) -> Result<Vec<PairingCodeRange>, Error> {
+    use diesel::ExpressionMethods;
+    use diesel::QueryDsl;
+    use diesel::RunQueryDsl;
+
+    let result = pairing_code_range_schema::table
+        .filter(pairing_code_range_schema::family.eq(&family))
+        .order(pairing_code_range_schema::right.desc())
+        .order(pairing_code_range_schema::left.asc())
+        .get_results::<PairingCodeRange>(diesel_connection(connection));
+
+    result.map_err(|err| err.into())
+}
+
+pub fn delete_by_id(id: i32, connection: &dyn DBConnection) -> Result<(), Error> {
+    delete_by_column!(
         pairing_code_range_schema::table,
         pairing_code_range_schema::id,
         id,

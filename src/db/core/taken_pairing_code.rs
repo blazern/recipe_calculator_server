@@ -40,6 +40,8 @@ impl TakenPairingCode {
         self.id
     }
 
+    /// NOTE: the ID is not a foreign key, so existence of a
+    /// user with the returned ID is not guaranteed.
     pub fn app_user_id(&self) -> i32 {
         self.app_user_id
     }
@@ -57,10 +59,18 @@ impl TakenPairingCode {
     }
 }
 
-pub fn new(app_user: &AppUser, val: i32, creation_time: i64, family: String) -> NewTakenPairingCode {
+pub fn new(
+    app_user: &AppUser,
+    val: i32,
+    creation_time: i64,
+    family: String,
+) -> NewTakenPairingCode {
     let app_user_id = app_user.id();
     NewTakenPairingCode {
-        app_user_id, val, creation_time, family
+        app_user_id,
+        val,
+        creation_time,
+        family,
     }
 }
 
@@ -92,7 +102,7 @@ pub fn select_by_id(
 pub fn select_by_app_user_id(
     app_user_id: i32,
     family: &str,
-    connection: &dyn DBConnection
+    connection: &dyn DBConnection,
 ) -> Result<Option<TakenPairingCode>, Error> {
     use db::core::transform_diesel_single_result;
     use diesel::ExpressionMethods;
@@ -114,16 +124,51 @@ pub fn delete_family(family: &str, connection: &dyn DBConnection) -> Result<(), 
     )
 }
 
-pub fn delete_older_than(time: i64, family: &str, connection: &dyn DBConnection) -> Result<Vec<TakenPairingCode>, Error> {
+pub fn delete_older_than(
+    time: i64,
+    family: &str,
+    connection: &dyn DBConnection,
+) -> Result<Vec<TakenPairingCode>, Error> {
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
 
     let result = diesel::delete(
         taken_pairing_code_schema::table
             .filter(taken_pairing_code_schema::creation_time.lt(time))
-            .filter(taken_pairing_code_schema::family.eq(family))
-    ).get_results::<TakenPairingCode>(diesel_connection(connection));//.execute(diesel_connection(connection));
+            .filter(taken_pairing_code_schema::family.eq(family)),
+    )
+    .get_results::<TakenPairingCode>(diesel_connection(connection));
     result.map_err(|err| err.into())
+}
+
+pub fn select_first_newer_than(
+    time: i64,
+    family: &str,
+    connection: &dyn DBConnection,
+) -> Result<Option<TakenPairingCode>, Error> {
+    use db::core::transform_diesel_single_result;
+    use diesel::ExpressionMethods;
+    use diesel::QueryDsl;
+
+    let result = taken_pairing_code_schema::table
+        .filter(taken_pairing_code_schema::creation_time.gt(time))
+        .filter(taken_pairing_code_schema::family.eq(family))
+        .first::<TakenPairingCode>(diesel_connection(connection));
+    transform_diesel_single_result(result)
+}
+
+pub fn select_any(
+    family: &str,
+    connection: &dyn DBConnection,
+) -> Result<Option<TakenPairingCode>, Error> {
+    use db::core::transform_diesel_single_result;
+    use diesel::ExpressionMethods;
+    use diesel::QueryDsl;
+
+    let result = taken_pairing_code_schema::table
+        .filter(taken_pairing_code_schema::family.eq(family))
+        .first::<TakenPairingCode>(diesel_connection(connection));
+    transform_diesel_single_result(result)
 }
 
 #[cfg(test)]

@@ -11,7 +11,7 @@ error_chain! {
     foreign_links {
         Io(std::io::Error);
         SerdeJson(serde_json::error::Error);
-        UuidParseError(uuid::ParseError);
+        UuidParseError(uuid::parser::ParseError);
         InvalidUri(hyper::http::uri::InvalidUri);
         HyperError(hyper::Error);
         HyperTlsError(hyper_tls::Error);

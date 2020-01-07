@@ -41,6 +41,28 @@ fn insertion_and_selection_work() {
 }
 
 #[test]
+fn can_delete_by_id() {
+    let fam = format!("{}{}", file!(), line!());
+    delete_ranges_with_family(&fam);
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
+
+    let pairing_code_range = pairing_code_range::new(0, 100, fam.to_owned());
+    let inserted_range = pairing_code_range::insert(pairing_code_range, &connection).unwrap();
+
+    assert!(
+        pairing_code_range::select_by_id(inserted_range.id(), &connection)
+            .unwrap()
+            .is_some()
+    );
+    pairing_code_range::delete_by_id(inserted_range.id(), &connection).unwrap();
+    assert!(
+        pairing_code_range::select_by_id(inserted_range.id(), &connection)
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
 fn can_delete_family() {
     let fam = format!("{}{}", file!(), line!());
     delete_ranges_with_family(&fam);
@@ -372,4 +394,28 @@ fn range_with_value_inside_is_not_found_when_it_has_different_family() {
         pairing_code_range::select_first_range_with_value_inside(50, "another_fam", &connection)
             .unwrap();
     assert!(ri.is_none());
+}
+
+#[test]
+fn select_family() {
+    let fam1 = format!("{}{}", file!(), line!());
+    let fam2 = format!("{}{}", file!(), line!());
+    delete_ranges_with_family(&fam1);
+    delete_ranges_with_family(&fam2);
+    let conn = dbtesting_utils::testing_connection_for_client_user().unwrap();
+
+    pairing_code_range::insert(pairing_code_range::new(10, 20, fam1.to_owned()), &conn).unwrap();
+    pairing_code_range::insert(pairing_code_range::new(0, 9, fam1.to_owned()), &conn).unwrap();
+    pairing_code_range::insert(pairing_code_range::new(21, 30, fam1.to_owned()), &conn).unwrap();
+    pairing_code_range::insert(pairing_code_range::new(40, 50, fam2.to_owned()), &conn).unwrap();
+
+    let codes = pairing_code_range::select_family(&fam1, &conn).unwrap();
+    // Let's verify values and order
+    assert_eq!(3, codes.len());
+    assert_eq!(0, codes[0].left());
+    assert_eq!(9, codes[0].right());
+    assert_eq!(10, codes[1].left());
+    assert_eq!(20, codes[1].right());
+    assert_eq!(21, codes[2].left());
+    assert_eq!(30, codes[2].right());
 }
