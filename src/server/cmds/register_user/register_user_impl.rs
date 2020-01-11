@@ -4,21 +4,6 @@ use futures::Future;
 use std::sync::Arc;
 use uuid::Uuid;
 
-use super::error::Error;
-use super::error::ErrorKind::GPTokenCheckError;
-use super::error::ErrorKind::GPTokenCheckUnknownError;
-use super::error::ErrorKind::GPUidDuplicationError;
-use super::error::ErrorKind::UniqueUuidCreationError;
-use super::error::ErrorKind::UnsupportedSocialNetwork;
-use super::error::ErrorKind::VKTokenCheckError;
-use super::error::ErrorKind::VKTokenCheckFail;
-use super::error::ErrorKind::VKUidDuplicationError;
-use super::user_data_generators::new_gp_token_checker_for;
-use super::user_data_generators::new_user_uuid_generator_for;
-use super::user_data_generators::new_vk_token_checker_for;
-use super::user_data_generators::GpTokenChecker;
-use super::user_data_generators::UserUuidGenerator;
-use super::user_data_generators::VkTokenChecker;
 use config::Config;
 use db::core::app_user;
 use db::core::connection::DBConnection;
@@ -30,6 +15,22 @@ use db::core::vk_user;
 use http_client::HttpClient;
 use outside::gp;
 use outside::vk;
+use server::error::Error;
+use server::error::ErrorKind::GPTokenCheckError;
+use server::error::ErrorKind::GPTokenCheckUnknownError;
+use server::error::ErrorKind::GPUidDuplicationError;
+use server::error::ErrorKind::UniqueUuidCreationError;
+use server::error::ErrorKind::UnsupportedSocialNetwork;
+use server::error::ErrorKind::VKTokenCheckError;
+use server::error::ErrorKind::VKTokenCheckFail;
+use server::error::ErrorKind::VKUidDuplicationError;
+
+use super::user_data_generators::new_gp_token_checker_for;
+use super::user_data_generators::new_user_uuid_generator_for;
+use super::user_data_generators::new_vk_token_checker_for;
+use super::user_data_generators::GpTokenChecker;
+use super::user_data_generators::UserUuidGenerator;
+use super::user_data_generators::VkTokenChecker;
 
 pub struct UserRegistrationResult {
     pub uid: Uuid,

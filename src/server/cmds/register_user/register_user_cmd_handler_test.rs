@@ -11,13 +11,13 @@ use db::core::gp_user;
 use db::core::testing_util::testing_connection_for_server_user;
 use db::core::vk_user;
 use http_client::HttpClient;
+use server::cmds::register_user::user_data_generators::create_gp_overrides;
+use server::cmds::register_user::user_data_generators::create_uuid_only_overrides;
+use server::cmds::register_user::user_data_generators::create_vk_overrides;
 use server::constants;
 use server::requests_handler_impl::RequestsHandlerImpl;
 use server::testing_server_wrapper;
 use server::testing_server_wrapper::ServerWrapper;
-use server::user_data_generators::create_gp_overrides;
-use server::user_data_generators::create_uuid_only_overrides;
-use server::user_data_generators::create_vk_overrides;
 use testing_utils::testing_config;
 
 fn start_server() -> ServerWrapper {

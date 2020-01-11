@@ -1,48 +1,38 @@
 use futures::done;
-use futures::future::err;
 use futures::future::ok;
 use futures::Future;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
-use std::convert::From;
 use std::sync::Arc;
 use std::sync::Mutex;
-use uuid;
 
 use config::Config;
-use db::core::migrator;
-use db::pool::connection_pool::BorrowedDBConnection;
 use db::pool::connection_pool::ConnectionPool;
 use db::pool::connection_pool::ConnectionType;
-use db::pool::error::Error as PoolError;
 use http_client::HttpClient;
-use server::error::Error as ServerError;
-use server::error::ErrorKind as ServerErrorKind;
 
-use super::client_cmd;
+use super::cmds::cmds_hub::CmdsHub;
 use super::constants;
 use super::error::Error;
+use super::request_error::RequestError;
 use super::requests_handler::RequestsHandler;
 
 pub struct RequestsHandlerImpl {
     connection_pool: Mutex<ConnectionPool>,
     config: Config,
     http_client: Arc<HttpClient>,
+    cmds_hub: Arc<CmdsHub>,
 }
 
 impl RequestsHandlerImpl {
     pub fn new(config: Config) -> Result<RequestsHandlerImpl, Error> {
         let pool = ConnectionPool::new(ConnectionType::UserConnection, config.clone());
-        let mut server_user_pool =
-            ConnectionPool::new(ConnectionType::ServerConnection, config.clone());
-
-        let server_user_connection = server_user_pool.borrow()?;
-        migrator::perform_migrations(&server_user_connection)?;
 
         Ok(RequestsHandlerImpl {
             connection_pool: Mutex::new(pool),
             config,
             http_client: Arc::new(HttpClient::new()?),
+            cmds_hub: Arc::new(CmdsHub::new()),
         })
     }
 
@@ -58,62 +48,17 @@ impl RequestsHandlerImpl {
         let connection = (&mut pool).borrow();
         let config = self.config.clone();
         let http_client = self.http_client.clone();
+        let cmds_hub = self.cmds_hub.clone();
 
         done(connection)
             .map_err(|err| err.into())
-            .map(|connection| (request, query, connection))
-            .and_then(|(request, query, connection)| {
-                done(query_to_args(query)).map(|args| (request, args, connection))
+            .map(|connection| (request, query, connection, cmds_hub))
+            .and_then(|(request, query, connection, cmds_hub)| {
+                done(query_to_args(query)).map(|args| (request, args, connection, cmds_hub))
             })
-            .and_then(|(request, args, connection)| {
-                handle_prepared_request(request, args, connection, config, http_client)
+            .and_then(|(request, args, connection, cmds_hub)| {
+                cmds_hub.handle(request, args, connection, config, http_client)
             })
-    }
-}
-
-fn handle_prepared_request(
-    request: String,
-    args: HashMap<String, String>,
-    connection: BorrowedDBConnection,
-    config: Config,
-    http_client: Arc<HttpClient>,
-) -> Box<dyn Future<Item = JsonValue, Error = RequestError> + Send> {
-    match request.as_ref() {
-        constants::CMD_REGISTER_USER => {
-            let result = done(args.get_or_request_error(constants::ARG_USER_NAME))
-                .join4(
-                    done(args.get_or_request_error(constants::ARG_SOCIAL_NETWORK_TYPE)),
-                    done(args.get_or_request_error(constants::ARG_SOCIAL_NETWORK_TOKEN)),
-                    ok(args.get_or_empty(constants::ARG_OVERRIDES)),
-                )
-                .and_then(
-                    move |(user_name, social_network_type, social_network_token, overrides)| {
-                        client_cmd::register_user(
-                            user_name,
-                            social_network_type,
-                            social_network_token,
-                            overrides,
-                            config,
-                            connection,
-                            http_client,
-                        )
-                        .map_err(|err| err.into())
-                    },
-                )
-                .map(|result| {
-                    json!({
-                        constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK,
-                        constants::FIELD_NAME_USER_ID: result.uid.to_string(),
-                        constants::FIELD_NAME_CLIENT_TOKEN: result.client_token.to_string(),
-                    })
-                })
-                .map_err(|err| err);
-            Box::new(result)
-        }
-        &_ => Box::new(err(RequestError::new(
-            constants::FIELD_STATUS_UNKNOWN_REQUEST,
-            &format!("Unknown request: {}", request),
-        ))),
     }
 }
 
@@ -128,8 +73,8 @@ impl RequestsHandler for RequestsHandlerImpl {
             .map(|response| response.to_string())
             .or_else(|error| {
                 let response = json!({
-                    constants::FIELD_NAME_STATUS: error.status,
-                    constants::FIELD_NAME_ERROR_DESCRIPTION: error.error_description
+                    constants::FIELD_NAME_STATUS: error.status(),
+                    constants::FIELD_NAME_ERROR_DESCRIPTION: error.error_description()
                 });
                 ok(response.to_string())
             });
@@ -169,100 +114,3 @@ fn query_to_args(query: String) -> Result<HashMap<String, String>, RequestError>
 
     Ok(result)
 }
-
-struct RequestError {
-    status: String,
-    error_description: String,
-}
-
-impl RequestError {
-    fn new(status: &str, error_description: &str) -> Self {
-        RequestError {
-            status: status.to_string(),
-            error_description: error_description.to_string(),
-        }
-    }
-}
-
-trait HashMapAdditionalOperations {
-    fn get_or_request_error(&self, key: &str) -> Result<String, RequestError>;
-    fn get_or_empty(&self, key: &str) -> String;
-}
-impl HashMapAdditionalOperations for HashMap<std::string::String, std::string::String> {
-    fn get_or_request_error(&self, key: &str) -> Result<String, RequestError> {
-        let result = self.get(key);
-        match result {
-            Some(result) => Ok(result.to_string()),
-            None => Err(RequestError::new(
-                constants::FIELD_STATUS_PARAM_MISSING,
-                &format!("No param '{}' in query", key),
-            )),
-        }
-    }
-    fn get_or_empty(&self, key: &str) -> String {
-        let result = self.get(key);
-        match result {
-            Some(result) => result.to_string(),
-            None => "".to_string(),
-        }
-    }
-}
-
-impl From<PoolError> for RequestError {
-    fn from(error: PoolError) -> Self {
-        RequestError::new(
-            constants::FIELD_STATUS_INTERNAL_ERROR,
-            &format!("Pool error: {}", error),
-        )
-    }
-}
-
-impl From<ServerError> for RequestError {
-    fn from(error: ServerError) -> Self {
-        match error {
-            ServerError(error @ ServerErrorKind::VKUidDuplicationError, _) => RequestError::new(
-                constants::FIELD_STATUS_ALREADY_REGISTERED,
-                &format!("User already registered: {}", error),
-            ),
-            ServerError(error @ ServerErrorKind::GPUidDuplicationError, _) => RequestError::new(
-                constants::FIELD_STATUS_ALREADY_REGISTERED,
-                &format!("User already registered: {}", error),
-            ),
-            ServerError(error @ ServerErrorKind::VKTokenCheckError(_, _), _) => RequestError::new(
-                constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
-                &format!("Token check fail: {}", error),
-            ),
-            ServerError(error @ ServerErrorKind::VKTokenCheckFail {}, _) => RequestError::new(
-                constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
-                &format!("Token check fail: {}", error),
-            ),
-            ServerError(error @ ServerErrorKind::GPTokenCheckError(_, _), _) => RequestError::new(
-                constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
-                &format!("Token check fail: {}", error),
-            ),
-            ServerError(error @ ServerErrorKind::GPTokenCheckUnknownError {}, _) => {
-                RequestError::new(
-                    constants::FIELD_STATUS_TOKEN_CHECK_FAIL,
-                    &format!("Token check fail: {}", error),
-                )
-            }
-            ServerError(error, _) => RequestError::new(
-                constants::FIELD_STATUS_INTERNAL_ERROR,
-                &format!("Internal error: {}", error),
-            ),
-        }
-    }
-}
-
-impl From<uuid::parser::ParseError> for RequestError {
-    fn from(error: uuid::parser::ParseError) -> Self {
-        RequestError::new(
-            constants::FIELD_STATUS_INVALID_UUID,
-            &format!("Invalid UUID: {}", error),
-        )
-    }
-}
-
-#[cfg(test)]
-#[path = "./requests_handler_impl_test.rs"]
-mod requests_handler_impl_test;
