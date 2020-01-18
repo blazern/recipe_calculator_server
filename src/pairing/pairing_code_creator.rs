@@ -2,7 +2,7 @@ use super::error::Error;
 
 use rand::Rng;
 use std::collections::HashSet;
-use std::rc::Rc;
+use std::marker::PhantomData;
 use std::sync::Mutex;
 use std::time::SystemTime;
 use std::time::SystemTimeError;
@@ -27,7 +27,7 @@ lazy_static! {
 /// See documentation for PairingCodeCreatorImpl
 pub trait PairingCodeCreator {
     fn borrow_pairing_code(
-        &mut self,
+        &self,
         user: &AppUser,
         connection: &dyn DBConnection,
     ) -> Result<String, Error>;
@@ -93,15 +93,15 @@ where
     now_source: NS,
     rand_code_generator: RCG,
 
-    /// NOTE1: This field is !Send & !Sync by design, because
-    /// we want PairingCodeCreatorImpl to be !Send & !Sync and currently
+    /// NOTE1: This field is !Sync by design, because
+    /// we want PairingCodeCreatorImpl to be !Sync and currently
     /// there's no easy way to do it in Rust.
     /// PairingCodeCreatorImpl is NOT thread safe because its operations
     /// on DB require mutual exclusion by their design - single code generation
     /// performs multiple operations on DB, and expect used tables to be in a
     /// complex valid state. It's easy to make a hard-to-find error when threading
     /// and external resource modification are involved together.
-    _threading_blocker: Rc<i32>,
+    _threading_blocker: PhantomData<Box<dyn Send>>,
 }
 
 pub type DefaultPairingCodeCreatorImpl =
@@ -113,7 +113,7 @@ where
     RCG: RandCodeGenerator,
 {
     fn borrow_pairing_code(
-        &mut self,
+        &self,
         user: &AppUser,
         connection: &dyn DBConnection,
     ) -> Result<String, Error> {
@@ -185,7 +185,7 @@ where
         code_life_length_secs,
         now_source,
         rand_code_generator,
-        _threading_blocker: Rc::new(0),
+        _threading_blocker: PhantomData {},
     })
 }
 
@@ -206,7 +206,7 @@ where
     RCG: RandCodeGenerator,
 {
     fn borrow_pairing_code_impl(
-        &mut self,
+        &self,
         user: &AppUser,
         connection: &dyn DBConnection,
     ) -> Result<String, Error> {
@@ -315,7 +315,7 @@ where
         Ok(())
     }
 
-    fn free_old_pairing_codes(&mut self, connection: &dyn DBConnection) -> Result<(), Error> {
+    fn free_old_pairing_codes(&self, connection: &dyn DBConnection) -> Result<(), Error> {
         let now = self.now_source.now_secs()?;
         let last_allowed_time = now - self.code_life_length_secs;
         let freed_codes =
@@ -427,7 +427,7 @@ where
         "0".repeat(needed_zeros_count) + &result_short
     }
 
-    fn fully_reset_persistent_state(&self, connection: &dyn DBConnection) -> Result<(), Error> {
+    pub fn fully_reset_persistent_state(&self, connection: &dyn DBConnection) -> Result<(), Error> {
         taken_pairing_code::delete_family(&self.family, connection)?;
         pairing_code_range::delete_family(&self.family, connection)?;
         Ok(())

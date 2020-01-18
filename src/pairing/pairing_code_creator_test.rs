@@ -78,7 +78,7 @@ fn can_generate_code() {
     let conn = dbtesting_utils::testing_connection_for_client_user().unwrap();
     let user = create_user_with_uid(&uid);
 
-    let mut creator = super::new(fam.to_owned(), 0, 10, 60 * 4).unwrap();
+    let creator = super::new(fam.to_owned(), 0, 10, 60 * 4).unwrap();
     let code = creator.borrow_pairing_code(&user, &conn).unwrap();
     let code = code.parse::<i32>().unwrap();
     assert!(0 <= code && code <= 10);
@@ -93,7 +93,7 @@ fn generated_codes_saved_in_db() {
     let conn = dbtesting_utils::testing_connection_for_client_user().unwrap();
     let user = create_user_with_uid(&uid);
 
-    let mut creator = super::new(fam.to_owned(), 0, 10, 60 * 4).unwrap();
+    let creator = super::new(fam.to_owned(), 0, 10, 60 * 4).unwrap();
 
     let taken_code = taken_pairing_code::select_by_app_user_id(user.id(), &fam, &conn).unwrap();
     assert!(taken_code.is_none());
@@ -129,7 +129,7 @@ fn generated_codes_freed_after_timeout() {
         now_fn: || *now.borrow(),
     };
     let codes_generator = DefaultRandCodeGenerator {};
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         0,
         10,
@@ -187,7 +187,7 @@ fn out_of_codes_error_returned() {
     let user3 = create_user_with_uid(&uid3);
 
     // [0..1] - there will be 2 codes only
-    let mut creator = super::new(fam.to_owned(), 0, 1, 60 * 4).unwrap();
+    let creator = super::new(fam.to_owned(), 0, 1, 60 * 4).unwrap();
     creator.borrow_pairing_code(&user1, &conn).unwrap();
     creator.borrow_pairing_code(&user2, &conn).unwrap();
     let code3 = creator.borrow_pairing_code(&user3, &conn);
@@ -221,7 +221,7 @@ fn state_fully_reset_when_time_goes_backwards() {
         now_fn: || *now.borrow(),
     };
     let codes_generator = DefaultRandCodeGenerator {};
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         0,
         10,
@@ -307,7 +307,7 @@ fn if_rn1_has_wrapping_free_codes_range_then_rn2_is_within_it() {
             }
         },
     };
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -368,7 +368,7 @@ fn if_rn1_has_no_wrapping_free_codes_range_then_rn2_is_within_left_or_right_free
             }
         },
     };
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -435,7 +435,7 @@ fn if_rn1_has_only_left_free_range_then_rn2_is_within_left_free_range() {
             }
         },
     };
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -503,7 +503,7 @@ fn if_rn1_has_only_right_free_range_then_rn2_is_within_right_free_range() {
             }
         },
     };
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -540,7 +540,7 @@ fn new_code_generated_inside_free_range_splits_range_in_two() {
     let codes_generator = FnCodeGenerator {
         code_fn: |_l, _r| 15,
     };
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -583,7 +583,7 @@ fn new_code_generated_on_left_of_free_range_makes_range_smaller_by_1() {
     let codes_generator = FnCodeGenerator {
         code_fn: |_l, _r| full_range_left,
     };
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -624,7 +624,7 @@ fn new_code_generated_on_right_of_free_range_makes_range_smaller_by_1() {
     let codes_generator = FnCodeGenerator {
         code_fn: |_l, _r| full_range_right,
     };
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -665,7 +665,7 @@ fn new_code_generated_in_free_range_with_size_of_1_then_it_is_erased() {
     let codes_generator = FnCodeGenerator {
         code_fn: |_l, _r| 0,
     };
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -713,7 +713,7 @@ fn state_fully_reset_when_freed_code_has_free_wrapping_range() {
         code_fn: |_l, _r| *next_generated_code.borrow(),
     };
 
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -792,7 +792,7 @@ fn when_freed_code_has_free_neighbor_ranges_on_both_sides_they_are_merged() {
         code_fn: |_l, _r| *next_generated_code.borrow(),
     };
 
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -851,7 +851,7 @@ fn when_freed_code_has_left_free_neighbor_range_then_they_are_merged() {
         code_fn: |_l, _r| *next_generated_code.borrow(),
     };
 
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -908,7 +908,7 @@ fn when_freed_code_has_right_free_neighbor_range_then_they_are_merged() {
         code_fn: |_l, _r| *next_generated_code.borrow(),
     };
 
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -968,7 +968,7 @@ fn when_freed_code_has_no_free_neighbor_ranges_then_it_becomes_one() {
         code_fn: |_l, _r| *next_generated_code.borrow(),
     };
 
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -1034,7 +1034,7 @@ fn codes_format() {
         code_fn: |_l, _r| *next_generated_code.borrow(),
     };
 
-    let mut creator1 = super::new_extended(
+    let creator1 = super::new_extended(
         fam1.to_owned(),
         full_range_left,
         full_range_right,
@@ -1065,7 +1065,7 @@ fn codes_format() {
     let codes_generator = FnCodeGenerator {
         code_fn: |_l, _r| *next_generated_code.borrow(),
     };
-    let mut creator2 = super::new_extended(
+    let creator2 = super::new_extended(
         fam2.to_owned(),
         full_range_left,
         full_range_right,
@@ -1105,7 +1105,7 @@ fn ranges_table_is_force_reset_when_all_taken_codes_deleted() {
         code_fn: |_l, _r| *next_generated_code.borrow(),
     };
 
-    let mut creator = super::new_extended(
+    let creator = super::new_extended(
         fam.to_owned(),
         full_range_left,
         full_range_right,
@@ -1201,8 +1201,8 @@ fn does_not_accept_left_bounds_greater_than_right() {
 }
 
 #[test]
-fn pairing_code_creator_is_not_send_or_sync() {
+fn pairing_code_creator_compilation_constraints() {
     let try_build_testcase = trybuild::TestCases::new();
-    try_build_testcase.compile_fail("src/pairing/pairing_code_creator_test_send.rs");
+    try_build_testcase.pass("src/pairing/pairing_code_creator_test_send.rs");
     try_build_testcase.compile_fail("src/pairing/pairing_code_creator_test_sync.rs");
 }

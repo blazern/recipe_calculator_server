@@ -16,12 +16,14 @@ use server::cmds::hash_map_additional_operations::HashMapAdditionalOperations;
 
 use super::register_user_impl;
 
+#[derive(Default)]
 pub struct RegisterUserCmdHandler {}
 impl RegisterUserCmdHandler {
     pub fn new() -> RegisterUserCmdHandler {
         RegisterUserCmdHandler {}
     }
 }
+
 impl CmdHandler for RegisterUserCmdHandler {
     fn handle(
         &self,

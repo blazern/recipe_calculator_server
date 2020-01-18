@@ -1,10 +1,10 @@
 use futures::done;
 use futures::future::ok;
 use futures::Future;
+use percent_encoding::percent_decode;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::Mutex;
 
 use config::Config;
 use db::pool::connection_pool::ConnectionPool;
@@ -18,7 +18,7 @@ use super::request_error::RequestError;
 use super::requests_handler::RequestsHandler;
 
 pub struct RequestsHandlerImpl {
-    connection_pool: Mutex<ConnectionPool>,
+    connection_pool: ConnectionPool,
     config: Config,
     http_client: Arc<HttpClient>,
     cmds_hub: Arc<CmdsHub>,
@@ -26,13 +26,21 @@ pub struct RequestsHandlerImpl {
 
 impl RequestsHandlerImpl {
     pub fn new(config: Config) -> Result<RequestsHandlerImpl, Error> {
-        let pool = ConnectionPool::new(ConnectionType::UserConnection, config.clone());
+        Self::new_with_overrides(config, &JsonValue::Null)
+    }
+
+    pub fn new_with_overrides(
+        config: Config,
+        overrides: &JsonValue,
+    ) -> Result<RequestsHandlerImpl, Error> {
+        let mut pool = ConnectionPool::new(ConnectionType::UserConnection, config.clone());
+        let connection = pool.borrow()?;
 
         Ok(RequestsHandlerImpl {
-            connection_pool: Mutex::new(pool),
+            connection_pool: pool,
             config,
             http_client: Arc::new(HttpClient::new()?),
-            cmds_hub: Arc::new(CmdsHub::new()),
+            cmds_hub: Arc::new(CmdsHub::new(overrides, connection)?),
         })
     }
 
@@ -41,11 +49,7 @@ impl RequestsHandlerImpl {
         request: String,
         query: String,
     ) -> impl Future<Item = JsonValue, Error = RequestError> + Send {
-        let mut pool = self
-            .connection_pool
-            .lock()
-            .expect("Broken mutex means broken app");
-        let connection = (&mut pool).borrow();
+        let connection = self.connection_pool.borrow();
         let config = self.config.clone();
         let http_client = self.http_client.clone();
         let cmds_hub = self.cmds_hub.clone();
@@ -101,7 +105,9 @@ fn query_to_args(query: String) -> Result<HashMap<String, String>, RequestError>
         }
         match (key, value) {
             (Some(key), Some(value)) => {
-                result.insert(key.to_string(), value.to_string());
+                let key = decode_query_part(key)?;
+                let value = decode_query_part(value)?;
+                result.insert(key, value);
             }
             _ => {
                 return Err(RequestError::new(
@@ -113,4 +119,15 @@ fn query_to_args(query: String) -> Result<HashMap<String, String>, RequestError>
     }
 
     Ok(result)
+}
+
+fn decode_query_part(part: &str) -> Result<String, RequestError> {
+    let result = percent_decode(part.as_bytes()).decode_utf8();
+    match result {
+        Ok(result) => Ok(result.to_string()),
+        Err(err) => Err(RequestError::new(
+            constants::FIELD_STATUS_INVALID_QUERY,
+            &format!("could not URL decode query part: {}, err: {}", part, err),
+        )),
+    }
 }

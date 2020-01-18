@@ -7,12 +7,14 @@ use std::sync::Arc;
 use config::Config;
 use db::pool::connection_pool::BorrowedDBConnection;
 use http_client::HttpClient;
+use server::error::Error;
 
 use server::constants;
 use server::request_error::RequestError;
 
 use super::cmd_handler::CmdHandler;
 use super::register_user::register_user_cmd_handler::RegisterUserCmdHandler;
+use super::start_pairing::start_pairing_cmd_handler::StartPairingCmdHandler;
 
 type CmdsHashMap = HashMap<&'static str, Box<dyn CmdHandler + Send + Sync>>;
 
@@ -21,13 +23,17 @@ pub struct CmdsHub {
 }
 
 impl CmdsHub {
-    pub fn new() -> CmdsHub {
+    pub fn new(overrides: &JsonValue, connection: BorrowedDBConnection) -> Result<CmdsHub, Error> {
         let mut cmd_handlers = CmdsHashMap::new();
         cmd_handlers.insert(
             constants::CMD_REGISTER_USER,
             Box::new(RegisterUserCmdHandler::new()),
         );
-        CmdsHub { cmd_handlers }
+        cmd_handlers.insert(
+            constants::CMD_START_PAIRING,
+            Box::new(StartPairingCmdHandler::new(overrides, &connection)?),
+        );
+        Ok(CmdsHub { cmd_handlers })
     }
 
     pub fn handle(

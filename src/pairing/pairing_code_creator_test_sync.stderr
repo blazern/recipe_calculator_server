@@ -1,11 +1,14 @@
-error[E0277]: `std::rc::Rc<i32>` cannot be shared between threads safely
+error[E0277]: `(dyn std::marker::Send + 'static)` cannot be shared between threads safely
  --> $DIR/pairing_code_creator_test_sync.rs:6:5
   |
 6 |     the_accepting_sync_trait_fn(creator);
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `std::rc::Rc<i32>` cannot be shared between threads safely
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `(dyn std::marker::Send + 'static)` cannot be shared between threads safely
 ...
 9 | fn the_accepting_sync_trait_fn(_creator: impl PairingCodeCreator + Sync) {
   |    ---------------------------                                     ---- required by this bound in `the_accepting_sync_trait_fn`
   |
-  = help: within `recipe_calculator_lib::pairing::pairing_code_creator::PairingCodeCreatorImpl<recipe_calculator_lib::pairing::pairing_code_creator::DefaultNowSource, recipe_calculator_lib::pairing::pairing_code_creator::DefaultRandCodeGenerator>`, the trait `std::marker::Sync` is not implemented for `std::rc::Rc<i32>`
+  = help: the trait `std::marker::Sync` is not implemented for `(dyn std::marker::Send + 'static)`
+  = note: required because of the requirements on the impl of `std::marker::Sync` for `std::ptr::Unique<(dyn std::marker::Send + 'static)>`
+  = note: required because it appears within the type `std::boxed::Box<(dyn std::marker::Send + 'static)>`
+  = note: required because it appears within the type `std::marker::PhantomData<std::boxed::Box<(dyn std::marker::Send + 'static)>>`
   = note: required because it appears within the type `recipe_calculator_lib::pairing::pairing_code_creator::PairingCodeCreatorImpl<recipe_calculator_lib::pairing::pairing_code_creator::DefaultNowSource, recipe_calculator_lib::pairing::pairing_code_creator::DefaultRandCodeGenerator>`

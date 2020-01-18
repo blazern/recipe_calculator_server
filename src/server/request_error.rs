@@ -1,4 +1,8 @@
-use db::pool::error::Error as PoolError;
+use std::time::SystemTimeError;
+
+use db::core::error::Error as DbCoreError;
+use db::pool::error::Error as DbPoolError;
+use pairing::error::Error as PairingError;
 use server::error::Error as ServerError;
 use server::error::ErrorKind as ServerErrorKind;
 
@@ -26,11 +30,38 @@ impl RequestError {
     }
 }
 
-impl From<PoolError> for RequestError {
-    fn from(error: PoolError) -> Self {
+impl From<SystemTimeError> for RequestError {
+    fn from(error: SystemTimeError) -> Self {
+        RequestError::new(
+            constants::FIELD_STATUS_INTERNAL_ERROR,
+            &format!("System time error: {}", error),
+        )
+    }
+}
+
+impl From<DbCoreError> for RequestError {
+    fn from(error: DbCoreError) -> Self {
+        RequestError::new(
+            constants::FIELD_STATUS_INTERNAL_ERROR,
+            &format!("DB error: {}", error),
+        )
+    }
+}
+
+impl From<DbPoolError> for RequestError {
+    fn from(error: DbPoolError) -> Self {
         RequestError::new(
             constants::FIELD_STATUS_INTERNAL_ERROR,
             &format!("Pool error: {}", error),
+        )
+    }
+}
+
+impl From<PairingError> for RequestError {
+    fn from(error: PairingError) -> Self {
+        RequestError::new(
+            constants::FIELD_STATUS_INTERNAL_ERROR,
+            &format!("Internal pairing error: {}", error),
         )
     }
 }

@@ -165,15 +165,6 @@ fn create_overrides(
     percent_encode(&overrides.as_bytes(), DEFAULT_ENCODE_SET).to_string()
 }
 
-#[cfg(test)]
-fn decode_overrides(overrides: &str) -> String {
-    use percent_encoding::percent_decode;
-    percent_decode(overrides.as_bytes())
-        .decode_utf8()
-        .unwrap()
-        .to_string()
-}
-
 #[cfg(not(test))]
 fn maybe_override_uuid_for(_overrides: &str) -> Option<Box<dyn UserUuidGenerator>> {
     None
@@ -183,7 +174,7 @@ fn maybe_override_uuid_for(overrides: &str) -> Option<Box<dyn UserUuidGenerator>
     use serde_json::Value as JsonValue;
     use std::str::FromStr;
 
-    let json = serde_json::from_str(&decode_overrides(overrides));
+    let json = serde_json::from_str(&overrides);
     let json: JsonValue = match json {
         Ok(json) => json,
         Err(_) => return None,
@@ -212,7 +203,7 @@ fn maybe_override_vk_check_for(_overrides: &str) -> Option<Box<dyn VkTokenChecke
 fn maybe_override_vk_check_for(overrides: &str) -> Option<Box<dyn VkTokenChecker + Send>> {
     use serde_json::Value as JsonValue;
 
-    let json = serde_json::from_str(&decode_overrides(overrides));
+    let json = serde_json::from_str(&overrides);
     let json: JsonValue = match json {
         Ok(json) => json,
         Err(_) => return None,
@@ -242,7 +233,7 @@ fn maybe_override_gp_check_for(_overrides: &str) -> Option<Box<dyn GpTokenChecke
 fn maybe_override_gp_check_for(overrides: &str) -> Option<Box<dyn GpTokenChecker + Send>> {
     use serde_json::Value as JsonValue;
 
-    let json = serde_json::from_str(&decode_overrides(overrides));
+    let json = serde_json::from_str(&overrides);
     let json: JsonValue = match json {
         Ok(json) => json,
         Err(_) => return None,
