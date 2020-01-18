@@ -10,54 +10,90 @@ use std::sync::Mutex;
 
 // Thread-safe connection pool for connections reusing.
 
-type WrappedPool = Arc<Mutex<Vec<DBConnectionImpl>>>;
-
 pub enum ConnectionType {
     UserConnection,
     ServerConnection,
 }
 
 pub struct ConnectionPool {
-    connection_type: ConnectionType,
-    config: Config,
-    connections: WrappedPool,
+    pimpl: Arc<Mutex<ConnectionPoolImpl>>,
 }
 
 pub struct BorrowedDBConnection {
     connection: Option<DBConnectionImpl>,
-    connections: WrappedPool,
+    pimpl: Option<Arc<Mutex<ConnectionPoolImpl>>>,
+}
+
+struct ConnectionPoolImpl {
+    connection_type: ConnectionType,
+    config: Config,
+    connections: Vec<DBConnectionImpl>,
 }
 
 impl ConnectionPool {
     pub fn new(connection_type: ConnectionType, config: Config) -> Self {
+        let pimpl = ConnectionPoolImpl::new(connection_type, config);
         ConnectionPool {
-            connection_type,
-            config,
-            connections: Arc::new(Mutex::new(Vec::new())),
+            pimpl: Arc::new(Mutex::new(pimpl)),
         }
     }
 
     pub fn for_client_user(config: Config) -> Self {
-        ConnectionPool {
-            connection_type: ConnectionType::UserConnection,
-            config,
-            connections: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self::new(ConnectionType::UserConnection, config)
     }
 
     pub fn for_server_user(config: Config) -> Self {
-        ConnectionPool {
-            connection_type: ConnectionType::ServerConnection,
-            config,
-            connections: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self::new(ConnectionType::ServerConnection, config)
     }
 
     pub fn borrow(&mut self) -> Result<BorrowedDBConnection, Error> {
+        let result = self
+            .pimpl
+            .lock()
+            .expect("expecting ok mutex")
+            .borrow_connection();
+        if let Ok(mut result) = result {
+            result.pimpl = Some(self.pimpl.clone());
+            Ok(result)
+        } else {
+            result
+        }
+    }
+
+    pub fn pooled_connections_count(&self) -> usize {
+        self.pimpl
+            .lock()
+            .expect("expecting ok mutex")
+            .pooled_connections_count()
+    }
+}
+
+impl BorrowedDBConnection {
+    pub fn try_clone(&self) -> Result<Self, Error> {
+        let pimpl = self
+            .pimpl
+            .as_ref()
+            .expect("Pimpl is expected to be always present");
+        let mut pimpl = pimpl.lock().expect("Expecting ok mutex");
+        let mut result = pimpl.borrow_connection()?;
+        result.pimpl = self.pimpl.clone();
+        Ok(result)
+    }
+}
+
+impl ConnectionPoolImpl {
+    fn new(connection_type: ConnectionType, config: Config) -> Self {
+        ConnectionPoolImpl {
+            connection_type,
+            config,
+            connections: Vec::new(),
+        }
+    }
+
+    fn borrow_connection(&mut self) -> Result<BorrowedDBConnection, Error> {
         let connection: Option<DBConnectionImpl>;
         {
-            let mut connections = self.connections.lock().unwrap();
-            connection = (&mut connections).pop();
+            connection = self.connections.pop();
         }
         match connection {
             Some(connection) => Ok(self.connection_to_borrowed(connection)),
@@ -71,7 +107,7 @@ impl ConnectionPool {
     fn connection_to_borrowed(&mut self, connection: DBConnectionImpl) -> BorrowedDBConnection {
         BorrowedDBConnection {
             connection: Some(connection),
-            connections: self.connections.clone(),
+            pimpl: None, // We'll init it later
         }
     }
 
@@ -82,20 +118,27 @@ impl ConnectionPool {
         }
     }
 
-    pub fn pooled_connections_count(&self) -> usize {
-        let connections = self.connections.lock().unwrap();
-        (&connections).len()
+    fn pooled_connections_count(&self) -> usize {
+        self.connections.len()
+    }
+
+    fn return_borrowed_connection(&mut self, connection: DBConnectionImpl) {
+        self.connections.push(connection)
     }
 }
 
 impl Drop for BorrowedDBConnection {
     fn drop(&mut self) {
-        let mut connections = self.connections.lock().unwrap();
-        (&mut connections).push(
-            self.connection
-                .take()
-                .expect("Connection expected to be moved out only in drop"),
-        );
+        let connection = self
+            .connection
+            .take()
+            .expect("Connection expected to be moved out only in drop");
+        let pimpl = self
+            .pimpl
+            .as_ref()
+            .expect("Pimpl is expected to be always present");
+        let mut pimpl = pimpl.lock().expect("Expecting ok mutex");
+        pimpl.return_borrowed_connection(connection);
     }
 }
 

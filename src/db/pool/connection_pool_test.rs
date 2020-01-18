@@ -36,3 +36,27 @@ fn connections_are_reused() {
         pool.pooled_connections_count()
     );
 }
+
+#[test]
+fn borrowed_connection_can_be_cloned() {
+    let config = testing_config();
+
+    let mut pool = ConnectionPool::for_client_user(config);
+    let initial_connections_count = pool.pooled_connections_count();
+
+    {
+        let connection1 = pool.borrow().unwrap();
+        let _connection2 = connection1.try_clone().unwrap();
+    }
+
+    assert_eq!(
+        initial_connections_count + 2,
+        pool.pooled_connections_count()
+    );
+}
+
+#[test]
+fn connections_pool_is_send_and_sync() {
+    let try_build_testcase = trybuild::TestCases::new();
+    try_build_testcase.pass("src/db/pool/connection_pool_is_send_and_sync.rs");
+}
