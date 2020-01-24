@@ -1,16 +1,12 @@
 use futures::done;
-use futures::future::err;
 use futures::future::ok;
-use futures::future::Either;
 use futures::Future;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
-use uuid::Uuid;
 
 use config::Config;
-use db::core::app_user;
 use db::core::connection::DBConnection;
 use db::pool::connection_pool::BorrowedDBConnection;
 use http_client::HttpClient;
@@ -18,7 +14,7 @@ use pairing::pairing_code_creator;
 use pairing::pairing_code_creator::DefaultNowSource;
 use pairing::pairing_code_creator::{DefaultPairingCodeCreatorImpl, NowSource, PairingCodeCreator};
 use server::cmds::cmd_handler::CmdHandler;
-use server::cmds::hash_map_additional_operations::HashMapAdditionalOperations;
+use server::cmds::utils::extract_user_from_query_args;
 use server::constants;
 use server::error::Error;
 use server::request_error::RequestError;
@@ -112,44 +108,9 @@ impl CmdHandler for StartPairingCmdHandler {
         _config: Config,
         _http_client: Arc<HttpClient>,
     ) -> Box<dyn Future<Item = JsonValue, Error = RequestError> + Send> {
-        let conn1 = connection;
-        let conn2 = match conn1.try_clone() {
-            Ok(conn2) => conn2,
-            Err(error) => return Box::new(err(error.into())),
-        };
-
-        let user_future = done(args.get_or_request_error(constants::ARG_USER_ID))
-            .and_then(|user_id| done(Uuid::parse_str(&user_id)).map_err(|err| err.into()))
-            .and_then(move |user_id| {
-                done(app_user::select_by_uid(&user_id, &conn1)).map_err(|err| err.into())
-            })
-            .and_then(|user_option| {
-                if let Some(user) = user_option {
-                    Either::A(ok(user))
-                } else {
-                    Either::B(err(RequestError::new(
-                        constants::FIELD_STATUS_USER_NOT_FOUND,
-                        "User with given user ID not found",
-                    )))
-                }
-            });
-
-        let client_token_future = done(args.get_or_request_error(constants::ARG_CLIENT_TOKEN))
-            .and_then(|token| done(Uuid::parse_str(&token)).map_err(|err| err.into()));
-
+        let user_future = done(extract_user_from_query_args(&args, &connection));
         let pairing_codes_creator = self.pairing_codes_creator.clone();
-        let result = user_future.join(client_token_future)
-            .and_then(|(user, client_token)|{
-                if *user.client_token() == client_token {
-                    Either::A(ok(user))
-                } else {
-                    Either::B(err(RequestError::new(
-                        constants::FIELD_STATUS_INVALID_CLIENT_TOKEN,
-                        &format!("Given client token is not equal to user's token, {} != {}",
-                                 client_token, user.client_token()))))
-                }
-            })
-            .and_then(|user| {
+        let result = user_future.and_then(|user| {
                 let now_source = DefaultNowSource{};
                 done(now_source.now_secs())
                     .map_err(|err|err.into())
@@ -163,7 +124,7 @@ impl CmdHandler for StartPairingCmdHandler {
                 // (PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS < PAIRING_CODES_LIFETIME_SECS).
                 let pairing_code_expiration_date = now + PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS;
                 let pairing_codes_creator = pairing_codes_creator.lock().expect("Expecting ok mutex");
-                done(pairing_codes_creator.borrow_pairing_code(&user, &conn2))
+                done(pairing_codes_creator.borrow_pairing_code(&user, &connection))
                     .map_err(|err| err.into())
                     .join(ok(pairing_code_expiration_date))
                     .map(|(pairing_code, pairing_code_expiration_date)| {
@@ -180,6 +141,5 @@ impl CmdHandler for StartPairingCmdHandler {
 }
 
 #[cfg(test)]
-#[macro_use]
 #[path = "./start_pairing_cmd_handler_test.rs"]
 mod start_pairing_cmd_handler_test;

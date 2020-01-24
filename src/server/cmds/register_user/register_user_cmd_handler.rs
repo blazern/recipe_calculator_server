@@ -12,7 +12,7 @@ use server::constants;
 use server::request_error::RequestError;
 
 use server::cmds::cmd_handler::CmdHandler;
-use server::cmds::hash_map_additional_operations::HashMapAdditionalOperations;
+use server::cmds::utils::HashMapAdditionalOperations;
 
 use super::register_user_impl;
 

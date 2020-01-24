@@ -1,5 +1,6 @@
 pub const CMD_REGISTER_USER: &str = "/v1/user/register";
 pub const CMD_START_PAIRING: &str = "/v1/user/start_pairing";
+pub const CMD_UPDATE_FCM_TOKEN: &str = "/v1/user/update_fcm_token";
 
 pub const ARG_USER_NAME: &str = "name";
 pub const ARG_SOCIAL_NETWORK_TYPE: &str = "social_network_type";
@@ -7,6 +8,7 @@ pub const ARG_SOCIAL_NETWORK_TOKEN: &str = "social_network_token";
 pub const ARG_OVERRIDES: &str = "overrides";
 pub const ARG_CLIENT_TOKEN: &str = "client_token";
 pub const ARG_USER_ID: &str = "user_id";
+pub const ARG_FCM_TOKEN: &str = "fcm_token";
 
 pub const FIELD_NAME_ERROR_DESCRIPTION: &str = "error_description";
 pub const FIELD_NAME_STATUS: &str = "status";

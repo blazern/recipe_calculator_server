@@ -1,6 +1,7 @@
 use std::time::SystemTimeError;
 
 use db::core::error::Error as DbCoreError;
+use db::core::transaction::TransactionError as DbTransactionError;
 use db::pool::error::Error as DbPoolError;
 use pairing::error::Error as PairingError;
 use server::error::Error as ServerError;
@@ -54,6 +55,15 @@ impl From<DbPoolError> for RequestError {
             constants::FIELD_STATUS_INTERNAL_ERROR,
             &format!("Pool error: {}", error),
         )
+    }
+}
+
+impl From<DbTransactionError<RequestError>> for RequestError {
+    fn from(error: DbTransactionError<RequestError>) -> Self {
+        match error {
+            DbTransactionError::DBFail(error) => error.into(),
+            DbTransactionError::OperationFail(error) => error,
+        }
     }
 }
 

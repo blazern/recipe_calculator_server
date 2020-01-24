@@ -9,6 +9,7 @@ pub mod app_user;
 pub mod connection;
 pub mod device;
 pub mod error;
+pub mod fcm_token;
 pub mod foodstuff;
 pub mod gp_user;
 pub mod migrator;

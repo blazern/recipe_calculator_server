@@ -18,7 +18,7 @@ fn delete_entries_with(app_user_uid: &Uuid) {
     .unwrap();
 }
 
-// NOTE: different UUIDs and VK IDs must be used in each tests, because tests are run in parallel
+// NOTE: different UUIDs and GP IDs must be used in each tests, because tests are run in parallel
 // and usage of same IDs would cause race conditions.
 
 #[test]

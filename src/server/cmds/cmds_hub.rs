@@ -15,6 +15,7 @@ use server::request_error::RequestError;
 use super::cmd_handler::CmdHandler;
 use super::register_user::register_user_cmd_handler::RegisterUserCmdHandler;
 use super::start_pairing::start_pairing_cmd_handler::StartPairingCmdHandler;
+use super::update_fcm_token::update_fcm_token_cmd_handler::UpdateFcmTokenCmdHandler;
 
 type CmdsHashMap = HashMap<&'static str, Box<dyn CmdHandler + Send + Sync>>;
 
@@ -32,6 +33,10 @@ impl CmdsHub {
         cmd_handlers.insert(
             constants::CMD_START_PAIRING,
             Box::new(StartPairingCmdHandler::new(overrides, &connection)?),
+        );
+        cmd_handlers.insert(
+            constants::CMD_UPDATE_FCM_TOKEN,
+            Box::new(UpdateFcmTokenCmdHandler::new()),
         );
         Ok(CmdsHub { cmd_handlers })
     }
