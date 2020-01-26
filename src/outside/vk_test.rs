@@ -2,7 +2,7 @@ extern crate serde_json;
 
 use std::sync::Arc;
 
-use http_client::HttpClient;
+use outside::http_client::HttpClient;
 use outside::vk;
 use testing_utils::exhaust_future;
 use testing_utils::testing_config;

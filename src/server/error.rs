@@ -2,6 +2,7 @@ use db;
 
 use db::core::transaction;
 use error;
+use outside;
 use pairing;
 use uuid::Uuid;
 
@@ -11,6 +12,7 @@ error_chain! {
         DBPoolError(db::pool::error::Error, db::pool::error::ErrorKind);
         BaseError(error::Error, error::ErrorKind);
         PairingError(pairing::error::Error, pairing::error::ErrorKind);
+        OutsideWorldError(outside::error::Error, outside::error::ErrorKind);
     }
 
     errors {

@@ -14,19 +14,19 @@ use self::fcm_token as fcm_token_schema;
 
 #[derive(Insertable)]
 #[table_name = "fcm_token"]
-pub struct NewGcmToken {
+pub struct NewFcmToken {
     token_value: String,
     app_user_id: i32,
 }
 
 #[derive(Debug, PartialEq, Eq, Queryable)]
-pub struct GcmToken {
+pub struct FcmToken {
     id: i32,
     token_value: String,
     app_user_id: i32,
 }
 
-impl GcmToken {
+impl FcmToken {
     pub fn id(&self) -> i32 {
         self.id
     }
@@ -40,25 +40,25 @@ impl GcmToken {
     }
 }
 
-pub fn new(token_value: String, app_user: &AppUser) -> NewGcmToken {
-    NewGcmToken {
+pub fn new(token_value: String, app_user: &AppUser) -> NewFcmToken {
+    NewFcmToken {
         token_value,
         app_user_id: app_user.id(),
     }
 }
 
-pub fn insert(fcm_token: NewGcmToken, connection: &dyn DBConnection) -> Result<GcmToken, Error> {
+pub fn insert(fcm_token: NewFcmToken, connection: &dyn DBConnection) -> Result<FcmToken, Error> {
     return insert!(
-        GcmToken,
+        FcmToken,
         fcm_token,
         fcm_token_schema::table,
         diesel_connection(connection)
     );
 }
 
-pub fn select_by_id(id: i32, connection: &dyn DBConnection) -> Result<Option<GcmToken>, Error> {
+pub fn select_by_id(id: i32, connection: &dyn DBConnection) -> Result<Option<FcmToken>, Error> {
     return select_by_column!(
-        GcmToken,
+        FcmToken,
         fcm_token_schema::table,
         fcm_token_schema::id,
         id,
@@ -69,9 +69,9 @@ pub fn select_by_id(id: i32, connection: &dyn DBConnection) -> Result<Option<Gcm
 pub fn select_by_user_id(
     user_id: i32,
     connection: &dyn DBConnection,
-) -> Result<Option<GcmToken>, Error> {
+) -> Result<Option<FcmToken>, Error> {
     return select_by_column!(
-        GcmToken,
+        FcmToken,
         fcm_token_schema::table,
         fcm_token_schema::app_user_id,
         user_id,

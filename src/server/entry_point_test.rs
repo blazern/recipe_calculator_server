@@ -7,7 +7,7 @@ use std::sync::Arc;
 use server::requests_handler::RequestsHandler;
 use server::testing_server_wrapper;
 
-use http_client::HttpClient;
+use outside::http_client::HttpClient;
 
 struct Echo {
     string: String,
@@ -25,7 +25,7 @@ impl RequestsHandler for Echo {
 
 fn make_request(url: &str) -> String {
     let http_client = Arc::new(HttpClient::new().unwrap());
-    let response = http_client.make_request(Uri::from_str(url).unwrap());
+    let response = http_client.req_get(Uri::from_str(url).unwrap());
     let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
     tokio_core.run(response).unwrap()
 }

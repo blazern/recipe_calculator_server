@@ -7,7 +7,7 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use db::core::testing_util::testing_connection_for_server_user;
-use http_client::HttpClient;
+use outside::http_client::HttpClient;
 use server::cmds::register_user::user_data_generators::create_gp_overrides;
 use server::constants;
 use server::requests_handler_impl::RequestsHandlerImpl;
@@ -35,7 +35,7 @@ pub fn start_server_with_overrides(overrides: &JsonValue) -> ServerWrapper {
 
 pub fn make_request(url: &str) -> JsonValue {
     let http_client = Arc::new(HttpClient::new().unwrap());
-    let response = http_client.make_request(Uri::from_str(url).unwrap());
+    let response = http_client.req_get(Uri::from_str(url).unwrap());
     let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
     let response = tokio_core.run(response).unwrap();
     serde_json::from_str(&response).unwrap_or_else(|_| {

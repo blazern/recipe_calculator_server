@@ -4,8 +4,8 @@ use std;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use error::Error;
-use http_client::HttpClient;
+use super::error::Error;
+use super::http_client::HttpClient;
 use hyper::Uri;
 
 //curl "https://oauth2.googleapis.com/tokeninfo?id_token=eyJhbGciOi"
@@ -93,7 +93,7 @@ pub fn check_token(
     let url = Uri::from_str(&url);
     url.into_future()
         .map_err(|err| err.into())
-        .and_then(move |url| http_client.make_request(url))
+        .and_then(move |url| http_client.req_get(url))
         .and_then(|response| check_token_from_server_response(response.as_bytes()))
 }
 

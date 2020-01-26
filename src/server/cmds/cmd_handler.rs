@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use config::Config;
 use db::pool::connection_pool::BorrowedDBConnection;
-use http_client::HttpClient;
+use outside::http_client::HttpClient;
 
 use server::request_error::RequestError;
 

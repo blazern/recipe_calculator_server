@@ -9,7 +9,7 @@ use std::sync::Mutex;
 use config::Config;
 use db::core::connection::DBConnection;
 use db::pool::connection_pool::BorrowedDBConnection;
-use http_client::HttpClient;
+use outside::http_client::HttpClient;
 use pairing::pairing_code_creator;
 use pairing::pairing_code_creator::DefaultNowSource;
 use pairing::pairing_code_creator::{DefaultPairingCodeCreatorImpl, NowSource, PairingCodeCreator};

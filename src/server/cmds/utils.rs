@@ -33,6 +33,7 @@ impl HashMapAdditionalOperations for HashMap<std::string::String, std::string::S
     }
 }
 
+#[allow(clippy::implicit_hasher)]
 pub fn extract_user_from_query_args(
     args: &HashMap<String, String>,
     connection: &dyn DBConnection,

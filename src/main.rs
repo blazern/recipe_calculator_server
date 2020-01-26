@@ -20,9 +20,10 @@ fn main() {
     // at app startup, we want to know that as soon as possible.
 
     let example_config = config::Config::new(
-        "<large hex number>",
-        "postgres://recipe_calculator_server:P@ssw0rd@localhost/recipe_calculator_main",
-        "postgres://recipe_calculator_client:P@ssw0rd@localhost/recipe_calculator_main",
+        "<large hex number>".to_owned(),
+        "<large string>".to_owned(),
+        "postgres://recipe_calculator_server:P@ssw0rd@localhost/recipe_calculator_main".to_owned(),
+        "postgres://recipe_calculator_client:P@ssw0rd@localhost/recipe_calculator_main".to_owned(),
         180,
     );
     let example_config_json = serde_json::to_string_pretty(&example_config).unwrap();

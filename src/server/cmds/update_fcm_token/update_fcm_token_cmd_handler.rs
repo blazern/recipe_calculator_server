@@ -9,7 +9,7 @@ use config::Config;
 use db::core::fcm_token;
 use db::core::transaction;
 use db::pool::connection_pool::BorrowedDBConnection;
-use http_client::HttpClient;
+use outside::http_client::HttpClient;
 
 use server::cmds::cmd_handler::CmdHandler;
 use server::cmds::utils::extract_user_from_query_args;
@@ -17,6 +17,7 @@ use server::cmds::utils::HashMapAdditionalOperations;
 use server::constants;
 use server::request_error::RequestError;
 
+#[derive(Default)]
 pub struct UpdateFcmTokenCmdHandler;
 
 impl CmdHandler for UpdateFcmTokenCmdHandler {
@@ -38,7 +39,7 @@ impl CmdHandler for UpdateFcmTokenCmdHandler {
 
 impl UpdateFcmTokenCmdHandler {
     pub fn new() -> Self {
-        UpdateFcmTokenCmdHandler {}
+        UpdateFcmTokenCmdHandler::default()
     }
 
     fn handle_impl(

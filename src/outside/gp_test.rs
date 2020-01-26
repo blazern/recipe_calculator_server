@@ -2,8 +2,8 @@ extern crate serde_json;
 
 use std::sync::Arc;
 
-use http_client::HttpClient;
 use outside::gp;
+use outside::http_client::HttpClient;
 use testing_utils::exhaust_future;
 
 #[test]
