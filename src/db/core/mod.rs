@@ -13,6 +13,7 @@ pub mod fcm_token;
 pub mod foodstuff;
 pub mod gp_user;
 pub mod migrator;
+pub mod paired_partners;
 pub mod pairing_code_range;
 pub mod taken_pairing_code;
 pub mod transaction;

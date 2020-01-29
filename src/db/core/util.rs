@@ -10,6 +10,7 @@ pub fn delete_app_user(app_user_uid: &Uuid, connection: &dyn DBConnection) -> Re
     use super::fcm_token::fcm_token as fcm_token_schema;
     use super::foodstuff::foodstuff as foodstuff_schema;
     use super::gp_user::gp_user as gp_user_schema;
+    use super::paired_partners::paired_partners as paired_partners_schema;
     use super::vk_user::vk_user as vk_user_schema;
     let raw_connection = diesel_connection(connection);
 
@@ -52,6 +53,20 @@ pub fn delete_app_user(app_user_uid: &Uuid, connection: &dyn DBConnection) -> Re
     delete_by_column!(
         fcm_token_schema::table,
         fcm_token_schema::app_user_id,
+        app_user.id(),
+        raw_connection
+    )?;
+
+    delete_by_column!(
+        paired_partners_schema::table,
+        paired_partners_schema::partner1_user_id,
+        app_user.id(),
+        raw_connection
+    )?;
+
+    delete_by_column!(
+        paired_partners_schema::table,
+        paired_partners_schema::partner2_user_id,
         app_user.id(),
         raw_connection
     )?;

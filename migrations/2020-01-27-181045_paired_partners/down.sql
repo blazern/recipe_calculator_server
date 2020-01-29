@@ -1,0 +1,4 @@
+DROP INDEX paired_partners_partner1_user_id_index;
+DROP INDEX paired_partners_partner2_user_id_index;
+DROP INDEX paired_partners_pairing_start_time_index;
+DROP TABLE paired_partners;
