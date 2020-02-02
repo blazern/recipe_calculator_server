@@ -34,6 +34,7 @@ def Popen(cmd):
 def main(args):
   parser = argparse.ArgumentParser(description='Optional app description')
   parser.add_argument('--vk-server-token', required=True)
+  parser.add_argument('--fcm-server-token', required=True)
   parser.add_argument('--offline-mode', action='store_true',
                       help='With this option set, not nessecery operations that require network will not fail the script execution')
   args = parser.parse_args()
@@ -82,6 +83,7 @@ def main(args):
   config_template = '''
   {{
    "vk_server_token": "{}",
+   "fcm_server_token": "{}",
    "psql_url_user_server": "{}",
    "psql_url_user_client": "{}",
    "db_connection_attempts_timeout_seconds": 10
@@ -90,7 +92,10 @@ def main(args):
   postgres_url_template = 'postgres://{}:{}@localhost/recipe_calculator_main'
   postgres_server_url = postgres_url_template.format('recipe_calculator_server', users_password)
   postgres_client_url = postgres_url_template.format('recipe_calculator_client', users_password)
-  config = config_template.format(args.vk_server_token, postgres_server_url, postgres_client_url)
+  config = config_template.format(args.vk_server_token,
+                                  args.fcm_server_token,
+                                  postgres_server_url,
+                                  postgres_client_url)
 
   step('Writing config to a file')
   config_file = os.path.join(testing_env_dir, 'testing_config.json')
