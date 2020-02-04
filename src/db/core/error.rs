@@ -1,7 +1,3 @@
-extern crate diesel;
-extern crate diesel_migrations;
-extern crate uuid;
-
 error_chain! {
     foreign_links {
         // General error for all not specified DB failures.

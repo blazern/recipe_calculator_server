@@ -4,19 +4,19 @@ use std::thread;
 use std::time;
 use uuid::Uuid;
 
+use crate::server::constants;
 use percent_encoding::percent_encode;
 use percent_encoding::DEFAULT_ENCODE_SET;
-use server::constants;
 
-use server::cmds::start_pairing::start_pairing_cmd_handler::insert_pairing_code_gen_extended_override;
-use server::cmds::testing_cmds_utils::assert_status;
-use server::cmds::testing_cmds_utils::assert_status_ok;
-use server::cmds::testing_cmds_utils::delete_app_user_with;
-use server::cmds::testing_cmds_utils::make_request;
-use server::cmds::testing_cmds_utils::register_user;
-use server::cmds::testing_cmds_utils::start_server_with_overrides;
+use crate::server::cmds::start_pairing::start_pairing_cmd_handler::insert_pairing_code_gen_extended_override;
+use crate::server::cmds::testing_cmds_utils::assert_status;
+use crate::server::cmds::testing_cmds_utils::assert_status_ok;
+use crate::server::cmds::testing_cmds_utils::delete_app_user_with;
+use crate::server::cmds::testing_cmds_utils::make_request;
+use crate::server::cmds::testing_cmds_utils::register_user;
+use crate::server::cmds::testing_cmds_utils::start_server_with_overrides;
 
-use utils::now_source::{DefaultNowSource, NowSource};
+use crate::utils::now_source::{DefaultNowSource, NowSource};
 
 #[test]
 fn start_pairing() {

@@ -3,10 +3,10 @@ use std::sync::Arc;
 use futures::Future;
 use uuid::Uuid;
 
-use outside::error::Error;
-use outside::gp;
-use outside::http_client::HttpClient;
-use outside::vk;
+use crate::outside::error::Error;
+use crate::outside::gp;
+use crate::outside::http_client::HttpClient;
+use crate::outside::vk;
 
 pub trait UserUuidGenerator: Send {
     fn generate(&self) -> Uuid;
@@ -257,11 +257,11 @@ fn maybe_override_gp_check_for(overrides: &str) -> Option<Box<dyn GpTokenChecker
 
 #[cfg(test)]
 mod overriders {
+    use crate::outside::error::Error;
+    use crate::outside::gp;
+    use crate::outside::vk;
     use futures::future;
     use futures::Future;
-    use outside::error::Error;
-    use outside::gp;
-    use outside::vk;
     use uuid::Uuid;
 
     pub(super) struct UserUuidOverrider {

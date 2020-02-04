@@ -1,6 +1,3 @@
-extern crate diesel;
-extern crate uuid;
-
 use diesel::ExpressionMethods;
 use diesel::OptionalExtension;
 use diesel::QueryDsl;
@@ -8,16 +5,16 @@ use diesel::RunQueryDsl;
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::app_user::app_user as app_user_schema;
-use db::core::app_user::AppUser;
-use db::core::diesel_connection;
-use db::core::error::Error;
-use db::core::error::ErrorKind;
-use db::core::foodstuff;
-use db::core::foodstuff::foodstuff as foodstuff_schema;
-use db::core::foodstuff::Foodstuff;
-use db::core::testing_util as dbtesting_utils;
+use crate::db::core::app_user;
+use crate::db::core::app_user::app_user as app_user_schema;
+use crate::db::core::app_user::AppUser;
+use crate::db::core::diesel_connection;
+use crate::db::core::error::Error;
+use crate::db::core::error::ErrorKind;
+use crate::db::core::foodstuff;
+use crate::db::core::foodstuff::foodstuff as foodstuff_schema;
+use crate::db::core::foodstuff::Foodstuff;
+use crate::db::core::testing_util as dbtesting_utils;
 
 fn delete_user_by_uid(uid: &Uuid) {
     let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();

@@ -14,7 +14,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use error::Never;
+use crate::error::Never;
 
 use super::requests_handler::RequestsHandler;
 use std::collections::HashMap;

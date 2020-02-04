@@ -1,13 +1,11 @@
-extern crate serde_json;
-
 use std::sync::Arc;
 
-use outside::error::Error;
-use outside::error::ErrorKind;
-use outside::fcm;
-use outside::http_client::HttpClient;
-use testing_utils::exhaust_future;
-use testing_utils::testing_config;
+use crate::outside::error::Error;
+use crate::outside::error::ErrorKind;
+use crate::outside::fcm;
+use crate::outside::http_client::HttpClient;
+use crate::testing_utils::exhaust_future;
+use crate::testing_utils::testing_config;
 
 #[test]
 fn send_with_invalid_client_token() {

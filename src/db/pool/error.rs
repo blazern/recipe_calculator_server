@@ -1,4 +1,4 @@
-use db;
+use crate::db;
 
 error_chain! {
     links {

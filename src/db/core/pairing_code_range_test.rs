@@ -1,13 +1,10 @@
-extern crate diesel;
-extern crate uuid;
-
-use db::core::diesel_connection;
-use db::core::pairing_code_range;
-use db::core::testing_util as dbtesting_utils;
+use crate::db::core::diesel_connection;
+use crate::db::core::pairing_code_range;
+use crate::db::core::testing_util as dbtesting_utils;
 
 // Cleaning up before tests
 fn delete_ranges_with_family(family: &str) {
-    use db::core::pairing_code_range::pairing_code_range as pairing_code_range_schema;
+    use crate::db::core::pairing_code_range::pairing_code_range as pairing_code_range_schema;
     let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();
     let raw_connection = diesel_connection(&connection);
     delete_by_column!(

@@ -1,5 +1,5 @@
 use super::ConnectionPool;
-use testing_utils::testing_config;
+use crate::testing_utils::testing_config;
 
 #[test]
 fn can_borrow_and_put_back() {

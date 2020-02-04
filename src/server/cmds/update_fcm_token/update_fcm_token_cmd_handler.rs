@@ -5,17 +5,17 @@ use futures::Future;
 use serde_json::Value as JsonValue;
 use std::sync::Arc;
 
-use config::Config;
-use db::core::fcm_token;
-use db::pool::connection_pool::BorrowedDBConnection;
-use outside::http_client::HttpClient;
+use crate::config::Config;
+use crate::db::core::fcm_token;
+use crate::db::pool::connection_pool::BorrowedDBConnection;
+use crate::outside::http_client::HttpClient;
 
-use server::cmds::cmd_handler::CmdHandler;
-use server::cmds::utils::db_transaction;
-use server::cmds::utils::extract_user_from_query_args;
-use server::cmds::utils::HashMapAdditionalOperations;
-use server::constants;
-use server::request_error::RequestError;
+use crate::server::cmds::cmd_handler::CmdHandler;
+use crate::server::cmds::utils::db_transaction;
+use crate::server::cmds::utils::extract_user_from_query_args;
+use crate::server::cmds::utils::HashMapAdditionalOperations;
+use crate::server::constants;
+use crate::server::request_error::RequestError;
 
 #[derive(Default)]
 pub struct UpdateFcmTokenCmdHandler;

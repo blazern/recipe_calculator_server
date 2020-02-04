@@ -8,27 +8,27 @@ use std::str::FromStr;
 use std::sync::Arc;
 use uuid::Uuid;
 
-use config::Config;
+use crate::config::Config;
 
-use db::core::app_user;
-use db::core::app_user::AppUser;
-use db::core::fcm_token;
-use db::core::paired_partners;
-use db::core::paired_partners::PairingState;
-use db::core::taken_pairing_code;
-use db::pool::connection_pool::BorrowedDBConnection;
+use crate::db::core::app_user;
+use crate::db::core::app_user::AppUser;
+use crate::db::core::fcm_token;
+use crate::db::core::paired_partners;
+use crate::db::core::paired_partners::PairingState;
+use crate::db::core::taken_pairing_code;
+use crate::db::pool::connection_pool::BorrowedDBConnection;
 
-use outside::fcm;
-use outside::http_client::HttpClient;
+use crate::outside::fcm;
+use crate::outside::http_client::HttpClient;
 
-use server::cmds::cmd_handler::CmdHandleResult;
-use server::cmds::cmd_handler::CmdHandler;
-use server::cmds::utils::db_transaction;
-use server::cmds::utils::extract_user_from_query_args;
-use server::constants;
-use server::request_error::RequestError;
+use crate::server::cmds::cmd_handler::CmdHandleResult;
+use crate::server::cmds::cmd_handler::CmdHandler;
+use crate::server::cmds::utils::db_transaction;
+use crate::server::cmds::utils::extract_user_from_query_args;
+use crate::server::constants;
+use crate::server::request_error::RequestError;
 
-use utils::now_source::{DefaultNowSource, NowSource};
+use crate::utils::now_source::{DefaultNowSource, NowSource};
 
 pub const PAIRING_CONFIRMATION_EXPIRATION_DELAY_SECS: i64 = 60 * 60 * 24;
 

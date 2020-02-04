@@ -8,26 +8,26 @@ use serde_json::Value as JsonValue;
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::testing_util::testing_connection_for_server_user;
-use outside::http_client::HttpClient;
+use crate::db::core::testing_util::testing_connection_for_server_user;
+use crate::outside::http_client::HttpClient;
+use crate::server::cmds::register_user::user_data_generators::create_gp_overrides;
+use crate::server::constants;
+use crate::server::requests_handler_impl::RequestsHandlerImpl;
+use crate::server::testing_hostname;
+use crate::server::testing_mock_server::FullRequest;
+use crate::server::testing_mock_server::TestingMockServer;
+use crate::server::testing_server_wrapper;
+use crate::server::testing_server_wrapper::ServerWrapper;
+use crate::testing_utils::testing_config;
 use percent_encoding::percent_encode;
 use percent_encoding::DEFAULT_ENCODE_SET;
-use server::cmds::register_user::user_data_generators::create_gp_overrides;
-use server::constants;
-use server::requests_handler_impl::RequestsHandlerImpl;
-use server::testing_hostname;
-use server::testing_mock_server::FullRequest;
-use server::testing_mock_server::TestingMockServer;
-use server::testing_server_wrapper;
-use server::testing_server_wrapper::ServerWrapper;
-use testing_utils::testing_config;
 
 #[macro_export]
 macro_rules! start_server {
     () => {{
-        use server::cmds::start_pairing::start_pairing_cmd_handler::insert_pairing_code_gen_family_override;
-        use server::cmds::pairing_request::pairing_request_cmd_handler::insert_pairing_request_overrides;
-        use server::cmds::testing_cmds_utils::start_server_with_overrides;
+        use crate::server::cmds::start_pairing::start_pairing_cmd_handler::insert_pairing_code_gen_family_override;
+        use crate::server::cmds::pairing_request::pairing_request_cmd_handler::insert_pairing_request_overrides;
+        use crate::server::cmds::testing_cmds_utils::start_server_with_overrides;
         let fam = format!("{}{}", file!(), line!());
         let mut overrides = json!({});
         insert_pairing_code_gen_family_override(&mut overrides, fam.clone());
@@ -86,7 +86,7 @@ pub fn assert_status(response: &JsonValue, expected_status: &str) {
 
 /// Cleaning up before tests
 pub fn delete_app_user_with(uid: &Uuid) {
-    use db::core::util::delete_app_user;
+    use crate::db::core::util::delete_app_user;
     delete_app_user(&uid, &testing_connection_for_server_user().unwrap()).unwrap();
 }
 

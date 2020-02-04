@@ -4,7 +4,7 @@ use super::connection::DBConnection;
 use super::connection::DBConnectionImpl;
 use super::error::Error;
 use super::migrator;
-use testing_utils::testing_config;
+use crate::testing_utils::testing_config;
 
 // Migrations must not run in parallel (Rust tests are run in parallel) - so we lock them.
 lazy_static! {

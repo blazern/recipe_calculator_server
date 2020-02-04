@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! insert {
     ( $ResultType:ty, $new_item:expr, $table:path, $connection:expr ) => {{
-        use db::core::error;
+        use crate::db::core::error;
         use diesel;
         use diesel::result::DatabaseErrorKind as DieselDatabaseErrorKind;
         use diesel::result::Error as DieselError;
@@ -26,7 +26,7 @@ macro_rules! insert {
 #[macro_export]
 macro_rules! select_by_column {
     ( $Type:ty, $table:path, $column:path, $value:expr, $connection:expr ) => {{
-        use db::core::transform_diesel_single_result;
+        use crate::db::core::transform_diesel_single_result;
         use diesel::ExpressionMethods;
         use diesel::QueryDsl;
         use diesel::RunQueryDsl;
@@ -41,7 +41,7 @@ macro_rules! select_by_column {
 #[macro_export]
 macro_rules! delete_by_column {
     ( $table:path, $column:path, $value:expr, $connection:expr ) => {{
-        use db::core::error;
+        use crate::db::core::error;
         use diesel::ExpressionMethods;
         use diesel::QueryDsl;
         use diesel::RunQueryDsl;
@@ -65,7 +65,7 @@ macro_rules! update_column {
       $updated_column:path,
       $updated_value:expr,
       $connection:expr ) => {{
-        use db::core::error;
+        use crate::db::core::error;
         use diesel::ExpressionMethods;
         use diesel::QueryDsl;
         use diesel::RunQueryDsl;

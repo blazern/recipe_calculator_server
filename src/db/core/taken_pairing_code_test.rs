@@ -1,14 +1,11 @@
-extern crate diesel;
-extern crate uuid;
-
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::diesel_connection;
-use db::core::taken_pairing_code;
-use db::core::testing_util as dbtesting_utils;
-use db::core::util::delete_app_user;
+use crate::db::core::app_user;
+use crate::db::core::diesel_connection;
+use crate::db::core::taken_pairing_code;
+use crate::db::core::testing_util as dbtesting_utils;
+use crate::db::core::util::delete_app_user;
 
 // Cleaning up before tests
 fn delete_codes_with_family(family: &str) {

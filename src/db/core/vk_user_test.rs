@@ -1,16 +1,13 @@
-extern crate diesel;
-extern crate uuid;
-
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::testing_util as dbtesting_utils;
-use db::core::vk_user;
+use crate::db::core::app_user;
+use crate::db::core::testing_util as dbtesting_utils;
+use crate::db::core::vk_user;
 
 // Cleaning up before tests
 fn delete_entries_with(app_user_uid: &Uuid) {
-    use db::core::util::delete_app_user;
+    use crate::db::core::util::delete_app_user;
     delete_app_user(
         &app_user_uid,
         &dbtesting_utils::testing_connection_for_server_user().unwrap(),

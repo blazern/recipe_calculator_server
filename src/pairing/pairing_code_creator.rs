@@ -5,15 +5,15 @@ use std::collections::HashSet;
 use std::marker::PhantomData;
 use std::sync::Mutex;
 
-use db::core::app_user::AppUser;
-use db::core::connection::DBConnection;
-use db::core::pairing_code_range;
-use db::core::taken_pairing_code;
-use db::core::taken_pairing_code::TakenPairingCode;
-use db::core::transaction;
+use crate::db::core::app_user::AppUser;
+use crate::db::core::connection::DBConnection;
+use crate::db::core::pairing_code_range;
+use crate::db::core::taken_pairing_code;
+use crate::db::core::taken_pairing_code::TakenPairingCode;
+use crate::db::core::transaction;
 
-use utils::now_source::DefaultNowSource;
-use utils::now_source::NowSource;
+use crate::utils::now_source::DefaultNowSource;
+use crate::utils::now_source::NowSource;
 
 use super::error::ErrorKind::InvalidBoundsError;
 use super::error::ErrorKind::OutOfPairingCodes;

@@ -5,14 +5,14 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use config::Config;
-use db::pool::connection_pool::BorrowedDBConnection;
-use outside::http_client::HttpClient;
-use server::constants;
-use server::request_error::RequestError;
+use crate::config::Config;
+use crate::db::pool::connection_pool::BorrowedDBConnection;
+use crate::outside::http_client::HttpClient;
+use crate::server::constants;
+use crate::server::request_error::RequestError;
 
-use server::cmds::cmd_handler::CmdHandler;
-use server::cmds::utils::HashMapAdditionalOperations;
+use crate::server::cmds::cmd_handler::CmdHandler;
+use crate::server::cmds::utils::HashMapAdditionalOperations;
 
 use super::register_user_impl;
 

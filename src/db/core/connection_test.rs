@@ -1,6 +1,6 @@
-use config::Config;
-use db::core::connection::DBConnectionImpl;
-use testing_utils::testing_config;
+use crate::config::Config;
+use crate::db::core::connection::DBConnectionImpl;
+use crate::testing_utils::testing_config;
 
 #[test]
 fn connection_constructs_with_valid_config() {

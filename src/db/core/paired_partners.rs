@@ -15,7 +15,7 @@ table! {
     }
 }
 use self::paired_partners as paired_partners_schema;
-use db::core::fcm_token::delete_by_user_id;
+use crate::db::core::fcm_token::delete_by_user_id;
 use diesel::RunQueryDsl;
 
 /// NOTE: the values are stored into DB, so think
@@ -163,7 +163,7 @@ pub fn select_by_partners_user_ids(
     partner2_user_id: i32,
     connection: &dyn DBConnection,
 ) -> Result<Option<PairedPartners>, Error> {
-    use db::core::transform_diesel_single_result;
+    use crate::db::core::transform_diesel_single_result;
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
 
@@ -181,7 +181,7 @@ pub fn select_by_partners_user_ids_and_state(
     pairing_state: PairingState,
     connection: &dyn DBConnection,
 ) -> Result<Option<PairedPartners>, Error> {
-    use db::core::transform_diesel_single_result;
+    use crate::db::core::transform_diesel_single_result;
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
 
@@ -208,7 +208,7 @@ pub fn delete_by_partners_user_ids(
     partner2_user_id: i32,
     connection: &dyn DBConnection,
 ) -> Result<(), Error> {
-    use db::core::error;
+    use crate::db::core::error;
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
 

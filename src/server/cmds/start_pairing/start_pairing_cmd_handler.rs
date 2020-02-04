@@ -6,19 +6,19 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use config::Config;
-use db::core::connection::DBConnection;
-use db::pool::connection_pool::BorrowedDBConnection;
-use outside::http_client::HttpClient;
-use pairing::pairing_code_creator;
-use pairing::pairing_code_creator::{DefaultPairingCodeCreatorImpl, PairingCodeCreator};
-use server::cmds::cmd_handler::CmdHandler;
-use server::cmds::utils::extract_user_from_query_args;
-use server::constants;
-use server::error::Error;
-use server::request_error::RequestError;
-use utils::now_source::DefaultNowSource;
-use utils::now_source::NowSource;
+use crate::config::Config;
+use crate::db::core::connection::DBConnection;
+use crate::db::pool::connection_pool::BorrowedDBConnection;
+use crate::outside::http_client::HttpClient;
+use crate::pairing::pairing_code_creator;
+use crate::pairing::pairing_code_creator::{DefaultPairingCodeCreatorImpl, PairingCodeCreator};
+use crate::server::cmds::cmd_handler::CmdHandler;
+use crate::server::cmds::utils::extract_user_from_query_args;
+use crate::server::constants;
+use crate::server::error::Error;
+use crate::server::request_error::RequestError;
+use crate::utils::now_source::DefaultNowSource;
+use crate::utils::now_source::NowSource;
 
 const PAIRING_CODES_LIFETIME_SECS: i64 = 60 * 12; // 12 minutes
 const PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS: i64 = 60 * 10; // 12 minutes

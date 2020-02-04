@@ -4,7 +4,7 @@ use diesel::Connection;
 
 use super::error::Error;
 use super::error::ErrorKind;
-use config::Config;
+use crate::config::Config;
 
 /// Trait used as a DB connection, is used to perform any actions with the DB.
 /// Trait has a single method which would be private if Rust allowed it. Instead, the method itself

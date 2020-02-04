@@ -5,11 +5,11 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use server::requests_handler::RequestsHandler;
-use server::testing_hostname;
-use server::testing_server_wrapper;
+use crate::server::requests_handler::RequestsHandler;
+use crate::server::testing_hostname;
+use crate::server::testing_server_wrapper;
 
-use outside::http_client::HttpClient;
+use crate::outside::http_client::HttpClient;
 
 struct Echo {
     string: String,

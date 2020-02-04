@@ -4,11 +4,11 @@ use futures::Future;
 use serde_json::Value as JsonValue;
 use std::sync::Arc;
 
-use config::Config;
-use db::pool::connection_pool::BorrowedDBConnection;
-use outside::http_client::HttpClient;
+use crate::config::Config;
+use crate::db::pool::connection_pool::BorrowedDBConnection;
+use crate::outside::http_client::HttpClient;
 
-use server::request_error::RequestError;
+use crate::server::request_error::RequestError;
 
 pub type CmdHandleResult = Box<dyn Future<Item = JsonValue, Error = RequestError> + Send>;
 

@@ -1,7 +1,3 @@
-extern crate hyper;
-extern crate hyper_tls;
-extern crate serde_json;
-
 error_chain! {
     foreign_links {
         SerdeJson(serde_json::error::Error);

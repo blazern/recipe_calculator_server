@@ -1,14 +1,11 @@
-extern crate diesel;
-extern crate uuid;
-
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::paired_partners;
-use db::core::paired_partners::PairingState;
-use db::core::testing_util as dbtesting_utils;
-use db::core::util::delete_app_user;
+use crate::db::core::app_user;
+use crate::db::core::paired_partners;
+use crate::db::core::paired_partners::PairingState;
+use crate::db::core::testing_util as dbtesting_utils;
+use crate::db::core::util::delete_app_user;
 
 fn delete_user_with_uid(uid: &Uuid) {
     let connection = dbtesting_utils::testing_connection_for_server_user().unwrap();

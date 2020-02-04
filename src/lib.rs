@@ -9,16 +9,8 @@ extern crate serde_derive;
 extern crate error_chain;
 #[macro_use]
 extern crate lazy_static;
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate percent_encoding;
-extern crate rand;
-extern crate serde;
 #[macro_use]
 extern crate serde_json;
-extern crate tokio_core;
-extern crate uuid;
 
 pub mod config;
 pub mod db;

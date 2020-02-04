@@ -1,7 +1,4 @@
-extern crate serde_json;
-extern crate time;
-
-use config;
+use crate::config;
 use std::fs::OpenOptions;
 use std::io::Seek;
 use std::io::SeekFrom;

@@ -4,19 +4,19 @@ use std::time::SystemTimeError;
 
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::pairing_code_range;
-use db::core::taken_pairing_code;
-use db::core::testing_util as dbtesting_utils;
-use db::core::util::delete_app_user;
+use crate::db::core::app_user;
+use crate::db::core::pairing_code_range;
+use crate::db::core::taken_pairing_code;
+use crate::db::core::testing_util as dbtesting_utils;
+use crate::db::core::util::delete_app_user;
 
-use pairing::error::Error;
-use pairing::error::ErrorKind::InvalidBoundsError;
-use pairing::error::ErrorKind::OutOfPairingCodes;
-use pairing::error::ErrorKind::SameNamedFamilyExistsError;
+use crate::pairing::error::Error;
+use crate::pairing::error::ErrorKind::InvalidBoundsError;
+use crate::pairing::error::ErrorKind::OutOfPairingCodes;
+use crate::pairing::error::ErrorKind::SameNamedFamilyExistsError;
 
-use utils::now_source::DefaultNowSource;
-use utils::now_source::NowSource;
+use crate::utils::now_source::DefaultNowSource;
+use crate::utils::now_source::NowSource;
 
 use super::DefaultRandCodeGenerator;
 use super::PairingCodeCreator;

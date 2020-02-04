@@ -1,9 +1,9 @@
-use db;
+use crate::db;
 
-use db::core::transaction;
-use error;
-use outside;
-use pairing;
+use crate::db::core::transaction;
+use crate::error;
+use crate::outside;
+use crate::pairing;
 use uuid::Uuid;
 
 error_chain! {

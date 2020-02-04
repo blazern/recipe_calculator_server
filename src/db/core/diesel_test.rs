@@ -1,16 +1,13 @@
-extern crate diesel;
-extern crate uuid;
-
 use diesel::Connection;
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db;
-use db::core::app_user;
-use db::core::app_user::app_user as app_user_schema;
-use db::core::app_user::AppUser;
-use db::core::diesel_connection;
-use db::core::testing_util as dbtesting_utils;
+use crate::db;
+use crate::db::core::app_user;
+use crate::db::core::app_user::app_user as app_user_schema;
+use crate::db::core::app_user::AppUser;
+use crate::db::core::diesel_connection;
+use crate::db::core::testing_util as dbtesting_utils;
 
 #[test]
 fn transition_rolls_back_progress_when_interrupted() {

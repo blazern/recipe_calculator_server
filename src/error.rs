@@ -1,7 +1,3 @@
-extern crate diesel;
-extern crate serde_json;
-extern crate uuid;
-
 use std;
 use std::fmt;
 

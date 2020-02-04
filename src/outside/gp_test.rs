@@ -1,10 +1,8 @@
-extern crate serde_json;
-
 use std::sync::Arc;
 
-use outside::gp;
-use outside::http_client::HttpClient;
-use testing_utils::exhaust_future;
+use crate::outside::gp;
+use crate::outside::http_client::HttpClient;
+use crate::testing_utils::exhaust_future;
 
 #[test]
 fn can_check_client_token() {

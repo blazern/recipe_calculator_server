@@ -1,19 +1,19 @@
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::gp_user;
-use db::core::testing_util::testing_connection_for_server_user;
-use db::core::vk_user;
-use server::cmds::register_user::user_data_generators::create_gp_overrides;
-use server::cmds::register_user::user_data_generators::create_uuid_only_overrides;
-use server::cmds::register_user::user_data_generators::create_vk_overrides;
-use server::constants;
+use crate::db::core::app_user;
+use crate::db::core::gp_user;
+use crate::db::core::testing_util::testing_connection_for_server_user;
+use crate::db::core::vk_user;
+use crate::server::cmds::register_user::user_data_generators::create_gp_overrides;
+use crate::server::cmds::register_user::user_data_generators::create_uuid_only_overrides;
+use crate::server::cmds::register_user::user_data_generators::create_vk_overrides;
+use crate::server::constants;
 
-use server::cmds::testing_cmds_utils::assert_status;
-use server::cmds::testing_cmds_utils::assert_status_ok;
-use server::cmds::testing_cmds_utils::delete_app_user_with;
-use server::cmds::testing_cmds_utils::make_request;
+use crate::server::cmds::testing_cmds_utils::assert_status;
+use crate::server::cmds::testing_cmds_utils::assert_status_ok;
+use crate::server::cmds::testing_cmds_utils::delete_app_user_with;
+use crate::server::cmds::testing_cmds_utils::make_request;
 
 #[test]
 fn register_client_cmd_with_vk_user() {

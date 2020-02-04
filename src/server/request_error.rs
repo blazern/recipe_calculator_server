@@ -1,12 +1,12 @@
 use std::time::SystemTimeError;
 
-use db::core::error::Error as DbCoreError;
-use db::core::transaction::TransactionError as DbTransactionError;
-use db::pool::error::Error as DbPoolError;
-use outside::error::Error as OutsideError;
-use pairing::error::Error as PairingError;
-use server::error::Error as ServerError;
-use server::error::ErrorKind as ServerErrorKind;
+use crate::db::core::error::Error as DbCoreError;
+use crate::db::core::transaction::TransactionError as DbTransactionError;
+use crate::db::pool::error::Error as DbPoolError;
+use crate::outside::error::Error as OutsideError;
+use crate::pairing::error::Error as PairingError;
+use crate::server::error::Error as ServerError;
+use crate::server::error::ErrorKind as ServerErrorKind;
 
 use super::constants;
 

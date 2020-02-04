@@ -1,18 +1,18 @@
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::fcm_token;
-use db::core::testing_util::testing_connection_for_server_user;
+use crate::db::core::app_user;
+use crate::db::core::fcm_token;
+use crate::db::core::testing_util::testing_connection_for_server_user;
+use crate::server::constants;
 use percent_encoding::percent_encode;
 use percent_encoding::DEFAULT_ENCODE_SET;
-use server::constants;
 
-use server::cmds::testing_cmds_utils::assert_status;
-use server::cmds::testing_cmds_utils::assert_status_ok;
-use server::cmds::testing_cmds_utils::delete_app_user_with;
-use server::cmds::testing_cmds_utils::make_request;
-use server::cmds::testing_cmds_utils::register_user;
+use crate::server::cmds::testing_cmds_utils::assert_status;
+use crate::server::cmds::testing_cmds_utils::assert_status_ok;
+use crate::server::cmds::testing_cmds_utils::delete_app_user_with;
+use crate::server::cmds::testing_cmds_utils::make_request;
+use crate::server::cmds::testing_cmds_utils::register_user;
 
 #[test]
 fn by_default_there_is_no_fcm_token() {

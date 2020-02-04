@@ -1,9 +1,9 @@
 use super::error::Error;
-use config::Config;
-use db::core::connection::DBConnection;
-use db::core::connection::DBConnectionImpl;
-use db::core::connection::UnderlyingConnectionSource;
-use db::core::error::Error as DBCoreError;
+use crate::config::Config;
+use crate::db::core::connection::DBConnection;
+use crate::db::core::connection::DBConnectionImpl;
+use crate::db::core::connection::UnderlyingConnectionSource;
+use crate::db::core::error::Error as DBCoreError;
 
 use std::sync::Arc;
 use std::sync::Mutex;

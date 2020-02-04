@@ -1,12 +1,9 @@
-extern crate diesel;
-extern crate uuid;
-
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::foodstuff;
-use db::core::testing_util as dbtesting_utils;
+use crate::db::core::app_user;
+use crate::db::core::foodstuff;
+use crate::db::core::testing_util as dbtesting_utils;
 
 const FOODSTUFF_NAME: &str = "foodstuff name for tests";
 const FOODSTUFF_PROTEIN: i32 = 123_456_789_i32;
@@ -16,7 +13,7 @@ const FOODSTUFF_CALORIES: i32 = 123_456_789_i32;
 
 // Cleaning up before tests
 fn delete_entries_with(app_user_uid: &Uuid) {
-    use db::core::util::delete_app_user;
+    use crate::db::core::util::delete_app_user;
     delete_app_user(
         &app_user_uid,
         &dbtesting_utils::testing_connection_for_server_user().unwrap(),

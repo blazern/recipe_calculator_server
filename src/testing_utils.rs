@@ -1,5 +1,4 @@
-extern crate serde_json;
-use config;
+use crate::config;
 use futures::Future;
 use std::sync::Once;
 

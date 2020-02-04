@@ -6,10 +6,10 @@ use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use config::Config;
-use db::pool::connection_pool::ConnectionPool;
-use db::pool::connection_pool::ConnectionType;
-use outside::http_client::HttpClient;
+use crate::config::Config;
+use crate::db::pool::connection_pool::ConnectionPool;
+use crate::db::pool::connection_pool::ConnectionType;
+use crate::outside::http_client::HttpClient;
 
 use super::cmds::cmds_hub::CmdsHub;
 use super::constants;

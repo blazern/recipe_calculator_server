@@ -104,7 +104,7 @@ pub fn select_by_value(
     family: &str,
     connection: &dyn DBConnection,
 ) -> Result<Option<TakenPairingCode>, Error> {
-    use db::core::transform_diesel_single_result;
+    use crate::db::core::transform_diesel_single_result;
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
 
@@ -120,7 +120,7 @@ pub fn select_by_app_user_id(
     family: &str,
     connection: &dyn DBConnection,
 ) -> Result<Option<TakenPairingCode>, Error> {
-    use db::core::transform_diesel_single_result;
+    use crate::db::core::transform_diesel_single_result;
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
 
@@ -162,7 +162,7 @@ pub fn select_first_newer_than(
     family: &str,
     connection: &dyn DBConnection,
 ) -> Result<Option<TakenPairingCode>, Error> {
-    use db::core::transform_diesel_single_result;
+    use crate::db::core::transform_diesel_single_result;
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
 
@@ -177,7 +177,7 @@ pub fn select_any(
     family: &str,
     connection: &dyn DBConnection,
 ) -> Result<Option<TakenPairingCode>, Error> {
-    use db::core::transform_diesel_single_result;
+    use crate::db::core::transform_diesel_single_result;
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
 

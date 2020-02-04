@@ -1,8 +1,3 @@
-extern crate clap;
-extern crate futures;
-extern crate recipe_calculator_lib;
-extern crate serde_json;
-
 use std::net::ToSocketAddrs;
 
 use clap::{App, Arg};

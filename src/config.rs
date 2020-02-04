@@ -1,6 +1,4 @@
-extern crate serde_json;
-
-use error::Error;
+use crate::error::Error;
 use std::io::Read;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

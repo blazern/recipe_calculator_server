@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::connection::DBConnection;
-use db::core::transaction;
+use crate::db::core::app_user;
+use crate::db::core::connection::DBConnection;
+use crate::db::core::transaction;
 
-use server::constants;
-use server::request_error::RequestError;
+use crate::server::constants;
+use crate::server::request_error::RequestError;
 
 pub trait HashMapAdditionalOperations {
     fn get_or_request_error(&self, key: &str) -> Result<String, RequestError>;

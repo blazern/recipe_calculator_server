@@ -1,15 +1,15 @@
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::device;
-use db::core::fcm_token;
-use db::core::foodstuff;
-use db::core::paired_partners;
-use db::core::paired_partners::PairingState;
-use db::core::testing_util as dbtesting_utils;
-use db::core::util::delete_app_user;
-use db::core::vk_user;
+use crate::db::core::app_user;
+use crate::db::core::device;
+use crate::db::core::fcm_token;
+use crate::db::core::foodstuff;
+use crate::db::core::paired_partners;
+use crate::db::core::paired_partners::PairingState;
+use crate::db::core::testing_util as dbtesting_utils;
+use crate::db::core::util::delete_app_user;
+use crate::db::core::vk_user;
 
 #[test]
 fn deleting_app_user_deletes_all_related_data() {

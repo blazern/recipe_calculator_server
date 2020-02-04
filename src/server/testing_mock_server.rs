@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use server::requests_handler::RequestsHandler;
+use crate::server::requests_handler::RequestsHandler;
 
 pub struct TestingMockServer<Responder>
 where

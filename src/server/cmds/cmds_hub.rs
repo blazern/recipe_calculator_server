@@ -4,13 +4,13 @@ use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use config::Config;
-use db::pool::connection_pool::BorrowedDBConnection;
-use outside::http_client::HttpClient;
-use server::error::Error;
+use crate::config::Config;
+use crate::db::pool::connection_pool::BorrowedDBConnection;
+use crate::outside::http_client::HttpClient;
+use crate::server::error::Error;
 
-use server::constants;
-use server::request_error::RequestError;
+use crate::server::constants;
+use crate::server::request_error::RequestError;
 
 use super::cmd_handler::CmdHandler;
 use super::pairing_request::pairing_request_cmd_handler::PairingRequestCmdHandler;

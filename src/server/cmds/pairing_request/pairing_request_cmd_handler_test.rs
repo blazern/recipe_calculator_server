@@ -4,27 +4,27 @@ use serde_json::Value as JsonValue;
 use std::str::FromStr;
 use uuid::Uuid;
 
-use db::core::app_user;
-use db::core::paired_partners;
-use db::core::testing_util::testing_connection_for_server_user;
-use server::constants;
-use server::testing_hostname;
-use server::testing_mock_server::FullRequest;
+use crate::db::core::app_user;
+use crate::db::core::paired_partners;
+use crate::db::core::testing_util::testing_connection_for_server_user;
+use crate::server::constants;
+use crate::server::testing_hostname;
+use crate::server::testing_mock_server::FullRequest;
 
-use server::cmds::pairing_request::pairing_request_cmd_handler;
+use crate::server::cmds::pairing_request::pairing_request_cmd_handler;
 
-use server::cmds::testing_cmds_utils::assert_status;
-use server::cmds::testing_cmds_utils::delete_app_user_with;
-use server::cmds::testing_cmds_utils::make_request;
-use server::cmds::testing_cmds_utils::pairing_request_by_code;
-use server::cmds::testing_cmds_utils::pairing_request_by_code_with_overrides;
-use server::cmds::testing_cmds_utils::pairing_request_by_uid;
-use server::cmds::testing_cmds_utils::pairing_request_by_uid_with_overrides;
-use server::cmds::testing_cmds_utils::register_named_user;
-use server::cmds::testing_cmds_utils::register_user;
-use server::cmds::testing_cmds_utils::set_user_fcm_token;
-use server::cmds::testing_cmds_utils::start_mock_server;
-use server::cmds::testing_cmds_utils::start_pairing;
+use crate::server::cmds::testing_cmds_utils::assert_status;
+use crate::server::cmds::testing_cmds_utils::delete_app_user_with;
+use crate::server::cmds::testing_cmds_utils::make_request;
+use crate::server::cmds::testing_cmds_utils::pairing_request_by_code;
+use crate::server::cmds::testing_cmds_utils::pairing_request_by_code_with_overrides;
+use crate::server::cmds::testing_cmds_utils::pairing_request_by_uid;
+use crate::server::cmds::testing_cmds_utils::pairing_request_by_uid_with_overrides;
+use crate::server::cmds::testing_cmds_utils::register_named_user;
+use crate::server::cmds::testing_cmds_utils::register_user;
+use crate::server::cmds::testing_cmds_utils::set_user_fcm_token;
+use crate::server::cmds::testing_cmds_utils::start_mock_server;
+use crate::server::cmds::testing_cmds_utils::start_pairing;
 
 #[test]
 fn pairing_by_pairing_codes() {

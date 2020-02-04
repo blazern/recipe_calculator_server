@@ -3,8 +3,8 @@ use futures::sync::oneshot;
 use std::sync::MutexGuard;
 use std::thread;
 
-use server::entry_point;
-use server::requests_handler::RequestsHandler;
+use crate::server::entry_point;
+use crate::server::requests_handler::RequestsHandler;
 
 // Wrapper for server started by 'entry_point::start_server'.
 // Starts server on background thread (so that tests would be blocked by the server), stops
