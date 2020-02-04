@@ -156,7 +156,7 @@ fn row_with_corrupted_state_gets_erased() {
 }
 
 #[test]
-fn deletion() {
+fn deletion_by_partners_ids() {
     let uid1 = Uuid::from_str("00000000-0000-0000-0000-002210000008").unwrap();
     let uid2 = Uuid::from_str("00000000-0000-0000-0000-002210000009").unwrap();
     delete_user_with_uid(&uid1);
@@ -222,4 +222,28 @@ fn deletion_of_old_with_certain_state() {
     assert!(paired_partners::select_by_id(pp4.id(), &conn)
         .unwrap()
         .is_some());
+}
+
+#[test]
+fn deletion_by_id() {
+    let uid1 = Uuid::from_str("00000000-0000-0000-0000-002210000013").unwrap();
+    let uid2 = Uuid::from_str("00000000-0000-0000-0000-002210000014").unwrap();
+    delete_user_with_uid(&uid1);
+    delete_user_with_uid(&uid2);
+    let conn = dbtesting_utils::testing_connection_for_client_user().unwrap();
+    let user1 =
+        app_user::insert(app_user::new(uid1, "".to_owned(), Uuid::new_v4()), &conn).unwrap();
+    let user2 =
+        app_user::insert(app_user::new(uid2, "".to_owned(), Uuid::new_v4()), &conn).unwrap();
+
+    let pp = paired_partners::new(&user1, &user2, PairingState::Done, 123);
+    let pp = paired_partners::insert(pp, &conn).unwrap();
+
+    assert!(paired_partners::select_by_id(pp.id(), &conn)
+        .unwrap()
+        .is_some());
+    paired_partners::delete_by_id(pp.id(), &conn).unwrap();
+    assert!(paired_partners::select_by_id(pp.id(), &conn)
+        .unwrap()
+        .is_none());
 }

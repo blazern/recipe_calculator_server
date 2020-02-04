@@ -5,7 +5,6 @@ use std::thread;
 
 use server::entry_point;
 use server::requests_handler::RequestsHandler;
-use server::testing_hostname;
 
 // Wrapper for server started by 'entry_point::start_server'.
 // Starts server on background thread (so that tests would be blocked by the server), stops
@@ -18,7 +17,7 @@ pub struct ServerWrapper {
 }
 
 impl ServerWrapper {
-    fn new<RH>(requests_handler: RH) -> ServerWrapper
+    fn new<RH>(requests_handler: RH, address: MutexGuard<'static, String>) -> ServerWrapper
     where
         RH: RequestsHandler + 'static,
     {
@@ -37,7 +36,6 @@ impl ServerWrapper {
         let (start_event_sender, start_event_receiver) = oneshot::channel::<()>();
         let start_event_receiver = start_event_receiver.map_err(|_| ());
 
-        let address = testing_hostname::get_hostname();
         let sock_address = address.parse().unwrap();
         thread::spawn(move || {
             start_event_sender.send(()).unwrap();
@@ -75,9 +73,9 @@ impl Drop for ServerWrapper {
     }
 }
 
-pub fn start_server<RH>(requests_handler: RH) -> ServerWrapper
+pub fn start_server<RH>(requests_handler: RH, address: MutexGuard<'static, String>) -> ServerWrapper
 where
     RH: RequestsHandler + 'static,
 {
-    ServerWrapper::new(requests_handler)
+    ServerWrapper::new(requests_handler, address)
 }

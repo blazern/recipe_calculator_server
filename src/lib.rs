@@ -28,3 +28,4 @@ pub mod pairing;
 pub mod server;
 #[cfg(test)]
 pub mod testing_utils;
+pub mod utils;

@@ -194,6 +194,15 @@ pub fn select_by_partners_user_ids_and_state(
     validate_selection_result(result, connection)
 }
 
+pub fn delete_by_id(id: i32, connection: &dyn DBConnection) -> Result<(), Error> {
+    delete_by_column!(
+        paired_partners_schema::table,
+        paired_partners_schema::id,
+        id,
+        diesel_connection(connection)
+    )
+}
+
 pub fn delete_by_partners_user_ids(
     partner1_user_id: i32,
     partner2_user_id: i32,

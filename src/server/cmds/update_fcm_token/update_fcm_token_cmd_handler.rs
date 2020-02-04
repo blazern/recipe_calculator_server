@@ -7,11 +7,11 @@ use std::sync::Arc;
 
 use config::Config;
 use db::core::fcm_token;
-use db::core::transaction;
 use db::pool::connection_pool::BorrowedDBConnection;
 use outside::http_client::HttpClient;
 
 use server::cmds::cmd_handler::CmdHandler;
+use server::cmds::utils::db_transaction;
 use server::cmds::utils::extract_user_from_query_args;
 use server::cmds::utils::HashMapAdditionalOperations;
 use server::constants;
@@ -51,7 +51,7 @@ impl UpdateFcmTokenCmdHandler {
     ) -> Result<JsonValue, RequestError> {
         let user = extract_user_from_query_args(&args, &connection)?;
         let fcm_token_value = args.get_or_request_error(constants::ARG_FCM_TOKEN)?;
-        transaction::start::<(), RequestError, _>(&connection, || {
+        db_transaction(&connection, || {
             fcm_token::delete_by_user_id(user.id(), &connection)?;
             fcm_token::insert(fcm_token::new(fcm_token_value, &user), &connection)?;
             Ok(())

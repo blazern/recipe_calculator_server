@@ -15,9 +15,10 @@ use pairing::error::ErrorKind::InvalidBoundsError;
 use pairing::error::ErrorKind::OutOfPairingCodes;
 use pairing::error::ErrorKind::SameNamedFamilyExistsError;
 
-use super::DefaultNowSource;
+use utils::now_source::DefaultNowSource;
+use utils::now_source::NowSource;
+
 use super::DefaultRandCodeGenerator;
-use super::NowSource;
 use super::PairingCodeCreator;
 use super::RandCodeGenerator;
 

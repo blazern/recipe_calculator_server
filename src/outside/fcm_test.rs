@@ -25,6 +25,7 @@ fn send_with_invalid_client_token() {
         &data,
         user_fcm_token,
         config.fcm_server_token(),
+        fcm::FCM_ADDR,
         http_client,
     );
     let send_result = exhaust_future(send_result).unwrap();
@@ -52,7 +53,13 @@ fn send_with_invalid_server_token() {
     // a way to auth in tests.
 
     let data = json!({});
-    let send_result = fcm::send(&data, user_fcm_token, server_fcm_token, http_client);
+    let send_result = fcm::send(
+        &data,
+        user_fcm_token,
+        server_fcm_token,
+        fcm::FCM_ADDR,
+        http_client,
+    );
     let send_result = exhaust_future(send_result).unwrap();
 
     match send_result {

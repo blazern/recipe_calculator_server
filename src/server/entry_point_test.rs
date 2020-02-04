@@ -1,10 +1,12 @@
 use futures::future::ok;
 use futures::Future;
 use hyper::Uri;
+use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use server::requests_handler::RequestsHandler;
+use server::testing_hostname;
 use server::testing_server_wrapper;
 
 use outside::http_client::HttpClient;
@@ -18,6 +20,8 @@ impl RequestsHandler for Echo {
         &mut self,
         _request: String,
         _query: String,
+        _headers: HashMap<String, String>,
+        _body: String,
     ) -> Box<dyn Future<Item = String, Error = ()> + Send> {
         Box::new(ok(self.string.clone()))
     }
@@ -33,9 +37,13 @@ fn make_request(url: &str) -> String {
 #[test]
 fn test_server_responses() {
     let expected_response = "Hello, world";
-    let server = testing_server_wrapper::start_server(Echo {
-        string: expected_response.to_string(),
-    });
+    let address = testing_hostname::get_hostname();
+    let server = testing_server_wrapper::start_server(
+        Echo {
+            string: expected_response.to_string(),
+        },
+        address,
+    );
 
     let url = format!("http://{}", server.address());
     let response = make_request(&url);

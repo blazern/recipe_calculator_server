@@ -4,9 +4,6 @@ use rand::Rng;
 use std::collections::HashSet;
 use std::marker::PhantomData;
 use std::sync::Mutex;
-use std::time::SystemTime;
-use std::time::SystemTimeError;
-use std::time::UNIX_EPOCH;
 
 use db::core::app_user::AppUser;
 use db::core::connection::DBConnection;
@@ -14,6 +11,9 @@ use db::core::pairing_code_range;
 use db::core::taken_pairing_code;
 use db::core::taken_pairing_code::TakenPairingCode;
 use db::core::transaction;
+
+use utils::now_source::DefaultNowSource;
+use utils::now_source::NowSource;
 
 use super::error::ErrorKind::InvalidBoundsError;
 use super::error::ErrorKind::OutOfPairingCodes;
@@ -431,18 +431,6 @@ where
         taken_pairing_code::delete_family(&self.family, connection)?;
         pairing_code_range::delete_family(&self.family, connection)?;
         Ok(())
-    }
-}
-
-/// Used in tests
-pub trait NowSource {
-    fn now_secs(&self) -> Result<i64, SystemTimeError>;
-}
-#[derive(Debug)]
-pub struct DefaultNowSource;
-impl NowSource for DefaultNowSource {
-    fn now_secs(&self) -> Result<i64, SystemTimeError> {
-        Ok(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64)
     }
 }
 

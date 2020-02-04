@@ -17,12 +17,13 @@ use std::sync::Mutex;
 use error::Never;
 
 use super::requests_handler::RequestsHandler;
+use std::collections::HashMap;
 
 struct EntryPoint<RH>
 where
     RH: RequestsHandler,
 {
-    requests_handler: Mutex<RefCell<RH>>,
+    requests_handler: Arc<Mutex<RefCell<RH>>>,
 }
 
 impl<RH> EntryPoint<RH>
@@ -31,7 +32,7 @@ where
 {
     fn new(requests_handler: RefCell<RH>) -> EntryPoint<RH> {
         EntryPoint {
-            requests_handler: Mutex::new(requests_handler),
+            requests_handler: Arc::new(Mutex::new(requests_handler)),
         }
     }
 }
@@ -68,13 +69,13 @@ where
 
 struct MyHyperService<RH>
 where
-    RH: RequestsHandler,
+    RH: RequestsHandler + 'static,
 {
     entry_point: Arc<EntryPoint<RH>>,
 }
 impl<RH> Service for MyHyperService<RH>
 where
-    RH: RequestsHandler,
+    RH: RequestsHandler + 'static,
 {
     type ReqBody = Body;
     type ResBody = Body;
@@ -84,21 +85,26 @@ where
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         let uri = req.uri();
 
-        let requests_handler = self
-            .entry_point
-            .requests_handler
-            .lock()
-            .expect("Broken mutex == broken app");
         let request = uri.path().to_string();
         let query = match uri.query() {
             Some(query) => query.to_string(),
             None => "".to_string(),
         };
-        let response = requests_handler
-            .borrow_mut()
-            .handle(request, query)
-            .map(|response_str| Response::new(Body::from(response_str)))
-            .map_err(|err| panic!("No errors were expected, got: {:?}", err));
+        let headers = extract_headers(&req);
+        let body = extract_body(req);
+
+        let requests_handler = self.entry_point.requests_handler.clone();
+
+        let response = body.and_then(move |body| {
+            let requests_handler = requests_handler.lock().expect("Broken mutex == broken app");
+
+            let mut requests_handler = requests_handler.borrow_mut();
+            requests_handler
+                .handle(request, query, headers, body)
+                .map(|response_str| Response::new(Body::from(response_str)))
+                .map_err(|err| panic!("No errors were expected, got: {:?}", err))
+        });
+
         Box::new(response)
     }
 }
@@ -113,6 +119,39 @@ where
     fn into_future(self) -> Self::Future {
         future::ok(self)
     }
+}
+
+fn extract_headers(req: &Request<Body>) -> HashMap<String, String> {
+    let mut headers = HashMap::new();
+    for header in req.headers() {
+        let key = header.0.as_str().to_owned();
+        let val = match header.1.to_str() {
+            Ok(val) => val.to_owned(),
+            Err(_) => continue,
+        };
+        headers.insert(key, val);
+    }
+    headers
+}
+
+// Body extraction currently only supported for tests
+#[cfg(not(test))]
+fn extract_body(_req: Request<Body>) -> impl Future<Item = String, Error = Never> + Send {
+    futures::future::ok("".to_owned())
+}
+
+#[cfg(test)]
+fn extract_body(req: Request<Body>) -> impl Future<Item = String, Error = Never> + Send {
+    // NOTE: this implementation is terrible and should be used
+    // for tests only (for example, it doesn't check for body length,
+    // and malicious client might break our server by providing a huge body).
+    use futures::future::ok;
+    use futures::Stream;
+
+    req.into_body()
+        .concat2()
+        .and_then(|c| ok(String::from_utf8(c.to_vec()).unwrap()))
+        .map_err(|err| panic!("Err: {:?}", err))
 }
 
 #[cfg(test)]

@@ -4,7 +4,6 @@ use std::thread;
 use std::time;
 use uuid::Uuid;
 
-use pairing::pairing_code_creator::{DefaultNowSource, NowSource};
 use percent_encoding::percent_encode;
 use percent_encoding::DEFAULT_ENCODE_SET;
 use server::constants;
@@ -16,6 +15,8 @@ use server::cmds::testing_cmds_utils::delete_app_user_with;
 use server::cmds::testing_cmds_utils::make_request;
 use server::cmds::testing_cmds_utils::register_user;
 use server::cmds::testing_cmds_utils::start_server_with_overrides;
+
+use utils::now_source::{DefaultNowSource, NowSource};
 
 #[test]
 fn start_pairing() {

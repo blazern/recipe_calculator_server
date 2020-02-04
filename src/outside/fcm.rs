@@ -47,6 +47,8 @@ use super::http_client::RequestMethod;
 //</BODY>
 //</HTML>
 
+pub const FCM_ADDR: &str = "https://fcm.googleapis.com/";
+
 #[derive(Debug, Clone)]
 pub enum SendResult {
     Success,
@@ -58,6 +60,7 @@ pub fn send(
     data: &JsonValue,
     fcm_token: &str,
     server_fcm_token: &str,
+    fcm_address: &str,
     http_client: Arc<HttpClient>,
 ) -> impl Future<Item = SendResult, Error = Error> + Send {
     let mut headers = HashMap::new();
@@ -71,7 +74,7 @@ pub fn send(
         "to": fcm_token,
         "data": data
     });
-    done(Uri::from_str("https://fcm.googleapis.com/fcm/send"))
+    done(Uri::from_str(&format!("{}/fcm/send", fcm_address)))
         .map_err(|err| err.into())
         .and_then(move |url| {
             http_client.req(url, RequestMethod::Post, headers, Some(body.to_string()))

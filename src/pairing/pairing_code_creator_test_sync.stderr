@@ -11,4 +11,4 @@ error[E0277]: `(dyn std::marker::Send + 'static)` cannot be shared between threa
   = note: required because of the requirements on the impl of `std::marker::Sync` for `std::ptr::Unique<(dyn std::marker::Send + 'static)>`
   = note: required because it appears within the type `std::boxed::Box<(dyn std::marker::Send + 'static)>`
   = note: required because it appears within the type `std::marker::PhantomData<std::boxed::Box<(dyn std::marker::Send + 'static)>>`
-  = note: required because it appears within the type `recipe_calculator_lib::pairing::pairing_code_creator::PairingCodeCreatorImpl<recipe_calculator_lib::pairing::pairing_code_creator::DefaultNowSource, recipe_calculator_lib::pairing::pairing_code_creator::DefaultRandCodeGenerator>`
+  = note: required because it appears within the type `recipe_calculator_lib::pairing::pairing_code_creator::PairingCodeCreatorImpl<recipe_calculator_lib::utils::now_source::DefaultNowSource, recipe_calculator_lib::pairing::pairing_code_creator::DefaultRandCodeGenerator>`

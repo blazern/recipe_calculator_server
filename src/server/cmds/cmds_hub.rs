@@ -13,6 +13,7 @@ use server::constants;
 use server::request_error::RequestError;
 
 use super::cmd_handler::CmdHandler;
+use super::pairing_request::pairing_request_cmd_handler::PairingRequestCmdHandler;
 use super::register_user::register_user_cmd_handler::RegisterUserCmdHandler;
 use super::start_pairing::start_pairing_cmd_handler::StartPairingCmdHandler;
 use super::update_fcm_token::update_fcm_token_cmd_handler::UpdateFcmTokenCmdHandler;
@@ -37,6 +38,10 @@ impl CmdsHub {
         cmd_handlers.insert(
             constants::CMD_UPDATE_FCM_TOKEN,
             Box::new(UpdateFcmTokenCmdHandler::new()),
+        );
+        cmd_handlers.insert(
+            constants::CMD_PAIRING_REQUEST,
+            Box::new(PairingRequestCmdHandler::new(overrides)),
         );
         Ok(CmdsHub { cmd_handlers })
     }

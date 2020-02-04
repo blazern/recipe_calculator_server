@@ -3,6 +3,7 @@ use std::time::SystemTimeError;
 use db::core::error::Error as DbCoreError;
 use db::core::transaction::TransactionError as DbTransactionError;
 use db::pool::error::Error as DbPoolError;
+use outside::error::Error as OutsideError;
 use pairing::error::Error as PairingError;
 use server::error::Error as ServerError;
 use server::error::ErrorKind as ServerErrorKind;
@@ -72,6 +73,15 @@ impl From<PairingError> for RequestError {
         RequestError::new(
             constants::FIELD_STATUS_INTERNAL_ERROR,
             &format!("Internal pairing error: {}", error),
+        )
+    }
+}
+
+impl From<OutsideError> for RequestError {
+    fn from(error: OutsideError) -> Self {
+        RequestError::new(
+            constants::FIELD_STATUS_INTERNAL_ERROR,
+            &format!("Outside service error: {}", error),
         )
     }
 }

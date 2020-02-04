@@ -10,6 +10,8 @@ use outside::http_client::HttpClient;
 
 use server::request_error::RequestError;
 
+pub type CmdHandleResult = Box<dyn Future<Item = JsonValue, Error = RequestError> + Send>;
+
 pub trait CmdHandler {
     fn handle(
         &self,
@@ -17,5 +19,5 @@ pub trait CmdHandler {
         connection: BorrowedDBConnection,
         config: Config,
         http_client: Arc<HttpClient>,
-    ) -> Box<dyn Future<Item = JsonValue, Error = RequestError> + Send>;
+    ) -> CmdHandleResult;
 }

@@ -99,6 +99,22 @@ pub fn select_by_id(
     )
 }
 
+pub fn select_by_value(
+    val: i32,
+    family: &str,
+    connection: &dyn DBConnection,
+) -> Result<Option<TakenPairingCode>, Error> {
+    use db::core::transform_diesel_single_result;
+    use diesel::ExpressionMethods;
+    use diesel::QueryDsl;
+
+    let result = taken_pairing_code_schema::table
+        .filter(taken_pairing_code_schema::val.eq(val))
+        .filter(taken_pairing_code_schema::family.eq(family))
+        .first::<TakenPairingCode>(diesel_connection(connection));
+    transform_diesel_single_result(result)
+}
+
 pub fn select_by_app_user_id(
     app_user_id: i32,
     family: &str,

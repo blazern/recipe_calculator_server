@@ -71,6 +71,8 @@ impl RequestsHandler for RequestsHandlerImpl {
         &mut self,
         request: String,
         query: String,
+        _headers: HashMap<String, String>,
+        _body: String,
     ) -> Box<dyn Future<Item = String, Error = ()> + Send> {
         let result = self
             .handle_impl(request, query)

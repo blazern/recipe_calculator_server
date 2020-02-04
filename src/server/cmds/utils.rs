@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use db::core::app_user;
 use db::core::connection::DBConnection;
+use db::core::transaction;
 
 use server::constants;
 use server::request_error::RequestError;
@@ -60,4 +61,11 @@ pub fn extract_user_from_query_args(
             "User with given user ID not found",
         )),
     }
+}
+
+pub fn db_transaction<T, F>(connection: &dyn DBConnection, action: F) -> Result<T, RequestError>
+where
+    F: FnOnce() -> Result<T, RequestError>,
+{
+    transaction::start::<T, RequestError, _>(connection, action)
 }

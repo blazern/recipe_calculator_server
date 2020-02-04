@@ -57,8 +57,11 @@ fn insertion_and_selection_work() {
     let selected_code1 = selected_code1.unwrap().unwrap(); // unwrapping Result and Option
     let selected_code2 = taken_pairing_code::select_by_app_user_id(user.id(), &fam, &conn);
     let selected_code2 = selected_code2.unwrap().unwrap(); // unwrapping Result and Option
+    let selected_code3 = taken_pairing_code::select_by_value(10, &fam, &conn);
+    let selected_code3 = selected_code3.unwrap().unwrap(); // unwrapping Result and Option
     assert_eq!(inserted_code, selected_code1);
     assert_eq!(inserted_code, selected_code2);
+    assert_eq!(inserted_code, selected_code3);
 }
 
 #[test]

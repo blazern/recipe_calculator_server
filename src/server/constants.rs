@@ -1,6 +1,7 @@
 pub const CMD_REGISTER_USER: &str = "/v1/user/register";
-pub const CMD_START_PAIRING: &str = "/v1/user/start_pairing";
 pub const CMD_UPDATE_FCM_TOKEN: &str = "/v1/user/update_fcm_token";
+pub const CMD_START_PAIRING: &str = "/v1/start_pairing";
+pub const CMD_PAIRING_REQUEST: &str = "/v1/pairing_request";
 
 pub const ARG_USER_NAME: &str = "name";
 pub const ARG_SOCIAL_NETWORK_TYPE: &str = "social_network_type";
@@ -9,6 +10,8 @@ pub const ARG_OVERRIDES: &str = "overrides";
 pub const ARG_CLIENT_TOKEN: &str = "client_token";
 pub const ARG_USER_ID: &str = "user_id";
 pub const ARG_FCM_TOKEN: &str = "fcm_token";
+pub const ARG_PARTNER_PAIRING_CODE: &str = "partner_pairing_code";
+pub const ARG_PARTNER_USER_ID: &str = "partner_user_id";
 
 pub const FIELD_NAME_ERROR_DESCRIPTION: &str = "error_description";
 pub const FIELD_NAME_STATUS: &str = "status";
@@ -33,3 +36,15 @@ pub const FIELD_STATUS_ALREADY_REGISTERED: &str = "already_registered";
 pub const FIELD_STATUS_TOKEN_CHECK_FAIL: &str = "token_check_fail";
 pub const FIELD_STATUS_USER_NOT_FOUND: &str = "user_not_found";
 pub const FIELD_STATUS_INVALID_CLIENT_TOKEN: &str = "invalid_client_token";
+pub const FIELD_STATUS_PARTNER_USER_NOT_FOUND: &str = "partner_user_not_found";
+pub const FIELD_STATUS_INVALID_PARTNER_PAIRING_CODE: &str = "invalid_partner_pairing_code";
+
+pub const SERV_FIELD_MSG_TYPE: &str = "msg_type";
+pub const SERV_FIELD_PAIRING_PARTNER_USER_ID: &str = "pairing_partner_user_id";
+pub const SERV_FIELD_PARTNER_NAME: &str = "partner_name";
+pub const SERV_FIELD_REQUEST_EXPIRATION_DATE: &str = "request_expiration_date";
+
+pub const SERV_MSG_PAIRING_REQUEST_FROM_PARTNER: &str = "pairing_request_from_partner";
+pub const SERV_MSG_PAIRED_WITH_PARTNER: &str = "paired_with_partner";
+
+pub const PAIRING_CODES_FAMILY_NAME: &str = "default";
