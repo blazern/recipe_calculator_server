@@ -4,7 +4,6 @@ error_chain! {
         InvalidUri(hyper::http::uri::InvalidUri);
         HyperError(hyper::Error);
         HyperHttpError(hyper::http::Error);
-        HyperTlsError(hyper_tls::Error);
     }
 
     errors {

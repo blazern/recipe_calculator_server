@@ -1,33 +1,27 @@
-use futures::future::err;
-use futures::future::ok;
-use futures::future::Either;
-use futures::Future;
-use serde_json::Value as JsonValue;
+use futures::join;
 use std::collections::HashMap;
+use std::future::Future;
 use std::str::FromStr;
 use std::sync::Arc;
+use serde_json::Value as JsonValue;
 use uuid::Uuid;
 
 use crate::config::Config;
-
 use crate::db::core::app_user;
 use crate::db::core::app_user::AppUser;
 use crate::db::core::fcm_token;
 use crate::db::core::paired_partners;
 use crate::db::core::paired_partners::PairingState;
 use crate::db::core::taken_pairing_code;
-use crate::db::pool::connection_pool::BorrowedDBConnection;
-
+use crate::db::pool::connection_pool::{BorrowedDBConnection, ConnectionPool};
 use crate::outside::fcm;
 use crate::outside::http_client::HttpClient;
-
-use crate::server::cmds::cmd_handler::CmdHandleResult;
 use crate::server::cmds::cmd_handler::CmdHandler;
+use crate::server::cmds::cmd_handler::{CmdHandleResult, CmdHandleResultFuture};
 use crate::server::cmds::utils::db_transaction;
 use crate::server::cmds::utils::extract_user_from_query_args;
 use crate::server::constants;
 use crate::server::request_error::RequestError;
-
 use crate::utils::now_source::{DefaultNowSource, NowSource};
 
 pub const PAIRING_CONFIRMATION_EXPIRATION_DELAY_SECS: i64 = 60 * 60 * 24;
@@ -41,15 +35,11 @@ impl CmdHandler for PairingRequestCmdHandler {
     fn handle(
         &self,
         args: HashMap<String, String>,
-        connection: BorrowedDBConnection,
+        connections_pool: ConnectionPool,
         config: Config,
         http_client: Arc<HttpClient>,
-    ) -> CmdHandleResult {
-        let res = self.handle_impl(args, connection, config, http_client);
-        match res {
-            Ok(future) => future,
-            Err(request_err) => Box::new(err(request_err)),
-        }
+    ) -> CmdHandleResultFuture {
+        Box::pin(self.handle_async(args, connections_pool, config, http_client))
     }
 }
 
@@ -62,23 +52,49 @@ impl PairingRequestCmdHandler {
         }
     }
 
-    /// Returns Result<Future<..>>, which means that there
-    /// can be an instant success/failure, or a delayed one.
-    fn handle_impl(
+    fn handle_async(
         &self,
         args: HashMap<String, String>,
-        connection: BorrowedDBConnection,
+        connections_pool: ConnectionPool,
         config: Config,
         http_client: Arc<HttpClient>,
-    ) -> Result<CmdHandleResult, RequestError> {
+    ) -> impl Future<Output = CmdHandleResult> {
         let now = match extract_now_override(&args) {
-            Some(now) => now,
-            None => self.now_source.now_secs()?,
+            Some(now) => Ok(now),
+            None => self.now_source.now_secs(),
         };
         let fcm_address = match extract_cmd_fcm_address_override(&args) {
             Some(fcm_address) => fcm_address,
             None => fcm::FCM_ADDR.to_owned(),
         };
+        let family = self.family.clone();
+
+        async {
+            let now = now?;
+            Self::handle_impl(
+                args,
+                connections_pool,
+                config,
+                http_client,
+                now,
+                fcm_address,
+                family,
+            )
+            .await
+        }
+    }
+
+    async fn handle_impl(
+        args: HashMap<String, String>,
+        connections_pool: ConnectionPool,
+        config: Config,
+        http_client: Arc<HttpClient>,
+        now: i64,
+        fcm_address: String,
+        family: String,
+    ) -> CmdHandleResult {
+        let mut connections_pool = connections_pool;
+        let connection = connections_pool.borrow_connection()?;
 
         // cleanup
         paired_partners::delete_with_state_and_older_than(
@@ -89,7 +105,7 @@ impl PairingRequestCmdHandler {
 
         let user = extract_user_from_query_args(&args, &connection)?;
         let partner_user = extract_partner_user(
-            &self.family,
+            &family,
             args.get(constants::ARG_PARTNER_PAIRING_CODE),
             args.get(constants::ARG_PARTNER_USER_ID),
             &connection,
@@ -107,23 +123,22 @@ impl PairingRequestCmdHandler {
         )?;
         if is_pairing_finished(&pp1) || is_pairing_finished(&pp2) {
             // Already paired!
-            let send_fut = notify_of_pairing_finish(
+
+            // NOTE: we don't use the '?' operator on the send result - we want to respond
+            // with OK status to our client even if notifications sending will fail
+            let _send_res = notify_of_pairing_finish(
                 &user,
                 &partner_user,
-                &connection,
+                connections_pool.clone(),
                 &config,
                 &fcm_address,
                 http_client.clone(),
-            );
-            // NOTE: |then| is used instead of |and_then| - we'll send status OK even if
-            // notifications will fail.
-            let res = send_fut.then(|_| {
-                // TODO: log if send finished with error
-                Ok(json!({
-                    constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK
-                }))
-            });
-            return Ok(Box::new(res));
+            )
+            .await;
+
+            return Ok(json!({
+                constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK
+            }));
         }
 
         // Confirm pairing, if partner2 already started it
@@ -140,7 +155,7 @@ impl PairingRequestCmdHandler {
             let send_fut1 = notify_of_pairing_finish(
                 &user,
                 &partner_user,
-                &connection,
+                connections_pool.clone(),
                 &config,
                 &fcm_address,
                 http_client.clone(),
@@ -148,21 +163,18 @@ impl PairingRequestCmdHandler {
             let send_fut2 = notify_of_pairing_finish(
                 &partner_user,
                 &user,
-                &connection,
+                connections_pool.clone(),
                 &config,
                 &fcm_address,
                 http_client.clone(),
             );
+            // NOTE: we don't use the '?' operator on the send results - we want to respond
+            // with OK status to our client even if notifications sending will fail
+            let (_send_res1, _send_res2) = join!(send_fut1, send_fut2);
 
-            // NOTE: |then| is used instead of |and_then| - we'll send status OK even if
-            // notifications will fail.
-            let res = send_fut1.join(send_fut2).then(|_| {
-                // TODO: log if send finished with error
-                Ok(json!({
-                    constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK
-                }))
-            });
-            return Ok(Box::new(res));
+            return Ok(json!({
+                constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK
+            }));
         }
 
         // Send pairing request
@@ -176,24 +188,21 @@ impl PairingRequestCmdHandler {
             Ok(())
         })?;
 
-        let send_fut = notify_of_pairing_request(
+        // NOTE: we don't use the '?' operator on the send result - we want to respond
+        // with OK status to our client even if notifications sending will fail
+        let _send_res = notify_of_pairing_request(
             &partner_user,
             &user,
             now,
-            &connection,
+            connections_pool.clone(),
             &config,
             &fcm_address,
             http_client.clone(),
-        );
-        // NOTE: |then| is used instead of |and_then| - we'll send status OK even if
-        // notifications will fail.
-        let res = send_fut.then(|_| {
-            // TODO: log if send finished with error
-            Ok(json!({
-                constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK
-            }))
-        });
-        Ok(Box::new(res))
+        )
+        .await;
+        Ok(json!({
+            constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK
+        }))
     }
 }
 
@@ -259,31 +268,39 @@ fn is_pairing_finished(pp: &Option<paired_partners::PairedPartners>) -> bool {
     }
 }
 
-fn notify_of_pairing_finish(
+async fn notify_of_pairing_finish(
     user: &AppUser,
     paired_partner: &AppUser,
-    connection: &BorrowedDBConnection,
+    connections_pool: ConnectionPool,
     config: &Config,
     fcm_address: &str,
     http_client: Arc<HttpClient>,
-) -> Box<dyn Future<Item = (), Error = RequestError> + Send> {
+) -> Result<(), RequestError> {
     let json = json!({
         constants::SERV_FIELD_MSG_TYPE: constants::SERV_MSG_PAIRED_WITH_PARTNER,
         constants::SERV_FIELD_PAIRING_PARTNER_USER_ID: paired_partner.uid(),
         constants::SERV_FIELD_PARTNER_NAME: paired_partner.name()
     });
-    notify_user(user, &json, connection, config, fcm_address, http_client)
+    notify_user(
+        user,
+        &json,
+        connections_pool,
+        config,
+        fcm_address,
+        http_client,
+    )
+    .await
 }
 
-fn notify_of_pairing_request(
+async fn notify_of_pairing_request(
     user: &AppUser,
     paired_partner: &AppUser,
     now: i64,
-    connection: &BorrowedDBConnection,
+    connections_pool: ConnectionPool,
     config: &Config,
     fcm_address: &str,
     http_client: Arc<HttpClient>,
-) -> Box<dyn Future<Item = (), Error = RequestError> + Send> {
+) -> Result<(), RequestError> {
     let expiration_date = now + PAIRING_CONFIRMATION_EXPIRATION_DELAY_SECS;
     let json = json!({
         constants::SERV_FIELD_MSG_TYPE: constants::SERV_MSG_PAIRING_REQUEST_FROM_PARTNER,
@@ -291,32 +308,38 @@ fn notify_of_pairing_request(
         constants::SERV_FIELD_PARTNER_NAME: paired_partner.name(),
         constants::SERV_FIELD_REQUEST_EXPIRATION_DATE: expiration_date
     });
-    notify_user(user, &json, connection, config, fcm_address, http_client)
+    notify_user(
+        user,
+        &json,
+        connections_pool,
+        config,
+        fcm_address,
+        http_client,
+    )
+    .await
 }
 
 /// Returns future which resolves when a notification is sent to the |user|.
 /// Or immediately if the user doesn't have a FCM-token.
-fn notify_user(
+async fn notify_user(
     user: &AppUser,
     json: &JsonValue,
-    connection: &BorrowedDBConnection,
+    connections_pool: ConnectionPool,
     config: &Config,
     fcm_address: &str,
     http_client: Arc<HttpClient>,
-) -> Box<dyn Future<Item = (), Error = RequestError> + Send> {
-    let fcm_token = fcm_token::select_by_user_id(user.id(), connection);
-    let fcm_token = match fcm_token {
-        Ok(fcm_token) => fcm_token,
-        Err(error) => return Box::new(err(error.into())),
-    };
+) -> Result<(), RequestError> {
+    let mut connections_pool = connections_pool;
+    let connection = connections_pool.borrow_connection()?;
 
+    let fcm_token = fcm_token::select_by_user_id(user.id(), &connection)?;
     let fcm_token = if let Some(fcm_token) = fcm_token {
         fcm_token
     } else {
-        return Box::new(ok(()));
+        return Ok(());
     };
 
-    // TODO: log errors from send
+    // TODO: log all possible errors from send
     let send_res = fcm::send(
         &json,
         fcm_token.token_value(),
@@ -324,18 +347,16 @@ fn notify_user(
         fcm_address,
         http_client,
     )
-    .map_err(|err| err.into())
-    .and_then(|send_res| {
-        if let fcm::SendResult::Error(error) = send_res {
-            Either::A(err(RequestError::new(
-                constants::FIELD_STATUS_INTERNAL_ERROR,
-                &format!("FCM error: {}", error),
-            )))
-        } else {
-            Either::B(ok(()))
-        }
-    });
-    Box::new(send_res)
+    .await?;
+
+    if let fcm::SendResult::Error(error) = send_res {
+        Err(RequestError::new(
+            constants::FIELD_STATUS_INTERNAL_ERROR,
+            &format!("FCM error: {}", error),
+        ))
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(test)]

@@ -1,23 +1,24 @@
+use std::future::Future;
 use std::sync::Arc;
 
-use futures::Future;
 use uuid::Uuid;
 
 use crate::outside::error::Error;
 use crate::outside::gp;
 use crate::outside::http_client::HttpClient;
 use crate::outside::vk;
+use std::pin::Pin;
 
 pub trait UserUuidGenerator: Send {
     fn generate(&self) -> Uuid;
 }
 
 pub trait VkTokenChecker: Send {
-    fn check_token(&self) -> Box<dyn Future<Item = vk::CheckResult, Error = Error> + Send>;
+    fn check_token(&self) -> Pin<Box<dyn Future<Output = Result<vk::CheckResult, Error>> + Send>>;
 }
 
 pub trait GpTokenChecker: Send {
-    fn check_token(&self) -> Box<dyn Future<Item = gp::CheckResult, Error = Error> + Send>;
+    fn check_token(&self) -> Pin<Box<dyn Future<Output = Result<gp::CheckResult, Error>> + Send>>;
 }
 
 pub fn new_user_uuid_generator_for(overrides: &str) -> Box<dyn UserUuidGenerator> {
@@ -77,10 +78,10 @@ struct DefaultVkTokenChecker {
     http_client: Arc<HttpClient>,
 }
 impl VkTokenChecker for DefaultVkTokenChecker {
-    fn check_token(&self) -> Box<dyn Future<Item = vk::CheckResult, Error = Error> + Send> {
-        Box::new(vk::check_token(
-            &self.server_token,
-            &self.client_token,
+    fn check_token(&self) -> Pin<Box<dyn Future<Output = Result<vk::CheckResult, Error>> + Send>> {
+        Box::pin(vk::check_token(
+            self.server_token.clone(),
+            self.client_token.clone(),
             self.http_client.clone(),
         ))
     }
@@ -91,9 +92,9 @@ struct DefaultGpTokenChecker {
     http_client: Arc<HttpClient>,
 }
 impl GpTokenChecker for DefaultGpTokenChecker {
-    fn check_token(&self) -> Box<dyn Future<Item = gp::CheckResult, Error = Error> + Send> {
-        Box::new(gp::check_token(
-            &self.client_token,
+    fn check_token(&self) -> Pin<Box<dyn Future<Output = Result<gp::CheckResult, Error>> + Send>> {
+        Box::pin(gp::check_token(
+            self.client_token.clone(),
             self.http_client.clone(),
         ))
     }
@@ -260,8 +261,9 @@ mod overriders {
     use crate::outside::error::Error;
     use crate::outside::gp;
     use crate::outside::vk;
-    use futures::future;
-    use futures::Future;
+    use futures::future::ok;
+    use std::future::Future;
+    use std::pin::Pin;
     use uuid::Uuid;
 
     pub(super) struct UserUuidOverrider {
@@ -277,8 +279,10 @@ mod overriders {
         pub check_result: vk::CheckResult,
     }
     impl super::VkTokenChecker for VkTokenOverrider {
-        fn check_token(&self) -> Box<dyn Future<Item = vk::CheckResult, Error = Error> + Send> {
-            Box::new(future::ok(self.check_result.clone()))
+        fn check_token(
+            &self,
+        ) -> Pin<Box<dyn Future<Output = Result<vk::CheckResult, Error>> + Send>> {
+            Box::pin(ok(self.check_result.clone()))
         }
     }
 
@@ -286,8 +290,10 @@ mod overriders {
         pub check_result: gp::CheckResult,
     }
     impl super::GpTokenChecker for GpTokenOverrider {
-        fn check_token(&self) -> Box<dyn Future<Item = gp::CheckResult, Error = Error> + Send> {
-            Box::new(future::ok(self.check_result.clone()))
+        fn check_token(
+            &self,
+        ) -> Pin<Box<dyn Future<Output = Result<gp::CheckResult, Error>> + Send>> {
+            Box::pin(ok(self.check_result.clone()))
         }
     }
 }

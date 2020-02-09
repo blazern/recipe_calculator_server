@@ -1,6 +1,6 @@
-use futures::future::ok;
-use futures::Future;
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -44,7 +44,7 @@ where
         query: String,
         headers: HashMap<String, String>,
         body: String,
-    ) -> Box<dyn Future<Item = String, Error = ()> + Send> {
+    ) -> Pin<Box<dyn Future<Output = String> + Send>> {
         let req = FullRequest {
             request,
             query,
@@ -56,6 +56,6 @@ where
             None => "".to_owned(),
         };
         self.received_requests.lock().unwrap().push(req);
-        Box::new(ok(response))
+        Box::pin(futures::future::ready(response))
     }
 }

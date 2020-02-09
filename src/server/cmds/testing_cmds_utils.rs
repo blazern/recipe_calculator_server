@@ -18,7 +18,7 @@ use crate::server::testing_mock_server::FullRequest;
 use crate::server::testing_mock_server::TestingMockServer;
 use crate::server::testing_server_wrapper;
 use crate::server::testing_server_wrapper::ServerWrapper;
-use crate::testing_utils::testing_config;
+use crate::testing_utils::{exhaust_future, testing_config};
 use percent_encoding::percent_encode;
 use percent_encoding::DEFAULT_ENCODE_SET;
 
@@ -61,11 +61,10 @@ where
 pub fn make_request(url: &str) -> JsonValue {
     let http_client = Arc::new(HttpClient::new().unwrap());
     let response = http_client.req_get(Uri::from_str(url).unwrap());
-    let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
-    let response = tokio_core.run(response).unwrap();
-    serde_json::from_str(&response).unwrap_or_else(|_| {
+    let response = exhaust_future(response).unwrap();
+    serde_json::from_str(&response.body).unwrap_or_else(|_| {
         panic!(
-            "Expected JSON response for query: {}, got: {}",
+            "Expected JSON response for query: {}, got: {:?}",
             url, response
         )
     })

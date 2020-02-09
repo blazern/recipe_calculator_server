@@ -1,5 +1,6 @@
+use futures::channel::oneshot;
 use futures::future::Future;
-use futures::sync::oneshot;
+use futures::future::FutureExt;
 use std::sync::MutexGuard;
 use std::thread;
 
@@ -12,7 +13,7 @@ use crate::server::requests_handler::RequestsHandler;
 #[cfg(test)]
 pub struct ServerWrapper {
     finish_cmd_sender: Option<oneshot::Sender<()>>,
-    finish_event_receiver: Option<Box<dyn Future<Item = (), Error = ()>>>,
+    finish_event_receiver: Option<Box<dyn Future<Output = ()> + Unpin>>,
     address: MutexGuard<'static, String>,
 }
 
@@ -23,30 +24,31 @@ impl ServerWrapper {
     {
         // Channel for sending finish cmd - generates a Future to send a STOP cmd to Hyper.
         let (finish_cmd_sender, finish_cmd_receiver) = oneshot::channel::<()>();
-        let finish_cmd_receiver = finish_cmd_receiver.map_err(|_| ());
 
         // Channel for receiving finish event - address'es mutex should be released only when
         // the server finishes its work, otherwise a new server would try to start on occupied port.
         let (finish_event_sender, finish_event_receiver) = oneshot::channel::<()>();
-        let finish_event_receiver = finish_event_receiver.map_err(|_| ());
 
         // Channel for receiving start event -
         // this method should return only when server is started, otherwise testing code sometimes
         // will stumble upon Connection Refused (111) error.
         let (start_event_sender, start_event_receiver) = oneshot::channel::<()>();
-        let start_event_receiver = start_event_receiver.map_err(|_| ());
 
         let sock_address = address.parse().unwrap();
         thread::spawn(move || {
             start_event_sender.send(()).unwrap();
+            let finish_cmd_receiver = finish_cmd_receiver.map(|_| ());
             entry_point::start_server(&sock_address, finish_cmd_receiver, requests_handler);
             finish_event_sender.send(()).unwrap();
         });
 
-        start_event_receiver.wait().unwrap();
+        tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(start_event_receiver)
+            .unwrap();
         ServerWrapper {
             finish_cmd_sender: Some(finish_cmd_sender),
-            finish_event_receiver: Some(Box::new(finish_event_receiver)),
+            finish_event_receiver: Some(Box::new(finish_event_receiver.map(|_| ()))),
             address,
         }
     }
@@ -64,7 +66,9 @@ impl Drop for ServerWrapper {
         ) {
             (Some(finish_cmd_sender), Some(finish_event_receiver)) => {
                 finish_cmd_sender.send(()).unwrap();
-                finish_event_receiver.wait().unwrap();
+                tokio::runtime::Runtime::new()
+                    .unwrap()
+                    .block_on(finish_event_receiver);
             }
             (_, _) => {
                 panic!("Sender or Receiver is None already somehow!");

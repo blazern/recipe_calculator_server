@@ -1,5 +1,3 @@
-use futures::Future;
-use futures::IntoFuture;
 use std;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -87,11 +85,11 @@ where
     Ok(CheckResult::from_vk_check_result(vk_check_result))
 }
 
-pub fn check_token(
-    server_token: &str,
-    client_token: &str,
+pub async fn check_token(
+    server_token: String,
+    client_token: String,
     http_client: Arc<HttpClient>,
-) -> impl Future<Item = CheckResult, Error = Error> + Send {
+) -> Result<CheckResult, Error> {
     let url = [HOST_METHOD, METHOD_CHECK_TOKEN].join("");
     let url = format!(
         "{}?{}={}&{}={}&{}={}",
@@ -104,11 +102,9 @@ pub fn check_token(
         API_VERSION
     );
 
-    let url = Uri::from_str(&url);
-    url.into_future()
-        .map_err(|err| err.into())
-        .and_then(move |url| http_client.req_get(url))
-        .and_then(|response| check_token_from_server_response(response.as_bytes()))
+    let url = Uri::from_str(&url)?;
+    let response = http_client.req_get(url).await?;
+    check_token_from_server_response(response.body.as_bytes())
 }
 
 #[cfg(test)]

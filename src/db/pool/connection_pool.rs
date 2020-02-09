@@ -15,6 +15,9 @@ pub enum ConnectionType {
     ServerConnection,
 }
 
+/// Objects of the type are Cloneable, because they implement the PIMPL pattern -
+/// a cloned pool defacto is the same pool as the one it was cloned from.
+#[derive(Clone)]
 pub struct ConnectionPool {
     pimpl: Arc<Mutex<ConnectionPoolImpl>>,
 }
@@ -46,7 +49,7 @@ impl ConnectionPool {
         Self::new(ConnectionType::ServerConnection, config)
     }
 
-    pub fn borrow(&mut self) -> Result<BorrowedDBConnection, Error> {
+    pub fn borrow_connection(&mut self) -> Result<BorrowedDBConnection, Error> {
         let result = self
             .pimpl
             .lock()

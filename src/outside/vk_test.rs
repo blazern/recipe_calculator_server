@@ -16,7 +16,11 @@ fn can_check_client_token() {
     // VK api doesn't give mock user tokens and doesn't provide
     // a way to auth in tests.
 
-    let check_result = vk::check_token(&config.vk_server_token(), user_token, http_client);
+    let check_result = vk::check_token(
+        config.vk_server_token().to_owned(),
+        user_token.to_owned(),
+        http_client,
+    );
     let check_result = exhaust_future(check_result).unwrap();
 
     match check_result {
@@ -40,7 +44,7 @@ fn cant_check_client_token_if_server_token_invalid() {
     let user_token = "asdasd";
     let http_client = Arc::new(HttpClient::new().unwrap());
 
-    let check_result = vk::check_token(server_token, user_token, http_client);
+    let check_result = vk::check_token(server_token.to_owned(), user_token.to_owned(), http_client);
     let check_result = exhaust_future(check_result).unwrap();
 
     match check_result {

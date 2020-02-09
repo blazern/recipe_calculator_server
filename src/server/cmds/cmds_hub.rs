@@ -1,15 +1,14 @@
 use futures::future::err;
-use futures::Future;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::config::Config;
-use crate::db::pool::connection_pool::BorrowedDBConnection;
+use crate::db::pool::connection_pool::{BorrowedDBConnection, ConnectionPool};
 use crate::outside::http_client::HttpClient;
-use crate::server::error::Error;
-
 use crate::server::constants;
+use crate::server::error::Error;
+use crate::server::cmds::cmd_handler::CmdHandleResultFuture;
 use crate::server::request_error::RequestError;
 
 use super::cmd_handler::CmdHandler;
@@ -50,15 +49,15 @@ impl CmdsHub {
         &self,
         request: String,
         args: HashMap<String, String>,
-        connection: BorrowedDBConnection,
+        connections_pool: ConnectionPool,
         config: Config,
         http_client: Arc<HttpClient>,
-    ) -> Box<dyn Future<Item = JsonValue, Error = RequestError> + Send> {
+    ) -> CmdHandleResultFuture {
         let handler = self.cmd_handlers.get(request.as_str());
         if let Some(handler) = handler {
-            handler.handle(args, connection, config, http_client)
+            handler.handle(args, connections_pool, config, http_client)
         } else {
-            Box::new(err(RequestError::new(
+            Box::pin(err(RequestError::new(
                 constants::FIELD_STATUS_UNKNOWN_REQUEST,
                 &format!("Unknown request: {}", request),
             )))

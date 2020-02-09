@@ -1,15 +1,15 @@
-use futures::done;
-use futures::future::ok;
-use futures::Future;
 use percent_encoding::percent_decode;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::config::Config;
 use crate::db::pool::connection_pool::ConnectionPool;
 use crate::db::pool::connection_pool::ConnectionType;
 use crate::outside::http_client::HttpClient;
+use crate::server::cmds::cmd_handler::CmdHandleResult;
 
 use super::cmds::cmds_hub::CmdsHub;
 use super::constants;
@@ -34,7 +34,7 @@ impl RequestsHandlerImpl {
         overrides: &JsonValue,
     ) -> Result<RequestsHandlerImpl, Error> {
         let mut pool = ConnectionPool::new(ConnectionType::UserConnection, config.clone());
-        let connection = pool.borrow()?;
+        let connection = pool.borrow_connection()?;
 
         Ok(RequestsHandlerImpl {
             connection_pool: pool,
@@ -48,21 +48,18 @@ impl RequestsHandlerImpl {
         &mut self,
         request: String,
         query: String,
-    ) -> impl Future<Item = JsonValue, Error = RequestError> + Send {
-        let connection = self.connection_pool.borrow();
+    ) -> impl Future<Output = CmdHandleResult> {
+        let pool = self.connection_pool.clone();
         let config = self.config.clone();
         let http_client = self.http_client.clone();
         let cmds_hub = self.cmds_hub.clone();
 
-        done(connection)
-            .map_err(|err| err.into())
-            .map(|connection| (request, query, connection, cmds_hub))
-            .and_then(|(request, query, connection, cmds_hub)| {
-                done(query_to_args(query)).map(|args| (request, args, connection, cmds_hub))
-            })
-            .and_then(|(request, args, connection, cmds_hub)| {
-                cmds_hub.handle(request, args, connection, config, http_client)
-            })
+        async move {
+            let args = query_to_args(query)?;
+            cmds_hub
+                .handle(request, args, pool, config, http_client)
+                .await
+        }
     }
 }
 
@@ -73,18 +70,22 @@ impl RequestsHandler for RequestsHandlerImpl {
         query: String,
         _headers: HashMap<String, String>,
         _body: String,
-    ) -> Box<dyn Future<Item = String, Error = ()> + Send> {
-        let result = self
-            .handle_impl(request, query)
-            .map(|response| response.to_string())
-            .or_else(|error| {
-                let response = json!({
-                    constants::FIELD_NAME_STATUS: error.status(),
-                    constants::FIELD_NAME_ERROR_DESCRIPTION: error.error_description()
-                });
-                ok(response.to_string())
-            });
-        Box::new(result)
+    ) -> Pin<Box<dyn Future<Output = String> + Send>> {
+        let response = self.handle_impl(request, query);
+        let result = async {
+            let response = response.await;
+            match response {
+                Ok(response) => response.to_string(),
+                Err(error) => {
+                    let response = json!({
+                        constants::FIELD_NAME_STATUS: error.status(),
+                        constants::FIELD_NAME_ERROR_DESCRIPTION: error.error_description()
+                    });
+                    response.to_string()
+                }
+            }
+        };
+        Box::pin(result)
     }
 }
 

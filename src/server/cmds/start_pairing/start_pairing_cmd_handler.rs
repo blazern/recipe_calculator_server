@@ -1,6 +1,4 @@
-use futures::done;
-use futures::future::ok;
-use futures::Future;
+use futures::future::ready;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -8,20 +6,19 @@ use std::sync::Mutex;
 
 use crate::config::Config;
 use crate::db::core::connection::DBConnection;
-use crate::db::pool::connection_pool::BorrowedDBConnection;
+use crate::db::pool::connection_pool::ConnectionPool;
 use crate::outside::http_client::HttpClient;
 use crate::pairing::pairing_code_creator;
 use crate::pairing::pairing_code_creator::{DefaultPairingCodeCreatorImpl, PairingCodeCreator};
-use crate::server::cmds::cmd_handler::CmdHandler;
+use crate::server::cmds::cmd_handler::{CmdHandleResult, CmdHandleResultFuture, CmdHandler};
 use crate::server::cmds::utils::extract_user_from_query_args;
 use crate::server::constants;
 use crate::server::error::Error;
-use crate::server::request_error::RequestError;
 use crate::utils::now_source::DefaultNowSource;
 use crate::utils::now_source::NowSource;
 
 const PAIRING_CODES_LIFETIME_SECS: i64 = 60 * 12; // 12 minutes
-const PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS: i64 = 60 * 10; // 12 minutes
+const PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS: i64 = 60 * 10; // 10 minutes
 
 pub struct StartPairingCmdHandler {
     pairing_codes_creator: Arc<Mutex<DefaultPairingCodeCreatorImpl>>,
@@ -55,40 +52,44 @@ impl CmdHandler for StartPairingCmdHandler {
     fn handle(
         &self,
         args: HashMap<String, String>,
-        connection: BorrowedDBConnection,
+        connections_pool: ConnectionPool,
         _config: Config,
         _http_client: Arc<HttpClient>,
-    ) -> Box<dyn Future<Item = JsonValue, Error = RequestError> + Send> {
-        let user_future = done(extract_user_from_query_args(&args, &connection));
+    ) -> CmdHandleResultFuture {
         let pairing_codes_creator = self.pairing_codes_creator.clone();
-        let result = user_future.and_then(|user| {
-                let now_source = DefaultNowSource{};
-                done(now_source.now_secs())
-                    .map_err(|err|err.into())
-                    .join(ok(user))
-            })
-            .and_then(move |(now, user)| {
-                // Note: we use PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS here even though
-                // the real lifetime is PAIRING_CODES_LIFETIME_SECS. Reasoning - there's
-                // network latency and we don't want the client app to think that pairing
-                // is still possible when it's not
-                // (PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS < PAIRING_CODES_LIFETIME_SECS).
-                let pairing_code_expiration_date = now + PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS;
-                let pairing_codes_creator = pairing_codes_creator.lock().expect("Expecting ok mutex");
-                done(pairing_codes_creator.borrow_pairing_code(&user, &connection))
-                    .map_err(|err| err.into())
-                    .join(ok(pairing_code_expiration_date))
-                    .map(|(pairing_code, pairing_code_expiration_date)| {
-                        json!({
-                            constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK,
-                            constants::FIELD_NAME_PAIRING_CODE: pairing_code,
-                            constants::FIELD_NAME_PAIRING_CODE_EXPIRATION_DATE: pairing_code_expiration_date,
-                        })
-                    })
-                },
-            );
-        Box::new(result)
+        Box::pin(ready(handle_impl(
+            args,
+            connections_pool,
+            pairing_codes_creator,
+        )))
     }
+}
+
+fn handle_impl(
+    args: HashMap<String, String>,
+    mut connections_pool: ConnectionPool,
+    pairing_codes_creator: Arc<Mutex<DefaultPairingCodeCreatorImpl>>,
+) -> CmdHandleResult {
+    let connection = connections_pool.borrow_connection()?;
+    let user = extract_user_from_query_args(&args, &connection)?;
+    let now_source = DefaultNowSource {};
+    let now = now_source.now_secs()?;
+
+    // Note: we use PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS here even though
+    // the real lifetime is PAIRING_CODES_LIFETIME_SECS. Reasoning - there's
+    // network latency and we don't want the client app to think that pairing
+    // is still possible when it's not
+    // (PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS < PAIRING_CODES_LIFETIME_SECS).
+    let pairing_code_expiration_date = now + PAIRING_CODES_LIFETIME_USER_VISIBLE_SECS;
+    let pairing_codes_creator = pairing_codes_creator.lock().expect("Expecting ok mutex");
+    let pairing_code = pairing_codes_creator.borrow_pairing_code(&user, &connection)?;
+    let result = json!({
+        constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK,
+        constants::FIELD_NAME_PAIRING_CODE: pairing_code,
+        constants::FIELD_NAME_PAIRING_CODE_EXPIRATION_DATE: pairing_code_expiration_date,
+    });
+
+    Ok(result)
 }
 
 #[cfg(test)]

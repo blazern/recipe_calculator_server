@@ -14,7 +14,7 @@ fn can_check_client_token() {
     // GoogleApi doesn't give mock user tokens and doesn't provide
     // a way to auth in tests.
 
-    let check_result = gp::check_token(user_token, http_client);
+    let check_result = gp::check_token(user_token.to_owned(), http_client);
     let check_result = exhaust_future(check_result).unwrap();
 
     match check_result {

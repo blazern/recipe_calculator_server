@@ -1,5 +1,6 @@
 use futures::Future;
 use std::collections::HashMap;
+use std::pin::Pin;
 
 pub trait RequestsHandler: Send + Sync {
     fn handle(
@@ -8,5 +9,5 @@ pub trait RequestsHandler: Send + Sync {
         query: String,
         headers: HashMap<String, String>,
         body: String,
-    ) -> Box<dyn Future<Item = String, Error = ()> + Send>;
+    ) -> Pin<Box<dyn Future<Output = String> + Send>>;
 }

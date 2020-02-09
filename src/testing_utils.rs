@@ -1,5 +1,4 @@
 use crate::config;
-use futures::Future;
 use std::sync::Once;
 
 #[cfg(test)]
@@ -28,9 +27,8 @@ pub fn testing_config() -> config::Config {
 #[cfg(test)]
 pub fn exhaust_future<Fut, Item, Error>(future: Fut) -> Result<Item, Error>
 where
-    Fut: Future<Item = Item, Error = Error>,
+    Fut: futures::future::Future<Output = Result<Item, Error>>,
     Error: std::fmt::Debug,
 {
-    let mut tokio_core = tokio_core::reactor::Core::new().unwrap();
-    tokio_core.run(future)
+    tokio::runtime::Runtime::new().unwrap().block_on(future)
 }

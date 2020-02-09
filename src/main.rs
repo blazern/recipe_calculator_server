@@ -56,7 +56,7 @@ fn main() {
 
     let mut address = address.to_socket_addrs().unwrap();
     let address = address.next().unwrap();
-    let shutdown_signal = futures::future::empty::<(), ()>();
+    let shutdown_signal = futures::future::pending();
 
     println!("Performing migrations");
     migrator::migrate_with_timeout(

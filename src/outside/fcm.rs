@@ -1,5 +1,3 @@
-use futures::done;
-use futures::Future;
 use hyper::Uri;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
@@ -56,13 +54,13 @@ pub enum SendResult {
 }
 
 /// Ok(SendResult::Error) for expected errors, Err(..) for unexpected
-pub fn send(
+pub async fn send(
     data: &JsonValue,
     fcm_token: &str,
     server_fcm_token: &str,
     fcm_address: &str,
     http_client: Arc<HttpClient>,
-) -> impl Future<Item = SendResult, Error = Error> + Send {
+) -> Result<SendResult, Error> {
     let mut headers = HashMap::new();
     headers.insert(
         "Authorization".to_owned(),
@@ -74,12 +72,12 @@ pub fn send(
         "to": fcm_token,
         "data": data
     });
-    done(Uri::from_str(&format!("{}/fcm/send", fcm_address)))
-        .map_err(|err| err.into())
-        .and_then(move |url| {
-            http_client.req(url, RequestMethod::Post, headers, Some(body.to_string()))
-        })
-        .and_then(|resp| done(send_response_to_send_result(resp)))
+
+    let url = Uri::from_str(&format!("{}/fcm/send", fcm_address))?;
+    let response = http_client
+        .req(url, RequestMethod::Post, headers, Some(body.to_string()))
+        .await?;
+    send_response_to_send_result(response.body)
 }
 
 /// Ok(SendResult::Error) for expected errors, Err(..) for unexpected

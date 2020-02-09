@@ -1,7 +1,5 @@
-use futures::done;
-use futures::future::ok;
-use futures::Future;
 use std::sync::Arc;
+use std::future::Future;
 use uuid::Uuid;
 
 use crate::config::Config;
@@ -47,7 +45,7 @@ enum TokenCheckSuccess {
     GP { uid: String },
 }
 
-pub fn register_user<Conn>(
+pub async fn register_user<Conn>(
     user_name: String,
     social_network_type: String,
     social_network_token: String,
@@ -55,118 +53,114 @@ pub fn register_user<Conn>(
     config: Config,
     db_connection: Conn,
     http_client: Arc<HttpClient>,
-) -> impl Future<Item = UserRegistrationResult, Error = Error> + Send
+) -> Result<UserRegistrationResult, Error>
 where
     Conn: DBConnection + Send,
 {
     let user_uuid_generator = new_user_uuid_generator_for(&overrides);
 
     let token_checker = match social_network_type.as_ref() {
-        "vk" => Ok(TokenChecker::VK(new_vk_token_checker_for(
+        "vk" => TokenChecker::VK(new_vk_token_checker_for(
             &overrides,
             social_network_token,
             config.vk_server_token().to_string(),
             http_client,
-        ))),
-        "gp" => Ok(TokenChecker::GP(new_gp_token_checker_for(
+        )),
+        "gp" => TokenChecker::GP(new_gp_token_checker_for(
             &overrides,
             social_network_token,
             http_client,
-        ))),
-        _ => Err(UnsupportedSocialNetwork(social_network_type).into()),
+        )),
+        _ => return Err(UnsupportedSocialNetwork(social_network_type).into()),
     };
 
-    ok(user_uuid_generator).join(done(token_checker)).and_then(
-        |(user_uuid_generator, token_checker)| {
-            register_user_impl(user_name, db_connection, user_uuid_generator, token_checker)
-        },
-    )
+    register_user_impl(user_name, db_connection, user_uuid_generator, token_checker).await
 }
 
-fn register_user_impl<Conn>(
+async fn register_user_impl<Conn>(
     user_name: String,
     db_connection: Conn,
     user_uuid_generator: Box<dyn UserUuidGenerator>,
     token_checker: TokenChecker,
-) -> impl Future<Item = UserRegistrationResult, Error = Error> + Send
+) -> Result<UserRegistrationResult, Error>
 where
     Conn: DBConnection + Send,
 {
-    run_token_checker(token_checker).and_then(move |checked_token| {
-        let db_connection_ref = &db_connection;
+    let checked_token = run_token_checker(token_checker).await?;
+    let db_connection_ref = &db_connection;
 
-        let result = transaction::start(&db_connection, move || {
-            let uid = user_uuid_generator.generate();
-            let client_token = Uuid::new_v4();
+    transaction::start(&db_connection, move || {
+        let uid = user_uuid_generator.generate();
+        let client_token = Uuid::new_v4();
 
-            let app_user = app_user::insert(
-                app_user::new(uid, user_name.to_string(), client_token),
-                db_connection_ref,
-            );
-            let app_user = app_user.map_err(extract_uuid_duplication_error)?;
+        let app_user = app_user::insert(
+            app_user::new(uid, user_name.to_string(), client_token),
+            db_connection_ref,
+        );
+        let app_user = app_user.map_err(extract_uuid_duplication_error)?;
 
-            match checked_token {
-                TokenCheckSuccess::VK { uid } => {
-                    let vk_user = vk_user::new(uid, &app_user);
-                    let vk_user_insertion = vk_user::insert(vk_user, db_connection_ref);
-                    vk_user_insertion.map_err(extract_vk_uid_duplication_error)?;
-                }
-                TokenCheckSuccess::GP { uid } => {
-                    let gp_user = gp_user::new(uid, &app_user);
-                    let gp_user_insertion = gp_user::insert(gp_user, db_connection_ref);
-                    gp_user_insertion.map_err(extract_gp_uid_duplication_error)?;
-                }
-            };
+        match checked_token {
+            TokenCheckSuccess::VK { uid } => {
+                let vk_user = vk_user::new(uid, &app_user);
+                let vk_user_insertion = vk_user::insert(vk_user, db_connection_ref);
+                vk_user_insertion.map_err(extract_vk_uid_duplication_error)?;
+            }
+            TokenCheckSuccess::GP { uid } => {
+                let gp_user = gp_user::new(uid, &app_user);
+                let gp_user_insertion = gp_user::insert(gp_user, db_connection_ref);
+                gp_user_insertion.map_err(extract_gp_uid_duplication_error)?;
+            }
+        };
 
-            Ok(UserRegistrationResult {
-                uid: *app_user.uid(),
-                client_token: *app_user.client_token(),
-            })
-        });
-        done(result)
+        Ok(UserRegistrationResult {
+            uid: *app_user.uid(),
+            client_token: *app_user.client_token(),
+        })
     })
 }
 
-fn run_token_checker(
-    token_checker: TokenChecker,
-) -> Box<dyn Future<Item = TokenCheckSuccess, Error = Error> + Send> {
+async fn run_token_checker(token_checker: TokenChecker) -> Result<TokenCheckSuccess, Error> {
     match token_checker {
-        TokenChecker::VK(vk_checker) => Box::new(
-            vk_checker
-                .check_token()
-                .map_err(|err| err.into())
-                .and_then(|check_result| {
-                    let result = match check_result {
-                        vk::CheckResult::Success { user_id } => {
-                            Ok(TokenCheckSuccess::VK { uid: user_id })
-                        }
-                        vk::CheckResult::Fail => Err(VKTokenCheckFail.into()),
-                        vk::CheckResult::Error {
-                            error_code,
-                            error_msg,
-                        } => Err(VKTokenCheckError(error_code, error_msg).into()),
-                    };
-                    done(result)
-                }),
-        ),
-        TokenChecker::GP(gp_checker) => Box::new(
-            gp_checker
-                .check_token()
-                .map_err(|err| err.into())
-                .and_then(|check_result| {
-                    let result = match check_result {
-                        gp::CheckResult::Success { user_id } => {
-                            Ok(TokenCheckSuccess::GP { uid: user_id })
-                        }
-                        gp::CheckResult::UnknownError => Err(GPTokenCheckUnknownError.into()),
-                        gp::CheckResult::Error {
-                            error_title,
-                            error_descr,
-                        } => Err(GPTokenCheckError(error_title, error_descr).into()),
-                    };
-                    done(result)
-                }),
-        ),
+        TokenChecker::VK(vk_checker) => check_vk_token(vk_checker).await,
+        TokenChecker::GP(gp_checker) => check_gp_token(gp_checker).await,
+    }
+}
+
+fn check_vk_token(
+    vk_checker: Box<dyn VkTokenChecker + Send>,
+) -> impl Future<Output = Result<TokenCheckSuccess, Error>> {
+    // NOTE: we moved the token checker out of an async context so the returned
+    // Future would be Sync
+    let check_result = vk_checker.check_token();
+    async {
+        let check_result = check_result.await?;
+        match check_result {
+            vk::CheckResult::Success { user_id } => Ok(TokenCheckSuccess::VK { uid: user_id }),
+            vk::CheckResult::Fail => Err(VKTokenCheckFail.into()),
+            vk::CheckResult::Error {
+                error_code,
+                error_msg,
+            } => Err(VKTokenCheckError(error_code, error_msg).into()),
+        }
+    }
+}
+
+fn check_gp_token(
+    gp_checker: Box<dyn GpTokenChecker + Send>,
+) -> impl Future<Output = Result<TokenCheckSuccess, Error>> {
+    // NOTE: we moved the token checker out of an async context so the returned
+    // Future would be Sync
+    let check_result = gp_checker.check_token();
+    async {
+        let check_result = check_result.await?;
+        match check_result {
+            gp::CheckResult::Success { user_id } => Ok(TokenCheckSuccess::GP { uid: user_id }),
+            gp::CheckResult::UnknownError => Err(GPTokenCheckUnknownError.into()),
+            gp::CheckResult::Error {
+                error_title,
+                error_descr,
+            } => Err(GPTokenCheckError(error_title, error_descr).into()),
+        }
     }
 }
 

@@ -7,7 +7,7 @@ fn can_borrow_and_put_back() {
 
     let mut pool = ConnectionPool::for_client_user(config);
 
-    let _connection = pool.borrow().unwrap();
+    let _connection = pool.borrow_connection().unwrap();
 }
 
 #[test]
@@ -18,7 +18,7 @@ fn connections_are_reused() {
     let initial_connections_count = pool.pooled_connections_count();
 
     {
-        let _connection1 = pool.borrow().unwrap();
+        let _connection1 = pool.borrow_connection().unwrap();
         assert_eq!(initial_connections_count, pool.pooled_connections_count());
     }
     assert_eq!(
@@ -27,7 +27,7 @@ fn connections_are_reused() {
     );
 
     {
-        let _connection2 = pool.borrow().unwrap();
+        let _connection2 = pool.borrow_connection().unwrap();
         assert_eq!(initial_connections_count, pool.pooled_connections_count());
     }
 
@@ -45,7 +45,7 @@ fn borrowed_connection_can_be_cloned() {
     let initial_connections_count = pool.pooled_connections_count();
 
     {
-        let connection1 = pool.borrow().unwrap();
+        let connection1 = pool.borrow_connection().unwrap();
         let _connection2 = connection1.try_clone().unwrap();
     }
 
