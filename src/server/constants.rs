@@ -2,6 +2,7 @@ pub const CMD_REGISTER_USER: &str = "/v1/user/register";
 pub const CMD_UPDATE_FCM_TOKEN: &str = "/v1/user/update_fcm_token";
 pub const CMD_START_PAIRING: &str = "/v1/start_pairing";
 pub const CMD_PAIRING_REQUEST: &str = "/v1/pairing_request";
+pub const CMD_MOVE_DEVICE_ACCOUNT: &str = "/v1/user/move_device_account";
 
 pub const ARG_USER_NAME: &str = "name";
 pub const ARG_SOCIAL_NETWORK_TYPE: &str = "social_network_type";
@@ -16,7 +17,8 @@ pub const ARG_PARTNER_USER_ID: &str = "partner_user_id";
 pub const FIELD_NAME_ERROR_DESCRIPTION: &str = "error_description";
 pub const FIELD_NAME_STATUS: &str = "status";
 pub const FIELD_NAME_REGISTERED: &str = "registered";
-pub const FIELD_NAME_USER_ID: &str = "device_id";
+pub const FIELD_NAME_USER_ID: &str = "user_id";
+pub const FIELD_NAME_USER_NAME: &str = "user_name";
 pub const FIELD_NAME_CLIENT_TOKEN: &str = "client_token";
 pub const FIELD_NAME_PAIRING_CODE_EXPIRATION_DATE: &str = "pairing_code_expiration_date";
 pub const FIELD_NAME_PAIRING_CODE: &str = "pairing_code";

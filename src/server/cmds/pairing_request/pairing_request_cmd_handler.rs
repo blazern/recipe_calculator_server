@@ -1,9 +1,9 @@
 use futures::join;
+use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::future::Future;
 use std::str::FromStr;
 use std::sync::Arc;
-use serde_json::Value as JsonValue;
 use uuid::Uuid;
 
 use crate::config::Config;

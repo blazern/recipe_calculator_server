@@ -126,7 +126,11 @@ pub fn select_by_id(id: i32, connection: &dyn DBConnection) -> Result<Option<Foo
     );
 }
 
-pub fn unlist(foodstuff: Foodstuff, connection: &dyn DBConnection) -> Result<Foodstuff, Error> {
+/// Returns Option in case the user gets deleted while update operation is not finished yet
+pub fn unlist(
+    foodstuff: Foodstuff,
+    connection: &dyn DBConnection,
+) -> Result<Option<Foodstuff>, Error> {
     let result = update_column!(
         Foodstuff,
         foodstuff_schema::table,
@@ -141,8 +145,11 @@ pub fn unlist(foodstuff: Foodstuff, connection: &dyn DBConnection) -> Result<Foo
         Ok(mut vec) => {
             if vec.len() > 1 {
                 panic!("Count of unlisted foodstuffs is {}! Data in DB most likely was just corrupted!", vec.len());
+            } else if vec.len() == 1 {
+                Ok(Some(vec.pop().expect("Expect 1 foodstuff")))
+            } else {
+                Ok(None)
             }
-            Ok(vec.pop().expect("Expect 1 foodstuff"))
         }
         Err(err) => Err(err),
     }

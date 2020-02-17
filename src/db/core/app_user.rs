@@ -85,6 +85,36 @@ pub fn select_by_uid(uid: &Uuid, connection: &dyn DBConnection) -> Result<Option
     );
 }
 
+/// Returns Option in case the user gets deleted while update operation is not finished yet
+pub fn update_client_token(
+    app_user: AppUser,
+    new_client_token: &Uuid,
+    connection: &dyn DBConnection,
+) -> Result<Option<AppUser>, Error> {
+    let result = update_column!(
+        AppUser,
+        app_user_schema::table,
+        app_user_schema::id,
+        app_user.id(),
+        app_user_schema::client_token,
+        new_client_token,
+        diesel_connection(connection)
+    );
+
+    match result {
+        Ok(mut vec) => {
+            if vec.len() > 1 {
+                panic!("Unexpected count of updated app_users: {}", vec.len());
+            } else if vec.len() == 1 {
+                Ok(Some(vec.pop().expect("Expect 1 app user")))
+            } else {
+                Ok(None)
+            }
+        }
+        Err(err) => Err(err),
+    }
+}
+
 #[cfg(test)]
 #[path = "./app_user_test.rs"]
 mod app_user_test;

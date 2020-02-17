@@ -121,6 +121,17 @@ pub fn set_user_fcm_token(
     uid: &str,
     fcm_token: &str,
 ) -> JsonValue {
+    let response = set_user_fcm_token_without_ok_check(serv_address, client_token, uid, fcm_token);
+    assert_status_ok(&response);
+    response
+}
+
+pub fn set_user_fcm_token_without_ok_check(
+    serv_address: &str,
+    client_token: &str,
+    uid: &str,
+    fcm_token: &str,
+) -> JsonValue {
     let url = format!(
         "http://{}{}?{}={}&{}={}&{}={}",
         serv_address,
@@ -132,9 +143,7 @@ pub fn set_user_fcm_token(
         &constants::ARG_FCM_TOKEN,
         percent_encode(&fcm_token.as_bytes(), DEFAULT_ENCODE_SET).to_string()
     );
-    let response = make_request(&url);
-    assert_status_ok(&response);
-    response
+    make_request(&url)
 }
 
 pub fn start_pairing(server_addr: &str, client_token: &str, uid: &str) -> JsonValue {

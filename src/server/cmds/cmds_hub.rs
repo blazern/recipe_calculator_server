@@ -6,12 +6,13 @@ use std::sync::Arc;
 use crate::config::Config;
 use crate::db::pool::connection_pool::{BorrowedDBConnection, ConnectionPool};
 use crate::outside::http_client::HttpClient;
+use crate::server::cmds::cmd_handler::CmdHandleResultFuture;
 use crate::server::constants;
 use crate::server::error::Error;
-use crate::server::cmds::cmd_handler::CmdHandleResultFuture;
 use crate::server::request_error::RequestError;
 
 use super::cmd_handler::CmdHandler;
+use super::move_device_account::move_device_account_cmd_handler::MoveDeviceAccountCmdHandler;
 use super::pairing_request::pairing_request_cmd_handler::PairingRequestCmdHandler;
 use super::register_user::register_user_cmd_handler::RegisterUserCmdHandler;
 use super::start_pairing::start_pairing_cmd_handler::StartPairingCmdHandler;
@@ -41,6 +42,10 @@ impl CmdsHub {
         cmd_handlers.insert(
             constants::CMD_PAIRING_REQUEST,
             Box::new(PairingRequestCmdHandler::new(overrides)),
+        );
+        cmd_handlers.insert(
+            constants::CMD_MOVE_DEVICE_ACCOUNT,
+            Box::new(MoveDeviceAccountCmdHandler::new()),
         );
         Ok(CmdsHub { cmd_handlers })
     }

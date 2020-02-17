@@ -97,3 +97,23 @@ fn can_insert_user_with_already_used_name() {
     let user2_inserted = app_user::insert(user2, &connection).unwrap();
     assert_eq!(user1_inserted.name(), user2_inserted.name());
 }
+
+#[test]
+fn update_client_token() {
+    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000007").unwrap();
+    delete_entry_with(&uid);
+
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
+
+    let old_client_token = Uuid::new_v4();
+    let user = app_user::new(uid, "name".to_string(), old_client_token);
+
+    let user = app_user::insert(user, &connection).unwrap();
+    assert_eq!(old_client_token, *user.client_token());
+
+    let new_client_token = Uuid::new_v4();
+    let user = app_user::update_client_token(user, &new_client_token, &connection)
+        .unwrap()
+        .unwrap();
+    assert_eq!(new_client_token, *user.client_token());
+}

@@ -171,7 +171,9 @@ fn can_make_foodstuff_unlisted() {
 
     let inserted_foodstuff = foodstuff::insert(new_foodstuff, &connection).unwrap();
     assert!(inserted_foodstuff.is_listed());
-    let unlisted_foodstuff = foodstuff::unlist(inserted_foodstuff, &connection).unwrap();
+    let unlisted_foodstuff = foodstuff::unlist(inserted_foodstuff, &connection)
+        .unwrap()
+        .unwrap();
     assert!(!unlisted_foodstuff.is_listed());
 }
 
@@ -203,6 +205,8 @@ fn making_already_unlisted_foodstuff_unlisted_does_nothing() {
 
     let inserted_foodstuff = foodstuff::insert(new_foodstuff, &connection).unwrap();
     assert!(!inserted_foodstuff.is_listed());
-    let unlisted_foodstuff = foodstuff::unlist(inserted_foodstuff, &connection).unwrap();
+    let unlisted_foodstuff = foodstuff::unlist(inserted_foodstuff, &connection)
+        .unwrap()
+        .unwrap();
     assert!(!unlisted_foodstuff.is_listed());
 }
