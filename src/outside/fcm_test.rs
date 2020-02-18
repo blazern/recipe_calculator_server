@@ -4,13 +4,13 @@ use crate::outside::error::Error;
 use crate::outside::error::ErrorKind;
 use crate::outside::fcm;
 use crate::outside::http_client::HttpClient;
+use crate::testing_utils::config_in_tests;
 use crate::testing_utils::exhaust_future;
-use crate::testing_utils::testing_config;
 
 #[test]
 fn send_with_invalid_client_token() {
     let user_fcm_token = "asdasd";
-    let config = testing_config();
+    let config = config_in_tests();
 
     let http_client = Arc::new(HttpClient::new().unwrap());
 

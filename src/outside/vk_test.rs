@@ -2,12 +2,12 @@ use std::sync::Arc;
 
 use crate::outside::http_client::HttpClient;
 use crate::outside::vk;
+use crate::testing_utils::config_in_tests;
 use crate::testing_utils::exhaust_future;
-use crate::testing_utils::testing_config;
 
 #[test]
 fn can_check_client_token() {
-    let config = testing_config();
+    let config = config_in_tests();
     let user_token = "asdasd";
 
     let http_client = Arc::new(HttpClient::new().unwrap());

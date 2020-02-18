@@ -18,7 +18,7 @@ use crate::server::testing_mock_server::FullRequest;
 use crate::server::testing_mock_server::TestingMockServer;
 use crate::server::testing_server_wrapper;
 use crate::server::testing_server_wrapper::ServerWrapper;
-use crate::testing_utils::{exhaust_future, testing_config};
+use crate::testing_utils::{config_in_tests, exhaust_future};
 use percent_encoding::percent_encode;
 use percent_encoding::DEFAULT_ENCODE_SET;
 
@@ -37,7 +37,7 @@ macro_rules! start_server {
 }
 
 pub fn start_server_with_overrides(overrides: &JsonValue) -> ServerWrapper {
-    let config = testing_config();
+    let config = config_in_tests();
     // NOTE: address is acquired before handler requests creation for a reason -
     // address is a mutex lock, and multiple structs RequestsHandlerImpl can't live simultaneously
     let address = testing_hostname::get_hostname();
