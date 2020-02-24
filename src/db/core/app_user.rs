@@ -86,6 +86,7 @@ pub fn select_by_uid(uid: &Uuid, connection: &dyn DBConnection) -> Result<Option
 }
 
 /// Returns Option in case the user gets deleted while update operation is not finished yet
+#[allow(clippy::comparison_chain)]
 pub fn update_client_token(
     app_user: AppUser,
     new_client_token: &Uuid,

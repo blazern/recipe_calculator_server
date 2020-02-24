@@ -12,6 +12,7 @@ use crate::server::error::Error;
 use crate::server::request_error::RequestError;
 
 use super::cmd_handler::CmdHandler;
+use super::list_partners::list_partners_cmd_handler::ListPartnersCmdHandler;
 use super::move_device_account::move_device_account_cmd_handler::MoveDeviceAccountCmdHandler;
 use super::pairing_request::pairing_request_cmd_handler::PairingRequestCmdHandler;
 use super::register_user::register_user_cmd_handler::RegisterUserCmdHandler;
@@ -46,6 +47,10 @@ impl CmdsHub {
         cmd_handlers.insert(
             constants::CMD_MOVE_DEVICE_ACCOUNT,
             Box::new(MoveDeviceAccountCmdHandler::new()),
+        );
+        cmd_handlers.insert(
+            constants::CMD_LIST_PARTNERS,
+            Box::new(ListPartnersCmdHandler::new()),
         );
         Ok(CmdsHub { cmd_handlers })
     }

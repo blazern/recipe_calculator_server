@@ -127,6 +127,7 @@ pub fn select_by_id(id: i32, connection: &dyn DBConnection) -> Result<Option<Foo
 }
 
 /// Returns Option in case the user gets deleted while update operation is not finished yet
+#[allow(clippy::comparison_chain)]
 pub fn unlist(
     foodstuff: Foodstuff,
     connection: &dyn DBConnection,

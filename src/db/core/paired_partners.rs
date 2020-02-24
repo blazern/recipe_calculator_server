@@ -20,7 +20,7 @@ use diesel::RunQueryDsl;
 
 /// NOTE: the values are stored into DB, so think
 /// twice before reusing numeric values.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum PairingState {
     Done = 0,
     NotConfirmed = 1,
@@ -158,6 +158,40 @@ fn validate_selection_result(
     }
 }
 
+fn validate_selection_results(
+    pairing_partners: Result<Vec<PairedPartners>, Error>,
+    connection: &dyn DBConnection,
+) -> Result<Vec<PairedPartners>, Error> {
+    let mut pairing_partners = match pairing_partners {
+        Ok(pairing_partners) => pairing_partners,
+        Err(err) => return Err(err),
+    };
+
+    let mut first_error: Option<Error> = None;
+    pairing_partners.retain(|item| {
+        if first_error.is_some() {
+            // Doesn't matter now
+            return true;
+        }
+
+        if PairingState::from_number(item.pairing_state).is_ok() {
+            true
+        } else {
+            // TODO: log data corruption
+            let del_res = delete_by_user_id(item.id, connection);
+            if let Err(err) = del_res {
+                first_error = Some(err)
+            };
+            false
+        }
+    });
+
+    match first_error {
+        Some(err) => Err(err),
+        None => Ok(pairing_partners),
+    }
+}
+
 pub fn select_by_partners_user_ids(
     partner1_user_id: i32,
     partner2_user_id: i32,
@@ -192,6 +226,37 @@ pub fn select_by_partners_user_ids_and_state(
         .first::<PairedPartners>(diesel_connection(connection));
     let result = transform_diesel_single_result(result);
     validate_selection_result(result, connection)
+}
+
+pub fn select_by_partner_user_id_and_state(
+    partner_user_id: i32,
+    pairing_state: PairingState,
+    connection: &dyn DBConnection,
+) -> Result<Vec<PairedPartners>, Error> {
+    use diesel::ExpressionMethods;
+    use diesel::QueryDsl;
+
+    let result1 = paired_partners_schema::table
+        .filter(paired_partners_schema::partner1_user_id.eq(partner_user_id))
+        .filter(paired_partners_schema::pairing_state.eq(pairing_state.clone() as i32))
+        .get_results::<PairedPartners>(diesel_connection(connection));
+
+    let result2 = paired_partners_schema::table
+        .filter(paired_partners_schema::partner2_user_id.eq(partner_user_id))
+        .filter(paired_partners_schema::pairing_state.eq(pairing_state as i32))
+        .get_results::<PairedPartners>(diesel_connection(connection));
+
+    let result = match (result1, result2) {
+        (Ok(mut result1), Ok(mut result2)) => {
+            result1.append(&mut result2);
+            Ok(result1)
+        }
+        (Err(err1), _) => Err(err1),
+        (_, Err(err2)) => Err(err2),
+    };
+
+    let result = result.map_err(|err| err.into());
+    validate_selection_results(result, connection)
 }
 
 pub fn delete_by_id(id: i32, connection: &dyn DBConnection) -> Result<(), Error> {

@@ -52,6 +52,7 @@ where
     .await
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn register_user_impl<Conn>(
     user_name: String,
     db_connection: Conn,

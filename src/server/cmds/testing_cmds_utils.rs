@@ -89,6 +89,20 @@ pub fn delete_app_user_with(uid: &Uuid) {
     delete_app_user(&uid, &testing_connection_for_server_user().unwrap()).unwrap();
 }
 
+pub fn register_named_user_return_token(
+    serv_address: &str,
+    uuid: &Uuid,
+    gp_uid: &str,
+    name: &str,
+) -> String {
+    let reg_resp = register_named_user(serv_address, uuid, gp_uid, name);
+    let result = &reg_resp[constants::FIELD_NAME_CLIENT_TOKEN]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    result.clone()
+}
+
 pub fn register_user(serv_address: &str, uuid: &Uuid, gp_uid: &str) -> JsonValue {
     register_named_user(serv_address, uuid, gp_uid, "name")
 }
@@ -223,6 +237,26 @@ pub fn pairing_request_by_uid_with_overrides(
         percent_encode(&partner_uid.as_bytes(), DEFAULT_ENCODE_SET).to_string(),
         &constants::ARG_OVERRIDES,
         percent_encode(&overrides.to_string().as_bytes(), DEFAULT_ENCODE_SET).to_string(),
+    );
+    let response = make_request(&url);
+    assert_status_ok(&response);
+    response
+}
+
+pub fn pair(server_addr: &str, client_token1: &str, uid1: &str, client_token2: &str, uid2: &str) {
+    pairing_request_by_uid(server_addr, client_token1, uid1, uid2);
+    pairing_request_by_uid(server_addr, client_token2, uid2, uid1);
+}
+
+pub fn list_partners(server_addr: &str, client_token: &str, uid: &str) -> JsonValue {
+    let url = format!(
+        "http://{}{}?{}={}&{}={}",
+        server_addr,
+        &constants::CMD_LIST_PARTNERS,
+        &constants::ARG_USER_ID,
+        percent_encode(uid.as_bytes(), DEFAULT_ENCODE_SET).to_string(),
+        &constants::ARG_CLIENT_TOKEN,
+        percent_encode(&client_token.as_bytes(), DEFAULT_ENCODE_SET).to_string(),
     );
     let response = make_request(&url);
     assert_status_ok(&response);

@@ -244,3 +244,61 @@ fn deletion_by_id() {
         .unwrap()
         .is_none());
 }
+
+#[test]
+fn selection_of_all_paired_partners() {
+    let uid1 = Uuid::from_str("00000000-0000-0000-0000-002210000015").unwrap();
+    let uid2 = Uuid::from_str("00000000-0000-0000-0000-002210000016").unwrap();
+    let uid3 = Uuid::from_str("00000000-0000-0000-0000-002210000017").unwrap();
+    let uid4 = Uuid::from_str("00000000-0000-0000-0000-002210000018").unwrap();
+    delete_user_with_uid(&uid1);
+    delete_user_with_uid(&uid2);
+    delete_user_with_uid(&uid3);
+    delete_user_with_uid(&uid4);
+    let conn = dbtesting_utils::testing_connection_for_client_user().unwrap();
+    let user1 =
+        app_user::insert(app_user::new(uid1, "".to_owned(), Uuid::new_v4()), &conn).unwrap();
+    let user2 =
+        app_user::insert(app_user::new(uid2, "".to_owned(), Uuid::new_v4()), &conn).unwrap();
+    let user3 =
+        app_user::insert(app_user::new(uid3, "".to_owned(), Uuid::new_v4()), &conn).unwrap();
+    let user4 =
+        app_user::insert(app_user::new(uid4, "".to_owned(), Uuid::new_v4()), &conn).unwrap();
+
+    let pp1 = paired_partners::new(&user1, &user2, PairingState::Done, 123);
+    let pp1 = paired_partners::insert(pp1, &conn).unwrap();
+    let pp2 = paired_partners::new(&user3, &user1, PairingState::Done, 123);
+    let pp2 = paired_partners::insert(pp2, &conn).unwrap();
+    let pp3 = paired_partners::new(&user1, &user4, PairingState::NotConfirmed, 123);
+    let pp3 = paired_partners::insert(pp3, &conn).unwrap();
+
+    let selected_pairs =
+        paired_partners::select_by_partner_user_id_and_state(user1.id(), PairingState::Done, &conn)
+            .unwrap();
+    assert_eq!(2, selected_pairs.len());
+    assert!(selected_pairs.contains(&pp1));
+    assert!(selected_pairs.contains(&pp2));
+    assert!(!selected_pairs.contains(&pp3));
+}
+
+#[test]
+fn selection_of_all_paired_partners_and_data_corruption() {
+    let uid1 = Uuid::from_str("00000000-0000-0000-0000-002210000019").unwrap();
+    let uid2 = Uuid::from_str("00000000-0000-0000-0000-002210000020").unwrap();
+    delete_user_with_uid(&uid1);
+    delete_user_with_uid(&uid2);
+    let conn = dbtesting_utils::testing_connection_for_client_user().unwrap();
+    let user1 =
+        app_user::insert(app_user::new(uid1, "".to_owned(), Uuid::new_v4()), &conn).unwrap();
+    let user2 =
+        app_user::insert(app_user::new(uid2, "".to_owned(), Uuid::new_v4()), &conn).unwrap();
+
+    let invalid_state = 100500;
+    let pp = paired_partners::new_raw_for_tests(&user1, &user2, invalid_state, 123);
+    paired_partners::insert(pp, &conn).unwrap();
+
+    let spp =
+        paired_partners::select_by_partner_user_id_and_state(user1.id(), PairingState::Done, &conn)
+            .unwrap();
+    assert!(spp.is_empty());
+}
