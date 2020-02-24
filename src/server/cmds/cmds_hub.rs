@@ -17,6 +17,7 @@ use super::move_device_account::move_device_account_cmd_handler::MoveDeviceAccou
 use super::pairing_request::pairing_request_cmd_handler::PairingRequestCmdHandler;
 use super::register_user::register_user_cmd_handler::RegisterUserCmdHandler;
 use super::start_pairing::start_pairing_cmd_handler::StartPairingCmdHandler;
+use super::unpair::unpair_cmd_handler::UnpairCmdHandler;
 use super::update_fcm_token::update_fcm_token_cmd_handler::UpdateFcmTokenCmdHandler;
 
 type CmdsHashMap = HashMap<&'static str, Box<dyn CmdHandler + Send + Sync>>;
@@ -52,6 +53,7 @@ impl CmdsHub {
             constants::CMD_LIST_PARTNERS,
             Box::new(ListPartnersCmdHandler::new()),
         );
+        cmd_handlers.insert(constants::CMD_UNPAIR, Box::new(UnpairCmdHandler::new()));
         Ok(CmdsHub { cmd_handlers })
     }
 
