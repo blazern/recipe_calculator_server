@@ -187,6 +187,15 @@ pub fn select_any(
     transform_diesel_single_result(result)
 }
 
+pub fn delete_by_id(id: i32, connection: &dyn DBConnection) -> Result<(), Error> {
+    delete_by_column!(
+        taken_pairing_code_schema::table,
+        taken_pairing_code_schema::id,
+        id,
+        diesel_connection(connection)
+    )
+}
+
 #[cfg(test)]
 #[path = "./taken_pairing_code_test.rs"]
 mod taken_pairing_code_test;

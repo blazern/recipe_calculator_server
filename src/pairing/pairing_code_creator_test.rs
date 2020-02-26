@@ -1216,3 +1216,31 @@ fn pairing_code_creator_compilation_constraints() {
     try_build_testcase.pass("src/pairing/pairing_code_creator_test_send.rs");
     try_build_testcase.compile_fail("src/pairing/pairing_code_creator_test_sync.rs");
 }
+
+#[test]
+fn immediate_code_generation_for_same_user() {
+    let fam = format!("{}{}", file!(), line!());
+    delete_codes_with_family(&fam);
+    let uid = Uuid::from_str("00000000-0000-0000-0000-002222000043").unwrap();
+    delete_user_with_uid(&uid);
+    let conn = dbtesting_utils::testing_connection_for_client_user().unwrap();
+
+    let user = create_user_with_uid(&uid);
+
+    let codes_life_length = 10 as i64;
+    let now_source = FnNowSource { now_fn: || 123 };
+    let codes_generator = DefaultRandCodeGenerator {};
+    let creator = super::new_extended(
+        fam.to_owned(),
+        0,
+        10,
+        codes_life_length,
+        now_source,
+        codes_generator,
+    )
+    .unwrap();
+
+    // Verify the codes are generated
+    let _code1 = creator.borrow_pairing_code(&user, &conn).unwrap();
+    let _code2 = creator.borrow_pairing_code(&user, &conn).unwrap();
+}

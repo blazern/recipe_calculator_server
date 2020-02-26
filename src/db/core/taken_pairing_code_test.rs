@@ -335,3 +335,35 @@ fn select_any() {
         .unwrap();
     assert_eq!(code, selected_code);
 }
+
+#[test]
+fn delete_by_id() {
+    let fam = format!("{}{}", file!(), line!());
+    delete_codes_with_family(&fam);
+    let uid1 = Uuid::from_str("00000000-0000-0000-0000-002220000019").unwrap();
+    let uid2 = Uuid::from_str("00000000-0000-0000-0000-002220000020").unwrap();
+    delete_user_with_uid(&uid1);
+    delete_user_with_uid(&uid2);
+    let conn = dbtesting_utils::testing_connection_for_client_user().unwrap();
+
+    let user1 = app_user::insert(app_user::new(uid1, "".to_owned(), Uuid::new_v4()), &conn);
+    let user1 = user1.unwrap();
+    let user2 = app_user::insert(app_user::new(uid2, "".to_owned(), Uuid::new_v4()), &conn);
+    let user2 = user2.unwrap();
+
+    let code1 = taken_pairing_code::new(&user1, 10, 100, fam.to_owned());
+    let code1 = taken_pairing_code::insert(code1, &conn).unwrap();
+    let code2 = taken_pairing_code::new(&user2, 11, 100, fam.to_owned());
+    let code2 = taken_pairing_code::insert(code2, &conn).unwrap();
+
+    taken_pairing_code::delete_by_id(code1.id(), &conn).unwrap();
+    assert!(taken_pairing_code::select_by_id(code1.id(), &conn)
+        .unwrap()
+        .is_none());
+    assert_eq!(
+        code2,
+        taken_pairing_code::select_by_id(code2.id(), &conn)
+            .unwrap()
+            .unwrap()
+    );
+}

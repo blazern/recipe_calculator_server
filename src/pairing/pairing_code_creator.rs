@@ -214,6 +214,7 @@ where
         self.maybe_init_family(connection)?;
         self.free_old_pairing_codes(connection)?;
         self.validate_free_ranges(connection)?;
+        self.delete_existing_code(&user, connection)?;
 
         let generated_code = self
             .rand_code_generator
@@ -416,6 +417,20 @@ where
                 ))
                 .into());
             }
+        }
+        Ok(())
+    }
+
+    fn delete_existing_code(
+        &self,
+        user: &AppUser,
+        connection: &dyn DBConnection,
+    ) -> Result<(), Error> {
+        let existing_code =
+            taken_pairing_code::select_by_app_user_id(user.id(), &self.family, connection)?;
+        if let Some(existing_code) = existing_code {
+            taken_pairing_code::delete_by_id(existing_code.id(), connection)?;
+            self.return_free_ranges_for_freed_code(&existing_code, connection)?;
         }
         Ok(())
     }
