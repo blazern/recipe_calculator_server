@@ -1,10 +1,17 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::db::core::app_user;
+use crate::db::core::app_user::AppUser;
 use crate::db::core::connection::DBConnection;
+use crate::db::core::fcm_token;
 use crate::db::core::transaction;
+use crate::db::pool::connection_pool::ConnectionPool;
 
+use crate::config::Config;
+use crate::outside::fcm;
+use crate::outside::http_client::HttpClient;
 use crate::server::constants;
 use crate::server::request_error::RequestError;
 
@@ -20,8 +27,8 @@ impl HashMapAdditionalOperations for HashMap<std::string::String, std::string::S
         match result {
             Some(result) => Ok(result.to_string()),
             None => Err(RequestError::new(
-                constants::FIELD_STATUS_PARAM_MISSING,
-                &format!("No param '{}' in query", key),
+                constants::FIELD_STATUS_PARAM_MISSING.to_owned(),
+                format!("No param '{}' in query", key),
             )),
         }
     }
@@ -49,16 +56,16 @@ pub fn extract_user_from_query_args(
         Some(user) => {
             if *user.client_token() != client_token {
                 Err(RequestError::new(
-                    constants::FIELD_STATUS_INVALID_CLIENT_TOKEN,
-                    "Given client token doesn't belong to given user",
+                    constants::FIELD_STATUS_INVALID_CLIENT_TOKEN.to_owned(),
+                    "Given client token doesn't belong to given user".to_owned(),
                 ))
             } else {
                 Ok(user)
             }
         }
         None => Err(RequestError::new(
-            constants::FIELD_STATUS_USER_NOT_FOUND,
-            "User with given user ID not found",
+            constants::FIELD_STATUS_USER_NOT_FOUND.to_owned(),
+            "User with given user ID not found".to_owned(),
         )),
     }
 }
@@ -68,4 +75,44 @@ where
     F: FnOnce() -> Result<T, RequestError>,
 {
     transaction::start::<T, RequestError, _>(connection, action)
+}
+
+/// Returns future which resolves when a notification is sent to the |user|.
+/// Or immediately if the user doesn't have a FCM-token.
+pub async fn notify_user(
+    user: &AppUser,
+    msg: String,
+    connections_pool: ConnectionPool,
+    config: &Config,
+    fcm_address: &str,
+    http_client: Arc<HttpClient>,
+) -> Result<(), RequestError> {
+    let mut connections_pool = connections_pool;
+    let connection = connections_pool.borrow_connection()?;
+
+    let fcm_token = fcm_token::select_by_user_id(user.id(), &connection)?;
+    let fcm_token = if let Some(fcm_token) = fcm_token {
+        fcm_token
+    } else {
+        return Ok(());
+    };
+
+    // TODO: log all possible errors from send
+    let send_res = fcm::send(
+        msg,
+        fcm_token.token_value(),
+        config.fcm_server_token(),
+        fcm_address,
+        http_client,
+    )
+    .await?;
+
+    if let fcm::SendResult::Error(error) = send_res {
+        Err(RequestError::new(
+            constants::FIELD_STATUS_INTERNAL_ERROR.to_owned(),
+            format!("FCM error: {}", error),
+        ))
+    } else {
+        Ok(())
+    }
 }

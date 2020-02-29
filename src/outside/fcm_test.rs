@@ -18,9 +18,9 @@ fn send_with_invalid_client_token() {
     // GoogleApi doesn't give mock user tokens and doesn't provide
     // a way to auth in tests.
 
-    let data = json!({});
+    let data = json!({}).to_string();
     let send_result = fcm::send(
-        &data,
+        data,
         user_fcm_token,
         config.fcm_server_token(),
         fcm::FCM_ADDR,
@@ -50,9 +50,9 @@ fn send_with_invalid_server_token() {
     // GoogleApi doesn't give mock user tokens and doesn't provide
     // a way to auth in tests.
 
-    let data = json!({});
+    let data = json!({}).to_string();
     let send_result = fcm::send(
-        &data,
+        data,
         user_fcm_token,
         server_fcm_token,
         fcm::FCM_ADDR,

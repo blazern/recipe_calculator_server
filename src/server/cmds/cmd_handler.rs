@@ -17,6 +17,7 @@ pub trait CmdHandler {
     fn handle(
         &self,
         args: HashMap<String, String>,
+        body: String,
         connections_pool: ConnectionPool,
         config: Config,
         http_client: Arc<HttpClient>,

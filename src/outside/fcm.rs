@@ -55,7 +55,7 @@ pub enum SendResult {
 
 /// Ok(SendResult::Error) for expected errors, Err(..) for unexpected
 pub async fn send(
-    data: &JsonValue,
+    data: String,
     fcm_token: &str,
     server_fcm_token: &str,
     fcm_address: &str,
@@ -67,6 +67,13 @@ pub async fn send(
         format!("key={}", server_fcm_token),
     );
     headers.insert("Content-Type".to_owned(), "application/json".to_owned());
+
+    let data_json = serde_json::from_str(&data);
+    let data = match data_json {
+        Ok(data_json) => data_json,
+        Err(_) => JsonValue::String(data),
+    };
+
     let body = json!({
         "priority": "high",
         "to": fcm_token,

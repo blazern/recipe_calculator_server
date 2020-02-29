@@ -22,6 +22,7 @@ impl CmdHandler for MoveDeviceAccountCmdHandler {
     fn handle(
         &self,
         args: HashMap<String, String>,
+        _body: String,
         connections_pool: ConnectionPool,
         config: Config,
         http_client: Arc<HttpClient>,
@@ -70,8 +71,8 @@ impl MoveDeviceAccountCmdHandler {
                     Some(vk_user) => vk_user,
                     None => {
                         return Err(RequestError::new(
-                            constants::FIELD_STATUS_USER_NOT_FOUND,
-                            "User with given social network token not found",
+                            constants::FIELD_STATUS_USER_NOT_FOUND.to_owned(),
+                            "User with given social network token not found".to_owned(),
                         ))
                     }
                 };
@@ -83,8 +84,8 @@ impl MoveDeviceAccountCmdHandler {
                     Some(gp_user) => gp_user,
                     None => {
                         return Err(RequestError::new(
-                            constants::FIELD_STATUS_USER_NOT_FOUND,
-                            "User with given social network token not found",
+                            constants::FIELD_STATUS_USER_NOT_FOUND.to_owned(),
+                            "User with given social network token not found".to_owned(),
                         ))
                     }
                 };
@@ -112,8 +113,8 @@ fn extract_possibly_deleted_user(user: Option<AppUser>) -> Result<AppUser, Reque
     match user {
         Some(user) => Ok(user),
         None => Err(RequestError::new(
-            constants::FIELD_STATUS_USER_NOT_FOUND,
-            "User with given social network token not found",
+            constants::FIELD_STATUS_USER_NOT_FOUND.to_owned(),
+            "User with given social network token not found".to_owned(),
         )),
     }
 }

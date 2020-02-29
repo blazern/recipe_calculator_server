@@ -9,17 +9,17 @@ use uuid::Uuid;
 use crate::config::Config;
 use crate::db::core::app_user;
 use crate::db::core::app_user::AppUser;
-use crate::db::core::fcm_token;
 use crate::db::core::paired_partners;
 use crate::db::core::paired_partners::PairingState;
 use crate::db::core::taken_pairing_code;
 use crate::db::pool::connection_pool::{BorrowedDBConnection, ConnectionPool};
-use crate::outside::fcm;
+use crate::outside::fcm::FCM_ADDR;
 use crate::outside::http_client::HttpClient;
 use crate::server::cmds::cmd_handler::CmdHandler;
 use crate::server::cmds::cmd_handler::{CmdHandleResult, CmdHandleResultFuture};
 use crate::server::cmds::utils::db_transaction;
 use crate::server::cmds::utils::extract_user_from_query_args;
+use crate::server::cmds::utils::notify_user;
 use crate::server::constants;
 use crate::server::request_error::RequestError;
 use crate::utils::now_source::{DefaultNowSource, NowSource};
@@ -28,6 +28,7 @@ pub const PAIRING_CONFIRMATION_EXPIRATION_DELAY_SECS: i64 = 60 * 60 * 24;
 
 pub struct PairingRequestCmdHandler {
     family: String,
+    fcm_address: String,
     now_source: DefaultNowSource,
 }
 
@@ -35,6 +36,7 @@ impl CmdHandler for PairingRequestCmdHandler {
     fn handle(
         &self,
         args: HashMap<String, String>,
+        _body: String,
         connections_pool: ConnectionPool,
         config: Config,
         http_client: Arc<HttpClient>,
@@ -48,6 +50,7 @@ impl PairingRequestCmdHandler {
         let args = get_construction_args(overrides);
         PairingRequestCmdHandler {
             family: args.family,
+            fcm_address: args.fcm_address,
             now_source: DefaultNowSource::default(),
         }
     }
@@ -63,10 +66,7 @@ impl PairingRequestCmdHandler {
             Some(now) => Ok(now),
             None => self.now_source.now_secs(),
         };
-        let fcm_address = match extract_cmd_fcm_address_override(&args) {
-            Some(fcm_address) => fcm_address,
-            None => fcm::FCM_ADDR.to_owned(),
-        };
+        let fcm_address = self.fcm_address.clone();
         let family = self.family.clone();
 
         async {
@@ -214,8 +214,8 @@ fn extract_partner_user(
 ) -> Result<AppUser, RequestError> {
     if partner_uid.is_none() && partner_pairing_code.is_none() {
         return Err(RequestError::new(
-            constants::FIELD_STATUS_PARAM_MISSING,
-            "Need either partner user ID or partner pairng code, none provided",
+            constants::FIELD_STATUS_PARAM_MISSING.to_owned(),
+            "Need either partner user ID or partner pairng code, none provided".to_owned(),
         ));
     }
 
@@ -224,8 +224,8 @@ fn extract_partner_user(
             Ok(partner_pairing_code) => partner_pairing_code,
             Err(error) => {
                 return Err(RequestError::new(
-                    constants::FIELD_STATUS_INVALID_PARTNER_PAIRING_CODE,
-                    &format!(
+                    constants::FIELD_STATUS_INVALID_PARTNER_PAIRING_CODE.to_owned(),
+                    format!(
                         "Partner code is invalid: {}, err: {}",
                         partner_pairing_code, error
                     ),
@@ -252,8 +252,8 @@ fn extract_partner_user(
     }
 
     Err(RequestError::new(
-        constants::FIELD_STATUS_PARTNER_USER_NOT_FOUND,
-        &format!(
+        constants::FIELD_STATUS_PARTNER_USER_NOT_FOUND.to_owned(),
+        format!(
             "Partner user was not found. Given code: {:?}, uid: {:?}",
             partner_pairing_code, partner_uid
         ),
@@ -283,7 +283,7 @@ async fn notify_of_pairing_finish(
     });
     notify_user(
         user,
-        &json,
+        json.to_string(),
         connections_pool,
         config,
         fcm_address,
@@ -310,7 +310,7 @@ async fn notify_of_pairing_request(
     });
     notify_user(
         user,
-        &json,
+        json.to_string(),
         connections_pool,
         config,
         fcm_address,
@@ -319,60 +319,37 @@ async fn notify_of_pairing_request(
     .await
 }
 
-/// Returns future which resolves when a notification is sent to the |user|.
-/// Or immediately if the user doesn't have a FCM-token.
-async fn notify_user(
-    user: &AppUser,
-    json: &JsonValue,
-    connections_pool: ConnectionPool,
-    config: &Config,
-    fcm_address: &str,
-    http_client: Arc<HttpClient>,
-) -> Result<(), RequestError> {
-    let mut connections_pool = connections_pool;
-    let connection = connections_pool.borrow_connection()?;
-
-    let fcm_token = fcm_token::select_by_user_id(user.id(), &connection)?;
-    let fcm_token = if let Some(fcm_token) = fcm_token {
-        fcm_token
-    } else {
-        return Ok(());
-    };
-
-    // TODO: log all possible errors from send
-    let send_res = fcm::send(
-        &json,
-        fcm_token.token_value(),
-        config.fcm_server_token(),
-        fcm_address,
-        http_client,
-    )
-    .await?;
-
-    if let fcm::SendResult::Error(error) = send_res {
-        Err(RequestError::new(
-            constants::FIELD_STATUS_INTERNAL_ERROR,
-            &format!("FCM error: {}", error),
-        ))
-    } else {
-        Ok(())
-    }
-}
-
 #[cfg(test)]
-pub fn insert_pairing_request_overrides(overrides: &mut JsonValue, family_name: String) {
+pub fn insert_pairing_request_family_override(overrides: &mut JsonValue, family_name: String) {
     let overrides = overrides
         .as_object_mut()
         .expect("Can insert only into object");
-    overrides.insert("pairing_request_overrides".to_owned(), json!({}));
+    if overrides.get("pairing_request_overrides").is_none() {
+        overrides.insert("pairing_request_overrides".to_owned(), json!({}));
+    }
     let overrides = overrides["pairing_request_overrides"]
         .as_object_mut()
         .unwrap();
     overrides.insert("family".to_owned(), json!(family_name));
 }
 
+#[cfg(test)]
+pub fn insert_pairing_request_fcm_address_override(overrides: &mut JsonValue, fcm_address: String) {
+    let overrides = overrides
+        .as_object_mut()
+        .expect("Can insert only into object");
+    if overrides.get("pairing_request_overrides").is_none() {
+        overrides.insert("pairing_request_overrides".to_owned(), json!({}));
+    }
+    let overrides = overrides["pairing_request_overrides"]
+        .as_object_mut()
+        .unwrap();
+    overrides.insert("fcm_address_override".to_owned(), json!(fcm_address));
+}
+
 struct ConstructionArgs {
     family: String,
+    fcm_address: String,
 }
 
 fn get_construction_args(overrides: &JsonValue) -> ConstructionArgs {
@@ -381,6 +358,7 @@ fn get_construction_args(overrides: &JsonValue) -> ConstructionArgs {
     } else {
         ConstructionArgs {
             family: constants::PAIRING_CODES_FAMILY_NAME.to_owned(),
+            fcm_address: FCM_ADDR.to_owned(),
         }
     }
 }
@@ -393,9 +371,21 @@ fn extract_construction_overrides(_overrides: &JsonValue) -> Option<Construction
 #[cfg(test)]
 fn extract_construction_overrides(overrides: &JsonValue) -> Option<ConstructionArgs> {
     match &overrides["pairing_request_overrides"].as_object() {
-        Some(overrides) => Some(ConstructionArgs {
-            family: overrides["family"].as_str().unwrap().to_owned(),
-        }),
+        Some(overrides) => {
+            let fcm_address = if overrides.get("fcm_address_override").is_some() {
+                overrides["fcm_address_override"]
+                    .as_str()
+                    .unwrap()
+                    .to_string()
+            } else {
+                FCM_ADDR.to_owned()
+            };
+
+            Some(ConstructionArgs {
+                family: overrides["family"].as_str().unwrap().to_owned(),
+                fcm_address,
+            })
+        }
         None => None,
     }
 }
@@ -436,26 +426,6 @@ fn extract_overrides_json(args: &HashMap<String, String>) -> JsonValue {
             }
             json!({})
         }
-    }
-}
-
-#[cfg(test)]
-pub fn insert_cmd_fcm_address_override(overrides: &mut JsonValue, address: &str) {
-    overrides["fcm_address_override"] = json!(address);
-}
-
-#[cfg(not(test))]
-fn extract_cmd_fcm_address_override(_args: &HashMap<String, String>) -> Option<String> {
-    None
-}
-
-#[cfg(test)]
-fn extract_cmd_fcm_address_override(args: &HashMap<String, String>) -> Option<String> {
-    let json = extract_overrides_json(args);
-    if !json["fcm_address_override"].is_null() {
-        Some(json["fcm_address_override"].as_str().unwrap().to_owned())
-    } else {
-        None
     }
 }
 

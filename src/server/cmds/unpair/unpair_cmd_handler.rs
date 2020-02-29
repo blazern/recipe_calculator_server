@@ -21,6 +21,7 @@ impl CmdHandler for UnpairCmdHandler {
     fn handle(
         &self,
         args: HashMap<String, String>,
+        _body: String,
         connections_pool: ConnectionPool,
         config: Config,
         http_client: Arc<HttpClient>,

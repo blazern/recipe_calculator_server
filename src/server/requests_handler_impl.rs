@@ -48,6 +48,7 @@ impl RequestsHandlerImpl {
         &mut self,
         request: String,
         query: String,
+        body: String,
     ) -> impl Future<Output = CmdHandleResult> {
         let pool = self.connection_pool.clone();
         let config = self.config.clone();
@@ -57,7 +58,7 @@ impl RequestsHandlerImpl {
         async move {
             let args = query_to_args(query)?;
             cmds_hub
-                .handle(request, args, pool, config, http_client)
+                .handle(request, args, body, pool, config, http_client)
                 .await
         }
     }
@@ -69,9 +70,9 @@ impl RequestsHandler for RequestsHandlerImpl {
         request: String,
         query: String,
         _headers: HashMap<String, String>,
-        _body: String,
+        body: String,
     ) -> Pin<Box<dyn Future<Output = String> + Send>> {
-        let response = self.handle_impl(request, query);
+        let response = self.handle_impl(request, query, body);
         let result = async {
             let response = response.await;
             match response {
@@ -102,8 +103,8 @@ fn query_to_args(query: String) -> Result<HashMap<String, String>, RequestError>
         let value = key_and_value.next();
         if key_and_value.next().is_some() {
             return Err(RequestError::new(
-                constants::FIELD_STATUS_INVALID_QUERY,
-                &format!("invalid key-value pair: {}", pair),
+                constants::FIELD_STATUS_INVALID_QUERY.to_owned(),
+                format!("invalid key-value pair: {}", pair),
             ));
         }
         match (key, value) {
@@ -114,8 +115,8 @@ fn query_to_args(query: String) -> Result<HashMap<String, String>, RequestError>
             }
             _ => {
                 return Err(RequestError::new(
-                    constants::FIELD_STATUS_INVALID_QUERY,
-                    &format!("invalid key-value pair: {}", pair),
+                    constants::FIELD_STATUS_INVALID_QUERY.to_owned(),
+                    format!("invalid key-value pair: {}", pair),
                 ));
             }
         }
@@ -129,8 +130,8 @@ fn decode_query_part(part: &str) -> Result<String, RequestError> {
     match result {
         Ok(result) => Ok(result.to_string()),
         Err(err) => Err(RequestError::new(
-            constants::FIELD_STATUS_INVALID_QUERY,
-            &format!("could not URL decode query part: {}, err: {}", part, err),
+            constants::FIELD_STATUS_INVALID_QUERY.to_owned(),
+            format!("could not URL decode query part: {}, err: {}", part, err),
         )),
     }
 }

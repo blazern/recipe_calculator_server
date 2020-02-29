@@ -5,6 +5,7 @@ pub const CMD_PAIRING_REQUEST: &str = "/v1/user/pairing_request";
 pub const CMD_MOVE_DEVICE_ACCOUNT: &str = "/v1/user/move_device_account";
 pub const CMD_LIST_PARTNERS: &str = "/v1/user/list_partners";
 pub const CMD_UNPAIR: &str = "/v1/user/unpair";
+pub const CMD_DIRECT_PARTNER_MSG: &str = "/v1/user/direct_partner_msg";
 
 pub const ARG_USER_NAME: &str = "name";
 pub const ARG_SOCIAL_NETWORK_TYPE: &str = "social_network_type";
@@ -48,10 +49,13 @@ pub const FIELD_STATUS_INVALID_PARTNER_PAIRING_CODE: &str = "invalid_partner_pai
 
 pub const SERV_FIELD_MSG_TYPE: &str = "msg_type";
 pub const SERV_FIELD_PAIRING_PARTNER_USER_ID: &str = "pairing_partner_user_id";
+pub const SERV_FIELD_PARTNER_USER_ID: &str = "partner_user_id";
 pub const SERV_FIELD_PARTNER_NAME: &str = "partner_name";
 pub const SERV_FIELD_REQUEST_EXPIRATION_DATE: &str = "request_expiration_date";
+pub const SERV_FIELD_MSG: &str = "msg";
 
 pub const SERV_MSG_PAIRING_REQUEST_FROM_PARTNER: &str = "pairing_request_from_partner";
 pub const SERV_MSG_PAIRED_WITH_PARTNER: &str = "paired_with_partner";
+pub const SERV_MSG_DIRECT_MSG_FROM_PARTNER: &str = "direct_msg_from_partner";
 
 pub const PAIRING_CODES_FAMILY_NAME: &str = "default";

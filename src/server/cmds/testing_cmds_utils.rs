@@ -2,6 +2,7 @@ use hyper::Uri;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
+use std::collections::HashMap;
 
 use serde_json;
 use serde_json::Value as JsonValue;
@@ -9,7 +10,7 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use crate::db::core::testing_util::testing_connection_for_server_user;
-use crate::outside::http_client::HttpClient;
+use crate::outside::http_client::{HttpClient, RequestMethod};
 use crate::server::cmds::register_user::user_data_generators::create_gp_overrides;
 use crate::server::constants;
 use crate::server::requests_handler_impl::RequestsHandlerImpl;
@@ -24,15 +25,23 @@ use percent_encoding::DEFAULT_ENCODE_SET;
 
 #[macro_export]
 macro_rules! start_server {
-    () => {{
+    ( $override_fn:expr ) => {{
         use crate::server::cmds::start_pairing::start_pairing_cmd_handler::insert_pairing_code_gen_family_override;
-        use crate::server::cmds::pairing_request::pairing_request_cmd_handler::insert_pairing_request_overrides;
+        use crate::server::cmds::pairing_request::pairing_request_cmd_handler::insert_pairing_request_family_override;
         use crate::server::cmds::testing_cmds_utils::start_server_with_overrides;
+
         let fam = format!("{}{}", file!(), line!());
         let mut overrides = json!({});
         insert_pairing_code_gen_family_override(&mut overrides, fam.clone());
-        insert_pairing_request_overrides(&mut overrides, fam);
+        insert_pairing_request_family_override(&mut overrides, fam);
+        // Let our client to override our overrides!
+        // Because otherwise the client would be stuck with values set by the calls above.
+        $override_fn(&mut overrides);
+
         start_server_with_overrides(&overrides)
+    }};
+    () => {{
+        start_server!(|_|{})
     }};
 }
 
@@ -59,8 +68,17 @@ where
 }
 
 pub fn make_request(url: &str) -> JsonValue {
+    make_request_with_body(url, "".to_owned())
+}
+
+pub fn make_request_with_body(url: &str, body: String) -> JsonValue {
     let http_client = Arc::new(HttpClient::new().unwrap());
-    let response = http_client.req_get(Uri::from_str(url).unwrap());
+    let response = http_client.req(
+        Uri::from_str(url).unwrap(),
+        RequestMethod::Get,
+        HashMap::new(),
+        Some(body),
+    );
     let response = exhaust_future(response).unwrap();
     serde_json::from_str(&response.body).unwrap_or_else(|_| {
         panic!(

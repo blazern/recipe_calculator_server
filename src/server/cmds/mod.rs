@@ -4,6 +4,7 @@ pub mod testing_cmds_utils;
 
 pub mod cmd_handler;
 pub mod cmds_hub;
+pub mod direct_partner_msg;
 pub mod list_partners;
 pub mod move_device_account;
 pub mod pairing_request;

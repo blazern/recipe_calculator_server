@@ -12,6 +12,7 @@ use crate::server::error::Error;
 use crate::server::request_error::RequestError;
 
 use super::cmd_handler::CmdHandler;
+use super::direct_partner_msg::direct_partner_msg_cmd_handler::DirectPartnerMsgCmdHandler;
 use super::list_partners::list_partners_cmd_handler::ListPartnersCmdHandler;
 use super::move_device_account::move_device_account_cmd_handler::MoveDeviceAccountCmdHandler;
 use super::pairing_request::pairing_request_cmd_handler::PairingRequestCmdHandler;
@@ -54,6 +55,10 @@ impl CmdsHub {
             Box::new(ListPartnersCmdHandler::new()),
         );
         cmd_handlers.insert(constants::CMD_UNPAIR, Box::new(UnpairCmdHandler::new()));
+        cmd_handlers.insert(
+            constants::CMD_DIRECT_PARTNER_MSG,
+            Box::new(DirectPartnerMsgCmdHandler::new(overrides)),
+        );
         Ok(CmdsHub { cmd_handlers })
     }
 
@@ -61,17 +66,18 @@ impl CmdsHub {
         &self,
         request: String,
         args: HashMap<String, String>,
+        body: String,
         connections_pool: ConnectionPool,
         config: Config,
         http_client: Arc<HttpClient>,
     ) -> CmdHandleResultFuture {
         let handler = self.cmd_handlers.get(request.as_str());
         if let Some(handler) = handler {
-            handler.handle(args, connections_pool, config, http_client)
+            handler.handle(args, body, connections_pool, config, http_client)
         } else {
             Box::pin(err(RequestError::new(
-                constants::FIELD_STATUS_UNKNOWN_REQUEST,
-                &format!("Unknown request: {}", request),
+                constants::FIELD_STATUS_UNKNOWN_REQUEST.to_owned(),
+                format!("Unknown request: {}", request),
             )))
         }
     }

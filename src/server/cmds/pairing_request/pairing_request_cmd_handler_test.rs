@@ -17,7 +17,6 @@ use crate::server::cmds::testing_cmds_utils::assert_status;
 use crate::server::cmds::testing_cmds_utils::delete_app_user_with;
 use crate::server::cmds::testing_cmds_utils::make_request;
 use crate::server::cmds::testing_cmds_utils::pairing_request_by_code;
-use crate::server::cmds::testing_cmds_utils::pairing_request_by_code_with_overrides;
 use crate::server::cmds::testing_cmds_utils::pairing_request_by_uid;
 use crate::server::cmds::testing_cmds_utils::pairing_request_by_uid_with_overrides;
 use crate::server::cmds::testing_cmds_utils::register_named_user;
@@ -228,8 +227,6 @@ fn pairing_by_pairing_code_and_uid() {
 
 #[test]
 fn pairing_with_fcm() {
-    let server = start_server!();
-
     let r = |_request: &FullRequest| {
         let response = r#"
         {
@@ -242,6 +239,12 @@ fn pairing_with_fcm() {
         Some(response.to_owned())
     };
     let (fcm_server, fcm_requests) = start_mock_server(r, testing_hostname::get_spare_hostname1());
+    let server = start_server!(|overrides| {
+        let fcm_addr = format!("http://{}", fcm_server.address());
+        pairing_request_cmd_handler::insert_pairing_request_fcm_address_override(
+            overrides, fcm_addr,
+        );
+    });
 
     let uid1 = Uuid::from_str("00000000-d100-0000-0000-000000000008").unwrap();
     let uid2 = Uuid::from_str("00000000-d100-0000-0000-000000000009").unwrap();
@@ -283,24 +286,19 @@ fn pairing_with_fcm() {
         .as_str()
         .unwrap();
 
-    let mut overrides = json!({});
-    let fcm_addr = format!("http://{}", fcm_server.address());
-    pairing_request_cmd_handler::insert_cmd_fcm_address_override(&mut overrides, &fcm_addr);
     // Sends request0 (see below)
-    pairing_request_by_code_with_overrides(
+    pairing_request_by_code(
         server.address(),
         client_token1,
         &uid1.to_string(),
         &pairing_code2,
-        &overrides,
     );
     // Sends request1 and request2 (see below)
-    pairing_request_by_uid_with_overrides(
+    pairing_request_by_uid(
         server.address(),
         client_token2,
         &uid2.to_string(),
         &uid1.to_string(),
-        &overrides,
     );
 
     let conn = testing_connection_for_server_user().unwrap();
@@ -442,8 +440,6 @@ fn real_invalid_fcm_tokens_do_not_cause_pairing_fail() {
 
 #[test]
 fn invalid_fcm_tokens_do_not_cause_pairing_fail() {
-    let server = start_server!();
-
     let r = |_request: &FullRequest| {
         // NOTE: InvalidRegistration
         let response = r#"
@@ -457,6 +453,12 @@ fn invalid_fcm_tokens_do_not_cause_pairing_fail() {
         Some(response.to_owned())
     };
     let (fcm_server, _fcm_requests) = start_mock_server(r, testing_hostname::get_spare_hostname1());
+    let server = start_server!(|overrides| {
+        let fcm_addr = format!("http://{}", fcm_server.address());
+        pairing_request_cmd_handler::insert_pairing_request_fcm_address_override(
+            overrides, fcm_addr,
+        );
+    });
 
     let uid1 = Uuid::from_str("00000000-d100-0000-0000-000000000012").unwrap();
     let uid2 = Uuid::from_str("00000000-d100-0000-0000-000000000013").unwrap();
@@ -498,22 +500,17 @@ fn invalid_fcm_tokens_do_not_cause_pairing_fail() {
         .as_str()
         .unwrap();
 
-    let mut overrides = json!({});
-    let fcm_addr = format!("http://{}", fcm_server.address());
-    pairing_request_cmd_handler::insert_cmd_fcm_address_override(&mut overrides, &fcm_addr);
-    pairing_request_by_code_with_overrides(
+    pairing_request_by_code(
         server.address(),
         client_token1,
         &uid1.to_string(),
         &pairing_code2,
-        &overrides,
     );
-    pairing_request_by_uid_with_overrides(
+    pairing_request_by_uid(
         server.address(),
         client_token2,
         &uid2.to_string(),
         &uid1.to_string(),
-        &overrides,
     );
 
     let conn = testing_connection_for_server_user().unwrap();
@@ -529,8 +526,6 @@ fn invalid_fcm_tokens_do_not_cause_pairing_fail() {
 
 #[test]
 fn pairing_when_already_paired() {
-    let server = start_server!();
-
     let r = |_request: &FullRequest| {
         let response = r#"
         {
@@ -543,6 +538,12 @@ fn pairing_when_already_paired() {
         Some(response.to_owned())
     };
     let (fcm_server, fcm_requests) = start_mock_server(r, testing_hostname::get_spare_hostname1());
+    let server = start_server!(|overrides| {
+        let fcm_addr = format!("http://{}", fcm_server.address());
+        pairing_request_cmd_handler::insert_pairing_request_fcm_address_override(
+            overrides, fcm_addr,
+        );
+    });
 
     let uid1 = Uuid::from_str("00000000-d100-0000-0000-000000000014").unwrap();
     let uid2 = Uuid::from_str("00000000-d100-0000-0000-000000000015").unwrap();
@@ -578,22 +579,17 @@ fn pairing_when_already_paired() {
     start_pairing(server.address(), client_token1, &uid1.to_string());
     start_pairing(server.address(), client_token2, &uid2.to_string());
 
-    let mut overrides = json!({});
-    let fcm_addr = format!("http://{}", fcm_server.address());
-    pairing_request_cmd_handler::insert_cmd_fcm_address_override(&mut overrides, &fcm_addr);
-    pairing_request_by_uid_with_overrides(
+    pairing_request_by_uid(
         server.address(),
         client_token1,
         &uid1.to_string(),
         &uid2.to_string(),
-        &overrides,
     );
-    pairing_request_by_uid_with_overrides(
+    pairing_request_by_uid(
         server.address(),
         client_token2,
         &uid2.to_string(),
         &uid1.to_string(),
-        &overrides,
     );
 
     let conn = testing_connection_for_server_user().unwrap();
@@ -610,12 +606,11 @@ fn pairing_when_already_paired() {
     fcm_requests.lock().unwrap().clear();
 
     // Sending a pairing request even though already paired
-    pairing_request_by_uid_with_overrides(
+    pairing_request_by_uid(
         server.address(),
         client_token1,
         &uid1.to_string(),
         &uid2.to_string(),
-        &overrides,
     );
 
     // Verifying that the user which requested pairing again has received a success message
