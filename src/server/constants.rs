@@ -6,6 +6,7 @@ pub const CMD_MOVE_DEVICE_ACCOUNT: &str = "/v1/user/move_device_account";
 pub const CMD_LIST_PARTNERS: &str = "/v1/user/list_partners";
 pub const CMD_UNPAIR: &str = "/v1/user/unpair";
 pub const CMD_DIRECT_PARTNER_MSG: &str = "/v1/user/direct_partner_msg";
+pub const CMD_UPDATE_USER_NAME: &str = "/v1/user/update_user_name";
 
 pub const ARG_USER_NAME: &str = "name";
 pub const ARG_SOCIAL_NETWORK_TYPE: &str = "social_network_type";

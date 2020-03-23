@@ -101,7 +101,10 @@ pub fn update_client_token(
         new_client_token,
         diesel_connection(connection)
     );
+    convert_update_result(result)
+}
 
+fn convert_update_result(result: Result<Vec<AppUser>, Error>) -> Result<Option<AppUser>, Error> {
     match result {
         Ok(mut vec) => {
             if vec.len() > 1 {
@@ -114,6 +117,25 @@ pub fn update_client_token(
         }
         Err(err) => Err(err),
     }
+}
+
+/// Returns Option in case the user gets deleted while update operation is not finished yet
+#[allow(clippy::comparison_chain)]
+pub fn update_user_name(
+    app_user: AppUser,
+    new_name: &str,
+    connection: &dyn DBConnection,
+) -> Result<Option<AppUser>, Error> {
+    let result = update_column!(
+        AppUser,
+        app_user_schema::table,
+        app_user_schema::id,
+        app_user.id(),
+        app_user_schema::name,
+        new_name,
+        diesel_connection(connection)
+    );
+    convert_update_result(result)
 }
 
 #[cfg(test)]

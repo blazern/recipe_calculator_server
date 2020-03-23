@@ -20,6 +20,7 @@ use super::register_user::register_user_cmd_handler::RegisterUserCmdHandler;
 use super::start_pairing::start_pairing_cmd_handler::StartPairingCmdHandler;
 use super::unpair::unpair_cmd_handler::UnpairCmdHandler;
 use super::update_fcm_token::update_fcm_token_cmd_handler::UpdateFcmTokenCmdHandler;
+use super::update_user_name::update_user_name_cmd_handler::UpdateUserNameCmdHandler;
 
 type CmdsHashMap = HashMap<&'static str, Box<dyn CmdHandler + Send + Sync>>;
 
@@ -58,6 +59,10 @@ impl CmdsHub {
         cmd_handlers.insert(
             constants::CMD_DIRECT_PARTNER_MSG,
             Box::new(DirectPartnerMsgCmdHandler::new(overrides)),
+        );
+        cmd_handlers.insert(
+            constants::CMD_UPDATE_USER_NAME,
+            Box::new(UpdateUserNameCmdHandler::new()),
         );
         Ok(CmdsHub { cmd_handlers })
     }

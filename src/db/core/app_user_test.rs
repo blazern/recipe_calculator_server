@@ -117,3 +117,20 @@ fn update_client_token() {
         .unwrap();
     assert_eq!(new_client_token, *user.client_token());
 }
+
+#[test]
+fn update_user_name() {
+    let uid = Uuid::from_str("00000000-0000-0000-0000-009000000008").unwrap();
+    delete_entry_with(&uid);
+
+    let connection = dbtesting_utils::testing_connection_for_client_user().unwrap();
+
+    let user = app_user::new(uid, "name".to_string(), Uuid::new_v4());
+    let user = app_user::insert(user, &connection).unwrap();
+    assert_eq!("name", user.name());
+
+    let user = app_user::update_user_name(user, "name2", &connection)
+        .unwrap()
+        .unwrap();
+    assert_eq!("name2", user.name());
+}
