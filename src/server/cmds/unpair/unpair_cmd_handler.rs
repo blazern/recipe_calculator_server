@@ -53,6 +53,7 @@ impl UnpairCmdHandler {
         let partner = app_user::select_by_uid(&Uuid::from_str(&partner_uid)?, &connection)?;
         if let Some(partner) = partner {
             paired_partners::delete_by_partners_user_ids(user.id(), partner.id(), &connection)?;
+            paired_partners::delete_by_partners_user_ids(partner.id(), user.id(), &connection)?;
         }
         Ok(json!({
             constants::FIELD_NAME_STATUS: constants::FIELD_STATUS_OK
