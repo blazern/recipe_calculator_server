@@ -1,5 +1,7 @@
 use diesel;
 
+use log::error;
+
 use super::app_user::AppUser;
 use super::connection::DBConnection;
 use super::diesel_connection;
@@ -149,7 +151,7 @@ fn validate_selection_result(
             if PairingState::from_number(pairing_partners.pairing_state).is_ok() {
                 Ok(Some(pairing_partners))
             } else {
-                // TODO: log data corruption
+                error!("Data corruption detected in |validate_selection_result|");
                 delete_by_user_id(pairing_partners.id, connection)?;
                 Ok(None)
             }
@@ -177,7 +179,7 @@ fn validate_selection_results(
         if PairingState::from_number(item.pairing_state).is_ok() {
             true
         } else {
-            // TODO: log data corruption
+            error!("Data corruption detected in |validate_selection_results|");
             let del_res = delete_by_user_id(item.id, connection);
             if let Err(err) = del_res {
                 first_error = Some(err)

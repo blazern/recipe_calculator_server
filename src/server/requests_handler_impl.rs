@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
+use log::warn;
 
 use crate::config::Config;
 use crate::db::pool::connection_pool::ConnectionPool;
@@ -82,6 +83,7 @@ impl RequestsHandler for RequestsHandlerImpl {
                         constants::FIELD_NAME_STATUS: error.status(),
                         constants::FIELD_NAME_ERROR_DESCRIPTION: error.error_description()
                     });
+                    warn!("Error response: {}", &response);
                     response.to_string()
                 }
             }

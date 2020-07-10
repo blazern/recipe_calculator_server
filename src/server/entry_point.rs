@@ -7,6 +7,7 @@ use hyper::Server;
 use futures::future::select;
 use futures::future::Future;
 use futures::StreamExt;
+use log::error;
 use tokio::runtime::Runtime;
 
 use std::cell::RefCell;
@@ -81,7 +82,7 @@ where
         None => "".to_string(),
     };
     let headers = extract_headers(&req);
-    let body = extract_body(req).await;
+    let body = extract_body(&request, req).await;
 
     let body = match body {
         Ok(body) => body,
@@ -114,7 +115,7 @@ fn extract_headers(req: &Request<Body>) -> HashMap<String, String> {
     headers
 }
 
-async fn extract_body(req: Request<Body>) -> Result<String, Response<Body>> {
+async fn extract_body(request: &str, req: Request<Body>) -> Result<String, Response<Body>> {
     let mut bytes = Vec::new();
 
     let mut body_stream = req.into_body();
@@ -123,7 +124,7 @@ async fn extract_body(req: Request<Body>) -> Result<String, Response<Body>> {
             Ok(chunk) => {
                 bytes.append(&mut chunk.to_vec());
                 if bytes.len() > MAX_BODY_SIZE as usize {
-                    // TODO: log
+                    error!("Request body too large, uri: {}", request);
                     return Err(Response::builder()
                         .status(413) // Payload Too Large
                         .body(Body::from(""))
@@ -131,7 +132,7 @@ async fn extract_body(req: Request<Body>) -> Result<String, Response<Body>> {
                 }
             }
             Err(err) => {
-                // TODO: log
+                error!("Request body reading error, uri: {}, error: {:?}", request, err);
                 return Err(Response::builder()
                     .status(500)
                     .body(Body::from(format!("{:?}", err)))

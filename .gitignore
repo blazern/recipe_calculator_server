@@ -4,3 +4,4 @@ recipe_calculator_server.iml
 .idea/
 .testing_env/
 init-test-env.example
+logs.txt

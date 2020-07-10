@@ -97,7 +97,6 @@ pub async fn notify_user(
         return Ok(());
     };
 
-    // TODO: log all possible errors from send
     let send_res = fcm::send(
         msg,
         fcm_token.token_value(),

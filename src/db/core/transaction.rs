@@ -31,7 +31,6 @@ where
         }
     });
 
-    // TODO: log
     match transaction_result {
         Ok(result) => result,
         Err(error) => Err(error.into()),

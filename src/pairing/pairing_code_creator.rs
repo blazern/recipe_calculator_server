@@ -1,6 +1,7 @@
 use super::error::Error;
 
 use rand::Rng;
+use log::error;
 use std::collections::HashSet;
 use std::marker::PhantomData;
 use std::sync::Mutex;
@@ -119,7 +120,7 @@ where
     ) -> Result<String, Error> {
         transaction::start(connection, || {
             let res = self.borrow_pairing_code_impl(&user, connection);
-            // TODO: report 1nd corruption (the 2nd should be reported on top level). https://trello.com/c/u5HO8ZLK/
+            error!("Data corruption detected in |borrow_pairing_code|");
             match &res {
                 Err(Error(PersistentStateCorrupted(_), _)) => {
                     self.fully_reset_persistent_state(connection)?;

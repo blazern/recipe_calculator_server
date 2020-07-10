@@ -1,4 +1,5 @@
 use hyper::Uri;
+use log::info;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -81,6 +82,7 @@ pub async fn send(
     });
 
     let url = Uri::from_str(&format!("{}/fcm/send", fcm_address))?;
+    info!("fcm::send, url: {}, body: {}", url, body);
     let response = http_client
         .req(url, RequestMethod::Post, headers, Some(body.to_string()))
         .await?;
