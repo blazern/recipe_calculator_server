@@ -26,7 +26,6 @@ serde_json = "1.0.38"
 
 # testing
 time = "0.1"
-trybuild = "1.0.19"
 
 # HTTP
 futures = "0.3"

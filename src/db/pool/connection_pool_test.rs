@@ -1,7 +1,5 @@
 use super::ConnectionPool;
 use crate::testing_utils::config_in_tests;
-use crate::testing_utils::get_trybuild_lock;
-use crate::testing_utils::TestingConfig;
 
 #[test]
 fn can_borrow_and_put_back() {
@@ -55,15 +53,4 @@ fn borrowed_connection_can_be_cloned() {
         initial_connections_count + 2,
         pool.pooled_connections_count()
     );
-}
-
-#[test]
-fn connections_pool_is_send_and_sync() {
-    let testing_config = TestingConfig::load();
-    if !testing_config.run_trybuild_tests {
-        return;
-    }
-    let _lock = get_trybuild_lock();
-    let try_build_testcase = trybuild::TestCases::new();
-    try_build_testcase.pass("src/db/pool/connection_pool_is_send_and_sync.rs");
 }

@@ -15,9 +15,6 @@ use crate::pairing::error::ErrorKind::InvalidBoundsError;
 use crate::pairing::error::ErrorKind::OutOfPairingCodes;
 use crate::pairing::error::ErrorKind::SameNamedFamilyExistsError;
 
-use crate::testing_utils::get_trybuild_lock;
-use crate::testing_utils::TestingConfig;
-
 use crate::utils::now_source::DefaultNowSource;
 use crate::utils::now_source::NowSource;
 
@@ -1203,18 +1200,6 @@ fn does_not_accept_left_bounds_greater_than_right() {
             panic!("Err expected, got: {:?}", creator2_res);
         }
     }
-}
-
-#[test]
-fn pairing_code_creator_compilation_constraints() {
-    let testing_config = TestingConfig::load();
-    if !testing_config.run_trybuild_tests {
-        return;
-    }
-    let _lock = get_trybuild_lock();
-    let try_build_testcase = trybuild::TestCases::new();
-    try_build_testcase.pass("src/pairing/pairing_code_creator_test_send.rs");
-    try_build_testcase.compile_fail("src/pairing/pairing_code_creator_test_sync.rs");
 }
 
 #[test]
