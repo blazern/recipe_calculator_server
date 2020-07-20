@@ -15,6 +15,7 @@ extern crate serde_json;
 pub mod config;
 pub mod db;
 pub mod error;
+pub mod logs;
 pub mod outside;
 pub mod pairing;
 pub mod server;

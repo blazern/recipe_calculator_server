@@ -5,11 +5,12 @@ use log::info;
 
 use recipe_calculator_lib::config;
 use recipe_calculator_lib::db::core::migrator;
+use recipe_calculator_lib::logs::init_logs;
 use recipe_calculator_lib::server::entry_point;
 use recipe_calculator_lib::server::requests_handler_impl::RequestsHandlerImpl;
 
 const CONFIG_ARG: &str = "config";
-const LOG4RS_CONFIG_ARG: &str = "log4rs-config";
+const LOG4RS_LOGS_FILE_ARG: &str = "log4rs-logs-file";
 const ADDRESS_ARG: &str = "address";
 
 fn main() {
@@ -44,20 +45,20 @@ fn main() {
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name(LOG4RS_CONFIG_ARG)
-                .long(LOG4RS_CONFIG_ARG)
-                .help("Path to a config file which regulates log4rs logging")
-                .default_value("log4rs-default-config.yaml")
+            Arg::with_name(LOG4RS_LOGS_FILE_ARG)
+                .long(LOG4RS_LOGS_FILE_ARG)
+                .help("Path to precreated log4rs logs file. Note that the file must already exist")
+                .required(true)
                 .takes_value(true),
         )
         .get_matches();
 
     let config_path = matches.value_of(CONFIG_ARG).unwrap();
     let address = matches.value_of(ADDRESS_ARG).unwrap();
-    let log4rs_config_path = matches.value_of(LOG4RS_CONFIG_ARG).unwrap();
+    let log4rs_logs_path = matches.value_of(LOG4RS_LOGS_FILE_ARG).unwrap();
 
-    println!("log4rs config path: {}", log4rs_config_path);
-    log4rs::init_file(log4rs_config_path, Default::default()).unwrap();
+    println!("log4rs logs path: {}", log4rs_logs_path);
+    init_logs(log4rs_logs_path).unwrap();
 
     let mut config_file = std::fs::OpenOptions::new()
         .read(true)
